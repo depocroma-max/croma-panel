@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cierre de Caja · Croma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --black:    #0d0d0d;
+  --white:    #ffffff;
+  --gray-50:  #f7f7f5;
+  --gray-100: #efefec;
+  --gray-200: #ddddd8;
+  --gray-400: #a0a09a;
+  --gray-600: #666660;
+  --accent:   #e8251a;
+  --accent-light: #fde8e7;
+  --success:  #22c55e;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+}
+html { font-size: 16px; }
+body {
+  font-family: var(--font-body);
+  background: var(--black);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  padding: 2rem 1rem;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(232,37,26,0.18) 0%, rgba(232,37,26,0.05) 40%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── WRAPPER ── */
+.form-wrapper { max-width: 720px; margin: 0 auto; position: relative; z-index: 1; }
+
+/* ── HEADER ── */
+.form-logo {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 1.75rem; padding: 0 .25rem;
+}
+.form-logo img { height: 32px; }
+.form-logo-text {
+  font-family: var(--font-display); font-size: 26px;
+  letter-spacing: 3px; color: var(--white);
+}
+.form-logo-sub { font-size: 12px; color: var(--gray-400); margin-top: 1px; }
+
+/* ── CONFIG BANNER ── */
+.config-banner {
+  background: rgba(232,37,26,.12); border: 1px solid rgba(232,37,26,.3);
+  border-radius: var(--radius-md); padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: #fca5a5; margin-bottom: 1.25rem; flex-wrap: wrap;
+}
+.config-banner.hidden { display: none; }
+.config-banner input {
+  flex: 1; min-width: 200px; padding: 6px 10px;
+  border: 1px solid rgba(232,37,26,.4);
+  border-radius: var(--radius-sm); font-size: 13px;
+  font-family: var(--font-body); background: rgba(255,255,255,.07); color: var(--white);
+}
+.config-banner input::placeholder { color: rgba(255,255,255,.3); }
+.config-banner button {
+  padding: 6px 14px; background: var(--accent); color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  font-size: 13px; font-family: var(--font-body); cursor: pointer;
+}
+
+/* ── SUCURSAL GUARDADA banner ── */
+.suc-guardada {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-md); padding: 10px 16px;
+  margin-bottom: 1.25rem;
+}
+.suc-guardada-label { font-size: 12px; color: var(--gray-400); }
+.suc-guardada-val { font-family: var(--font-display); font-size: 16px; letter-spacing: 1px; color: var(--white); }
+.suc-guardada-btn { font-size: 12px; color: var(--gray-600); background: none; border: none; cursor: pointer; text-decoration: underline; }
+.suc-guardada-btn:hover { color: var(--gray-400); }
+.suc-guardada.hidden { display: none; }
+
+/* ── CARD ── */
+.card {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: var(--radius-lg); overflow: hidden;
+  margin-bottom: 1rem; backdrop-filter: blur(4px);
+}
+.card-header {
+  background: rgba(232,37,26,.15);
+  border-bottom: 1px solid rgba(232,37,26,.2);
+  padding: 1rem 1.5rem;
+}
+.card-header h2 {
+  font-family: var(--font-display); font-size: 18px;
+  letter-spacing: 1px; color: var(--white);
+}
+.card-header p { font-size: 12px; color: var(--gray-400); margin-top: 3px; }
+.card-body { padding: 1.25rem 1.5rem; }
+
+/* ── FIELDS ── */
+.field { margin-bottom: 1.1rem; }
+.field label {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--gray-400);
+  display: block; margin-bottom: 6px;
+}
+.req { color: var(--accent); }
+.field input[type=text],
+.field input[type=date],
+.field select,
+.field textarea {
+  width: 100%; padding: 10px 14px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--white); transition: border .15s;
+}
+.field input::placeholder, .field textarea::placeholder { color: rgba(255,255,255,.25); }
+.field select option { background: #1a1a1a; color: var(--white); }
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: rgba(232,37,26,.6);
+  background: rgba(255,255,255,.09);
+}
+.field textarea { resize: vertical; min-height: 60px; padding: 10px 14px; }
+.hint { font-size: 11px; color: var(--gray-600); margin-top: 4px; }
+
+.radio-group { display: flex; gap: 20px; flex-wrap: wrap; }
+.radio-opt { display: flex; align-items: center; gap: 7px; font-size: 14px; color: var(--white); cursor: pointer; }
+.radio-opt input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+.section-divider {
+  display: flex; align-items: center; gap: 10px; margin: 1.5rem 0 1rem;
+}
+.section-divider span {
+  font-size: 10px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--gray-600); white-space: nowrap;
+}
+.section-divider::before, .section-divider::after {
+  content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.08);
+}
+
+/* ── ARTÍCULOS ── */
+.art-block {
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-md); padding: .875rem;
+  margin-bottom: .75rem; background: rgba(255,255,255,.03);
+}
+.art-block-title {
+  font-size: 10px; font-weight: 700; color: var(--accent);
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: .75rem;
+}
+.art-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.art-field label {
+  font-size: 10px; color: var(--gray-600); display: block;
+  margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+}
+.art-field input {
+  width: 100%; padding: 7px 10px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+  border-radius: var(--radius-sm); font-size: 13px;
+  font-family: var(--font-body); color: var(--white); transition: border .15s;
+}
+.art-field input::placeholder { color: rgba(255,255,255,.2); }
+.art-field input:focus { outline: none; border-color: rgba(232,37,26,.5); }
+.obs-field { margin-top: 8px; }
+.obs-field label {
+  font-size: 10px; color: var(--gray-600); display: block;
+  margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+}
+.obs-field input {
+  width: 100%; padding: 7px 10px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+  border-radius: var(--radius-sm); font-size: 13px;
+  font-family: var(--font-body); color: var(--white);
+}
+.obs-field input::placeholder { color: rgba(255,255,255,.2); }
+.obs-field input:focus { outline: none; border-color: rgba(232,37,26,.5); }
+
+.btn-remove {
+  float: right; font-size: 11px; color: var(--gray-600);
+  background: none; border: none; cursor: pointer; padding: 0 0 .5rem;
+}
+.btn-remove:hover { color: var(--accent); }
+.btn-add {
+  display: flex; align-items: center; gap: 6px; justify-content: center;
+  width: 100%; padding: 8px 14px; margin-top: .25rem;
+  font-size: 12px; color: var(--gray-400);
+  background: none; border: 1px dashed rgba(255,255,255,.15);
+  border-radius: var(--radius-md); cursor: pointer; transition: all .15s;
+  font-family: var(--font-body);
+}
+.btn-add:hover { border-color: rgba(232,37,26,.5); color: var(--accent); background: rgba(232,37,26,.05); }
+
+/* ── SUBMIT ── */
+.btn-submit {
+  width: 100%; padding: 14px; background: var(--accent);
+  border: none; border-radius: var(--radius-md);
+  font-family: var(--font-display); font-size: 20px; letter-spacing: 2px;
+  color: var(--white); cursor: pointer; transition: opacity .15s;
+}
+.btn-submit:hover { opacity: .88; }
+.btn-submit:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ── SPINNER ── */
+.spinner {
+  display: none; width: 18px; height: 18px; margin: 0 auto;
+  border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 1.5rem; right: 1.5rem;
+  background: var(--black); color: var(--white);
+  padding: 12px 20px; border-radius: var(--radius-md);
+  font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  opacity: 0; transform: translateY(8px);
+  transition: all .25s; pointer-events: none; z-index: 999;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.ok  { background: #065f46; }
+.toast.err { background: #991b1b; }
+
+/* ── ÉXITO ── */
+.success-screen {
+  display: none; text-align: center; padding: 3rem 1.5rem;
+}
+.success-screen.show { display: block; }
+.success-icon { font-size: 48px; margin-bottom: 1rem; }
+.success-title {
+  font-family: var(--font-display); font-size: 28px;
+  letter-spacing: 2px; color: var(--white); margin-bottom: 8px;
+}
+.success-sub { font-size: 14px; color: var(--gray-400); margin-bottom: 1.5rem; }
+.btn-nuevo {
+  padding: 10px 24px; background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15); border-radius: var(--radius-md);
+  color: var(--white); font-family: var(--font-body);
+  font-size: 14px; cursor: pointer; transition: all .15s;
+}
+.btn-nuevo:hover { background: rgba(255,255,255,.14); }
+</style>
+</head>
+<body>
+
+<div class="form-wrapper">
+
+  <!-- Logo -->
+  <div class="form-logo">
+    <img src="https://depocroma-max.github.io/croma-dashboard/tridente_solo.png" alt="Croma">
+    <div>
+      <div class="form-logo-text">CROMA</div>
+      <div class="form-logo-sub">Cierre de Caja · Sistema interno</div>
+    </div>
+  </div>
+
+  <!-- Config API -->
+  <div class="config-banner" id="configBanner">
+    ⚙ Primera vez: pegá la URL del Apps Script.
+    <input type="text" id="inputApiUrl" placeholder="https://script.google.com/macros/s/.../exec">
+    <button onclick="guardarApiUrl()">Guardar</button>
+  </div>
+
+  <!-- Sucursal guardada -->
+  <div class="suc-guardada hidden" id="sucGuardada">
+    <div>
+      <div class="suc-guardada-label">Sucursal de esta PC</div>
+      <div class="suc-guardada-val" id="sucGuardadaVal"></div>
+    </div>
+    <button class="suc-guardada-btn" onclick="cambiarSucursal()">Cambiar</button>
+  </div>
+
+  <!-- Formulario -->
+  <div id="formContent">
+
+    <div class="card">
+      <div class="card-header">
+        <h2>🧾 Cierre de jornada</h2>
+        <p>Completar al cierre · * campos obligatorios</p>
+      </div>
+      <div class="card-body">
+
+        <div class="field" id="fieldSucursal">
+          <label>Sucursal <span class="req">*</span></label>
+          <select id="sucursal" required onchange="ofrecerGuardarSucursal()">
+            <option value="">Elegir sucursal...</option>
+            <option>01 PASEO</option>
+            <option>05 WAVE</option>
+            <option>09 CIPO SAN MARTIN</option>
+            <option>10 PERITO MORENO</option>
+            <option>12 CENTENARIO</option>
+            <option>14 ROCA</option>
+          </select>
+          <p class="hint" id="hintGuardar" style="display:none">
+            ¿Guardamos esta sucursal para esta PC? 
+            <button onclick="confirmarGuardarSucursal()" style="background:none;border:none;color:#e8251a;cursor:pointer;font-size:11px;font-family:inherit;text-decoration:underline">Sí, guardar</button>
+          </p>
+        </div>
+
+        <div class="field">
+          <label>Nombre encargado/a <span class="req">*</span></label>
+          <input type="text" id="encargado" placeholder="Tu nombre...">
+        </div>
+        <div class="field">
+          <label>📅 Fecha <span class="req">*</span></label>
+          <input type="date" id="fecha">
+        </div>
+
+        <div class="section-divider"><span>Cierre operativo</span></div>
+
+        <div class="field">
+          <label>1️⃣ ¿Cargaron todos los remitos de hoy? <span class="req">*</span></label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="remitos" value="Si"> Sí</label>
+            <label class="radio-opt"><input type="radio" name="remitos" value="No"> No</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>2️⃣ ¿Hicieron salida a los artículos que mandaron a otro local? <span class="req">*</span></label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="salidas" value="Si"> Sí</label>
+            <label class="radio-opt"><input type="radio" name="salidas" value="No"> No</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>3️⃣ ¿Tuvieron diferencia de algún cupón? <span class="req">*</span></label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="diferencia" value="Si"> Sí</label>
+            <label class="radio-opt"><input type="radio" name="diferencia" value="No"> No</label>
+          </div>
+        </div>
+
+        <div class="section-divider"><span>Novedades</span></div>
+
+        <div class="field">
+          <label>🔧 ¿Hay algún problema de mantenimiento?</label>
+          <p class="hint">Ej: Reflectores quemados, etc. Solo si aplica.</p>
+          <textarea id="mantenimiento" placeholder="Describir el problema..."></textarea>
+        </div>
+        <div class="field">
+          <label>👤 ¿Faltó alguien? ¿Quién y por qué?</label>
+          <input type="text" id="ausente" placeholder="Solo completar si aplica...">
+        </div>
+        <div class="field">
+          <label>⭐ ¿Probaron algún franquero/a? ¿A quién?</label>
+          <input type="text" id="franquero" placeholder="Solo completar si aplica...">
+        </div>
+        <div class="field">
+          <label>¿Les gustó cómo trabajó?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="gustoFranquero" value="Si"> Sí</label>
+            <label class="radio-opt"><input type="radio" name="gustoFranquero" value="No"> No</label>
+            <label class="radio-opt"><input type="radio" name="gustoFranquero" value=""> No aplica</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PEDIDOS -->
+    <div class="card">
+      <div class="card-header">
+        <h2>4️⃣ Artículos para PEDIR</h2>
+        <p>Cosas que piden los clientes y no tenés stock · Solo si aplica</p>
+      </div>
+      <div class="card-body">
+        <div id="pedidos-container"></div>
+        <button class="btn-add" onclick="agregarBloque('pedidos-container','PEDIDO')">+ Agregar artículo para pedir</button>
+      </div>
+    </div>
+
+    <!-- REPOSICIONES -->
+    <div class="card">
+      <div class="card-header">
+        <h2>5️⃣ Artículos para REPONER</h2>
+        <p>Cosas que ya llegaron y hay que distribuir · Solo si aplica</p>
+      </div>
+      <div class="card-body">
+        <div id="repos-container"></div>
+        <button class="btn-add" onclick="agregarBloque('repos-container','REPOSICION')">+ Agregar artículo para reponer</button>
+      </div>
+    </div>
+
+    <!-- ENVIAR -->
+    <div class="card">
+      <div class="card-body">
+        <button class="btn-submit" id="btnEnviar" onclick="enviarFormulario()">
+          <span id="btnText">ENVIAR CIERRE</span>
+          <div class="spinner" id="spinner"></div>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /formContent -->
+
+  <!-- PANTALLA ÉXITO -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">✅</div>
+    <div class="success-title">¡Cierre enviado!</div>
+    <div class="success-sub" id="successSub"></div>
+    <button class="btn-nuevo" onclick="nuevoFormulario()">Completar otro cierre</button>
+  </div>
+
+</div><!-- /form-wrapper -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+var API_URL  = localStorage.getItem('croma_api_url') || '';
+var SUC_GUARDADA = localStorage.getItem('croma_sucursal') || '';
+var contadores = { pedidos: 0, repos: 0 };
+
+// ── INIT ──
+(function(){
+  // Fecha de hoy
+  var hoy = new Date();
+  document.getElementById('fecha').value =
+    hoy.getFullYear() + '-' +
+    String(hoy.getMonth()+1).padStart(2,'0') + '-' +
+    String(hoy.getDate()).padStart(2,'0');
+
+  // API URL
+  if (API_URL) document.getElementById('configBanner').classList.add('hidden');
+
+  // Sucursal guardada
+  if (SUC_GUARDADA) {
+    document.getElementById('sucGuardada').classList.remove('hidden');
+    document.getElementById('sucGuardadaVal').textContent = SUC_GUARDADA;
+    document.getElementById('fieldSucursal').style.display = 'none';
+  }
+})();
+
+// ── CONFIG API ──
+function guardarApiUrl() {
+  var url = document.getElementById('inputApiUrl').value.trim();
+  if (!url || !url.startsWith('https://script.google.com')) {
+    toast('URL inválida', 'err'); return;
+  }
+  API_URL = url;
+  localStorage.setItem('croma_api_url', url);
+  document.getElementById('configBanner').classList.add('hidden');
+  toast('URL guardada ✓', 'ok');
+}
+
+// ── SUCURSAL GUARDADA ──
+function ofrecerGuardarSucursal() {
+  var val = document.getElementById('sucursal').value;
+  document.getElementById('hintGuardar').style.display = val ? 'block' : 'none';
+}
+function confirmarGuardarSucursal() {
+  var val = document.getElementById('sucursal').value;
+  if (!val) return;
+  SUC_GUARDADA = val;
+  localStorage.setItem('croma_sucursal', val);
+  document.getElementById('sucGuardadaVal').textContent = val;
+  document.getElementById('sucGuardada').classList.remove('hidden');
+  document.getElementById('fieldSucursal').style.display = 'none';
+  document.getElementById('hintGuardar').style.display = 'none';
+  toast('Sucursal guardada para esta PC ✓', 'ok');
+}
+function cambiarSucursal() {
+  localStorage.removeItem('croma_sucursal');
+  SUC_GUARDADA = '';
+  document.getElementById('sucGuardada').classList.add('hidden');
+  document.getElementById('fieldSucursal').style.display = '';
+  document.getElementById('sucursal').value = '';
+}
+
+// ── BLOQUES ARTÍCULOS ──
+function agregarBloque(containerId, tipo) {
+  var esRepo = tipo === 'REPOSICION';
+  var key = esRepo ? 'repos' : 'pedidos';
+  contadores[key]++;
+  var n = contadores[key];
+  var label = esRepo ? 'Reposición ' + n : 'Pedido ' + n;
+  var id = (esRepo ? 'repo' : 'ped') + n;
+  var div = document.createElement('div');
+  div.className = 'art-block';
+  div.id = 'block-' + id;
+  div.innerHTML =
+    '<button class="btn-remove" onclick="eliminarBloque(\'block-'+id+'\')">✕ quitar</button>' +
+    '<div class="art-block-title">' + label + '</div>' +
+    '<div class="art-grid">' +
+      '<div class="art-field"><label>COD</label><input type="text" id="cod-'+id+'" placeholder="QK142" style="text-transform:uppercase"></div>' +
+      '<div class="art-field"><label>Talle</label><input type="text" id="talle-'+id+'" placeholder="M / 060"></div>' +
+      '<div class="art-field"><label>Color</label><input type="text" id="color-'+id+'" placeholder="Navy"></div>' +
+      '<div class="art-field"><label>Cantidad</label><input type="text" id="cant-'+id+'" placeholder="2" inputmode="numeric"></div>' +
+    '</div>' +
+    '<div class="obs-field"><label>Observación</label><input type="text" id="obs-'+id+'" placeholder="Urgente, para vitrina..."></div>';
+  document.getElementById(containerId).appendChild(div);
+}
+function eliminarBloque(id) {
+  var el = document.getElementById(id);
+  if (el) el.remove();
+}
+function leerBloques(prefix, container) {
+  var result = [];
+  document.getElementById(container).querySelectorAll('.art-block').forEach(function(b) {
+    var idB = b.id.replace('block-','');
+    var cod = document.getElementById('cod-'+idB);
+    if (cod && cod.value.trim()) {
+      result.push({
+        cod:      cod.value.trim().toUpperCase(),
+        talle:    (document.getElementById('talle-'+idB)||{}).value || '',
+        color:    (document.getElementById('color-'+idB)||{}).value || '',
+        cantidad: (document.getElementById('cant-'+idB)||{}).value  || '1',
+        obs:      (document.getElementById('obs-'+idB)||{}).value   || ''
+      });
+    }
+  });
+  return result;
+}
+
+// ── HELPERS ──
+function getRadio(name) {
+  var r = document.querySelector('input[name="'+name+'"]:checked');
+  return r ? r.value : '';
+}
+function toast(msg, tipo) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (tipo||'');
+  setTimeout(function(){ t.className = 'toast'; }, 3500);
+}
+
+// ── ENVIAR ──
+async function enviarFormulario() {
+  if (!API_URL) {
+    toast('⚠ Configurá la URL del Apps Script primero', 'err'); return;
+  }
+  var suc = SUC_GUARDADA || document.getElementById('sucursal').value;
+  var enc = document.getElementById('encargado').value.trim();
+  var fecha = document.getElementById('fecha').value;
+  var remitos    = getRadio('remitos');
+  var salidas    = getRadio('salidas');
+  var diferencia = getRadio('diferencia');
+
+  if (!suc || !enc || !fecha || !remitos || !salidas || !diferencia) {
+    toast('⚠ Completá todos los campos obligatorios', 'err'); return;
+  }
+
+  var datos = {
+    sucursal: suc, encargado: enc, fecha: fecha,
+    remitos: remitos, salidas: salidas, diferencia: diferencia,
+    mantenimiento: document.getElementById('mantenimiento').value.trim(),
+    ausente:       document.getElementById('ausente').value.trim(),
+    franquero:     document.getElementById('franquero').value.trim(),
+    gustoFranquero: getRadio('gustoFranquero'),
+    pedidos:      leerBloques('ped','pedidos-container'),
+    reposiciones: leerBloques('repo','repos-container')
+  };
+
+  var btn = document.getElementById('btnEnviar');
+  btn.disabled = true;
+  document.getElementById('btnText').textContent = 'Enviando...';
+  document.getElementById('spinner').style.display = 'block';
+
+  try {
+    // Apps Script no acepta POST desde otros dominios sin configuración extra
+    // Usamos GET con los datos serializados como parámetro JSON
+    var url = API_URL + '?accion=guardarPedido&datos=' + encodeURIComponent(JSON.stringify(datos));
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (data.ok) {
+      document.getElementById('formContent').style.display = 'none';
+      var ss = document.getElementById('successScreen');
+      document.getElementById('successSub').textContent =
+        suc + ' · ' + enc + ' · ' + fecha;
+      ss.classList.add('show');
+    } else {
+      toast('Error: ' + (data.error || 'desconocido'), 'err');
+      btn.disabled = false;
+      document.getElementById('btnText').textContent = 'ENVIAR CIERRE';
+      document.getElementById('spinner').style.display = 'none';
+    }
+  } catch(e) {
+    toast('Error de conexión. Verificá la URL.', 'err');
+    btn.disabled = false;
+    document.getElementById('btnText').textContent = 'ENVIAR CIERRE';
+    document.getElementById('spinner').style.display = 'none';
+  }
+}
+
+function nuevoFormulario() {
+  document.getElementById('successScreen').classList.remove('show');
+  document.getElementById('formContent').style.display = '';
+  document.getElementById('encargado').value = '';
+  document.getElementById('mantenimiento').value = '';
+  document.getElementById('ausente').value = '';
+  document.getElementById('franquero').value = '';
+  document.querySelectorAll('input[type=radio]').forEach(function(r){ r.checked = false; });
+  document.getElementById('pedidos-container').innerHTML = '';
+  document.getElementById('repos-container').innerHTML = '';
+  contadores = { pedidos: 0, repos: 0 };
+  document.getElementById('btnEnviar').disabled = false;
+  document.getElementById('btnText').textContent = 'ENVIAR CIERRE';
+}
+</script>
+</body>
+</html>
