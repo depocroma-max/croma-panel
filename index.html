@@ -176,9 +176,9 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--b
 }
 .stat-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-400); margin-bottom: 6px; }
 .stat-val { font-family: var(--font-display); font-size: 32px; letter-spacing: 1px; color: var(--black); line-height: 1; }
-.stat-val.pend { color: #b45309; }
-.stat-val.proc { color: #15803d; }
-.stat-val.env  { color: #1d4ed8; }
+.stat-val.rev  { color: #dc2626; }
+.stat-val.proc { color: #d97706; }
+.stat-val.sol  { color: #15803d; }
 .stat-sub { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
 
 /* ── FILTROS ── */
@@ -258,9 +258,9 @@ td { padding: 10px 16px; vertical-align: middle; }
   padding: 3px 10px; border-radius: 20px;
   font-size: 11px; font-weight: 600; white-space: nowrap;
 }
-.badge-estado.Pendiente { background: #fef3c7; color: #92400e; }
-.badge-estado.Procesado { background: #dcfce7; color: #15803d; }
-.badge-estado.Enviado   { background: #dbeafe; color: #1d4ed8; }
+.badge-estado.EnProceso  { background: #fef3c7; color: #92400e; }
+.badge-estado.Revisar    { background: #fee2e2; color: #991b1b; }
+.badge-estado.Solucionado{ background: #dcfce7; color: #15803d; }
 
 /* ── BOTONES ACCIÓN ── */
 .actions { display: flex; gap: 5px; }
@@ -270,10 +270,12 @@ td { padding: 10px 16px; vertical-align: middle; }
   cursor: pointer; white-space: nowrap; transition: all 0.12s;
   background: var(--white); font-family: var(--font-body);
 }
-.btn-accion.proc { border-color: #16a34a; color: #16a34a; }
-.btn-accion.proc:hover { background: #16a34a; color: var(--white); }
-.btn-accion.env  { border-color: #2563eb; color: #2563eb; }
-.btn-accion.env:hover  { background: #2563eb; color: var(--white); }
+.btn-accion.sol  { border-color: #16a34a; color: #16a34a; }
+.btn-accion.sol:hover  { background: #16a34a; color: var(--white); }
+.btn-accion.rev  { border-color: #dc2626; color: #dc2626; }
+.btn-accion.rev:hover  { background: #dc2626; color: var(--white); }
+.btn-accion.proc { border-color: #d97706; color: #d97706; }
+.btn-accion.proc:hover { background: #d97706; color: var(--white); }
 
 /* ── EMPTY / LOADING ── */
 .empty-state { text-align: center; padding: 3rem; color: var(--gray-400); font-size: 14px; }
@@ -368,6 +370,7 @@ td { padding: 10px 16px; vertical-align: middle; }
       <div class="dash-header-title" id="headerTitle">Pedidos de hoy</div>
       <div class="dash-header-right">
         <span class="fecha-badge" id="fechaHoy"></span>
+        <span class="fecha-badge" id="ultimaActualizacion" style="color:var(--gray-400)"></span>
         <button class="btn-refresh" onclick="cargarDatos()">↻ Actualizar</button>
       </div>
     </header>
@@ -390,19 +393,19 @@ td { padding: 10px 16px; vertical-align: middle; }
           <div class="stat-sub">pedidos + reposiciones</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Pendientes</div>
-          <div class="stat-val pend" id="statPend">—</div>
-          <div class="stat-sub">sin procesar</div>
+          <div class="stat-label">Revisar</div>
+          <div class="stat-val rev" id="statPend">—</div>
+          <div class="stat-sub">para revisar</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Procesados</div>
+          <div class="stat-label">En proceso</div>
           <div class="stat-val proc" id="statProc">—</div>
-          <div class="stat-sub">listos para enviar</div>
+          <div class="stat-sub">en proceso</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Enviados</div>
-          <div class="stat-val env" id="statEnv">—</div>
-          <div class="stat-sub">completados</div>
+          <div class="stat-label">Solucionados</div>
+          <div class="stat-val sol" id="statEnv">—</div>
+          <div class="stat-sub">solucionados</div>
         </div>
       </div>
 
@@ -419,9 +422,9 @@ td { padding: 10px 16px; vertical-align: middle; }
         </select>
         <select id="filtroEstado" onchange="renderPanel()">
           <option value="">Todos los estados</option>
-          <option value="Pendiente">Pendiente</option>
-          <option value="Procesado">Procesado</option>
-          <option value="Enviado">Enviado</option>
+          <option value="EnProceso">En proceso</option>
+          <option value="Revisar">Revisar</option>
+          <option value="Solucionado">Solucionado</option>
         </select>
         <input type="text" id="filtroCod" placeholder="Buscar COD..." oninput="renderPanel()">
       </div>
@@ -477,6 +480,13 @@ var API_URL = localStorage.getItem('croma_api_url') || '';
     document.getElementById('sidebar').classList.remove('mobile-open');
     document.getElementById('sidebarOverlay').classList.remove('open');
   });
+
+  // Auto-refresh cada 2 minutos
+  setInterval(function(){
+    if (API_URL) {
+      cargarDatos();
+    }
+  }, 2 * 60 * 1000);
 })();
 
 // ── VISTAS ──
@@ -518,9 +528,16 @@ async function cargarDatos() {
     var resp = await fetch(API_URL + '?accion=obtenerPedidosHoy');
     var data = await resp.json();
     if (data.ok) {
-      todosLosPedidos = data.pedidos || [];
+      todosLosPedidos = (data.pedidos || []).map(function(p){
+        // compatibilidad con estados viejos
+        if (p.estado === 'Pendiente') p.estado = 'EnProceso';
+        if (p.estado === 'Procesado') p.estado = 'EnProceso';
+        if (p.estado === 'Enviado')   p.estado = 'Solucionado';
+        return p;
+      });
       actualizarStats();
       renderPanel();
+      mostrarUltimaActualizacion();
     } else {
       document.getElementById('panelBody').innerHTML =
         '<div class="empty-state">⚠ ' + (data.error || 'Error desconocido') + '</div>';
@@ -531,37 +548,40 @@ async function cargarDatos() {
   }
 }
 
-async function cambiarEstado(id, cod, talle, nuevoEstado, bkey) {
-  var badge = document.getElementById('b-' + bkey);
+async function cambiarEstado(idx, nuevoEstado) {
+  var p = todosLosPedidos[idx];
+  if (!p) return;
+  var badge = document.getElementById('b-' + idx);
   if (badge) { badge.textContent = '...'; badge.className = 'badge-estado'; }
   try {
-    var url = API_URL + '?accion=actualizarEstado&id=' + encodeURIComponent(id) +
-      '&cod=' + encodeURIComponent(cod) + '&talle=' + encodeURIComponent(talle) +
+    var url = API_URL + '?accion=actualizarEstado' +
+      '&id='     + encodeURIComponent(p.id) +
+      '&cod='    + encodeURIComponent(p.cod) +
+      '&talle='  + encodeURIComponent(p.talle || '') +
       '&estado=' + encodeURIComponent(nuevoEstado);
     var resp = await fetch(url);
     var data = await resp.json();
     if (data.ok) {
-      todosLosPedidos.forEach(function(p){
-        if (p.id === id && p.cod === cod && p.talle === talle) p.estado = nuevoEstado;
-      });
+      todosLosPedidos[idx].estado = nuevoEstado;
       actualizarStats();
       renderPanel();
       toast('Estado actualizado: ' + nuevoEstado, 'success');
-    } else { toast('Error: ' + (data.error||'desconocido'), 'error'); }
+      mostrarUltimaActualizacion();
+    } else { toast('Error: ' + (data.error || 'desconocido'), 'error'); }
   } catch(e) { toast('Error de conexión', 'error'); }
 }
 
 // ── STATS ──
 function actualizarStats() {
   var total = todosLosPedidos.length;
-  var pend  = todosLosPedidos.filter(function(p){ return p.estado === 'Pendiente'; }).length;
-  var proc  = todosLosPedidos.filter(function(p){ return p.estado === 'Procesado'; }).length;
-  var env   = todosLosPedidos.filter(function(p){ return p.estado === 'Enviado'; }).length;
+  var rev   = todosLosPedidos.filter(function(p){ return p.estado === 'Revisar'; }).length;
+  var proc  = todosLosPedidos.filter(function(p){ return p.estado === 'EnProceso'; }).length;
+  var sol   = todosLosPedidos.filter(function(p){ return p.estado === 'Solucionado'; }).length;
   document.getElementById('statTotal').textContent = total;
-  document.getElementById('statPend').textContent  = pend;
+  document.getElementById('statPend').textContent  = rev;
   document.getElementById('statProc').textContent  = proc;
-  document.getElementById('statEnv').textContent   = env;
-  document.getElementById('badge-pend').textContent = pend;
+  document.getElementById('statEnv').textContent   = sol;
+  document.getElementById('badge-pend').textContent = rev + proc;
 }
 
 // ── FILTRADO ──
@@ -612,7 +632,7 @@ function renderPanel() {
     html += '<thead><tr><th>Hora</th><th>Tipo</th><th>COD</th><th>Talle</th><th>Color</th><th>Cant.</th><th>Observación</th><th>Encargado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
 
     lista.forEach(function(p){
-      var bkey = btoa(p.id + '|' + p.cod + '|' + p.talle).replace(/[+=\/]/g,'');
+      var idx = todosLosPedidos.indexOf(p);
       html += '<tr>';
       html += '<td class="hora">' + p.hora + '</td>';
       html += '<td><span class="badge-tipo ' + p.tipo + '">' + p.tipo + '</span></td>';
@@ -622,21 +642,30 @@ function renderPanel() {
       html += '<td style="font-weight:600">' + p.cantidad + '</td>';
       html += '<td class="obs-cell" title="' + (p.obs||'') + '">' + (p.obs || '<span style="color:#ccc">—</span>') + '</td>';
       html += '<td class="encargado-cell">' + p.encargado + '</td>';
-      html += '<td><span class="badge-estado ' + p.estado + '" id="b-' + bkey + '">' + p.estado + '</span></td>';
+      html += '<td><span class="badge-estado ' + p.estado + '" id="b-' + idx + '">' + p.estado + '</span></td>';
       html += '<td><div class="actions">';
-      if (p.estado === 'Pendiente') {
-        html += '<button class="btn-accion proc" onclick="cambiarEstado(\'' + p.id + '\',\'' + p.cod + '\',\'' + p.talle + '\',\'Procesado\',\'' + bkey + '\')">✓ Procesar</button>';
-        html += '<button class="btn-accion env"  onclick="cambiarEstado(\'' + p.id + '\',\'' + p.cod + '\',\'' + p.talle + '\',\'Enviado\',\''   + bkey + '\')">↗ Enviar</button>';
-      } else if (p.estado === 'Procesado') {
-        html += '<button class="btn-accion env"  onclick="cambiarEstado(\'' + p.id + '\',\'' + p.cod + '\',\'' + p.talle + '\',\'Enviado\',\''   + bkey + '\')">↗ Enviar</button>';
+      if (p.estado !== 'Solucionado') {
+        html += '<button class="btn-accion sol"  onclick="cambiarEstado(' + idx + ',\'Solucionado\')">✓ Solucionado</button>';
+        html += '<button class="btn-accion proc" onclick="cambiarEstado(' + idx + ',\'EnProceso\')">⏳ En proceso</button>';
+        html += '<button class="btn-accion rev"  onclick="cambiarEstado(' + idx + ',\'Revisar\')">⚠ Revisar</button>';
       } else {
-        html += '<span style="color:var(--gray-400);font-size:12px">✓ Completado</span>';
+        html += '<span style="color:var(--gray-400);font-size:12px">✓ Solucionado</span>';
       }
       html += '</div></td></tr>';
     });
     html += '</tbody></table></div></div>';
   });
   body.innerHTML = html;
+}
+
+// ── ÚLTIMA ACTUALIZACIÓN ──
+function mostrarUltimaActualizacion() {
+  var el = document.getElementById('ultimaActualizacion');
+  if (!el) return;
+  var ahora = new Date();
+  var h = String(ahora.getHours()).padStart(2,'0');
+  var m = String(ahora.getMinutes()).padStart(2,'0');
+  el.textContent = 'Actualizado ' + h + ':' + m;
 }
 
 // ── TOAST ──
