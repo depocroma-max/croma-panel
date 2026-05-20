@@ -388,11 +388,95 @@ td { padding: 10px 16px; vertical-align: middle; }
   .filters-bar input, .filters-bar select { width: 100%; }
   .suc-section { margin: 0 0 1rem; }
 }
+
+/* ── LOGIN ── */
+.login-screen {
+  min-height: 100vh; display: flex;
+  align-items: center; justify-content: center;
+  position: fixed; inset: 0; z-index: 999;
+  background: var(--black);
+}
+.login-screen.hidden { display: none; }
+.login-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(232,37,26,0.22) 0%, rgba(232,37,26,0.07) 35%, transparent 65%);
+}
+.login-card {
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem; width: 100%; max-width: 380px;
+  backdrop-filter: blur(10px);
+}
+.login-logo {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 6px;
+}
+.login-tridente { height: 36px; }
+.login-brand {
+  font-family: var(--font-display); font-size: 32px;
+  letter-spacing: 3px; color: var(--white);
+}
+.login-sub { font-size: 13px; color: var(--gray-400); margin-bottom: 2rem; }
+.login-form { display: flex; flex-direction: column; gap: 14px; }
+.login-field { display: flex; flex-direction: column; gap: 6px; }
+.login-field label {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--gray-400);
+}
+.login-field input {
+  height: 44px; padding: 0 14px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body); font-size: 14px;
+  color: var(--white); transition: border .15s;
+}
+.login-field input:focus {
+  outline: none; border-color: rgba(232,37,26,.6);
+  background: rgba(255,255,255,.09);
+}
+.login-field input::placeholder { color: rgba(255,255,255,.25); }
+.login-error {
+  font-size: 12px; color: #f87171; min-height: 16px; text-align: center;
+}
+.login-btn {
+  height: 46px; background: var(--accent);
+  border: none; border-radius: var(--radius-md);
+  font-family: var(--font-display); font-size: 20px; letter-spacing: 2px;
+  color: var(--white); cursor: pointer; transition: opacity .15s; margin-top: 4px;
+}
+.login-btn:hover { opacity: .88; }
+
 </style>
 </head>
 <body>
 
-<div class="dash-app">
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-bg"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="https://depocroma-max.github.io/croma-dashboard/tridente_solo.png" class="login-tridente" alt="Croma">
+      <span class="login-brand">CROMA</span>
+    </div>
+    <p class="login-sub">Panel de gestión interno</p>
+    <div class="login-form">
+      <div class="login-field">
+        <label>Usuario</label>
+        <input type="text" id="loginUser" placeholder="Tu usuario" autocomplete="username">
+      </div>
+      <div class="login-field">
+        <label>Contraseña</label>
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button class="login-btn" id="btnLogin" onclick="hacerLogin()">Ingresar</button>
+    </div>
+  </div>
+</div>
+
+<div class="dash-app" id="dashApp" style="display:none">
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
@@ -552,6 +636,38 @@ td { padding: 10px 16px; vertical-align: middle; }
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <script>
+
+// ── LOGIN ──
+var CREDENCIALES = { admin: 'cromacajas' };
+
+function hacerLogin() {
+  var user = document.getElementById('loginUser').value.trim();
+  var pass = document.getElementById('loginPass').value;
+  var err  = document.getElementById('loginError');
+
+  if (CREDENCIALES[user] && CREDENCIALES[user] === pass) {
+    sessionStorage.setItem('croma_auth', '1');
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('dashApp').style.display = '';
+    err.textContent = '';
+    if (API_URL) cargarDatos();
+  } else {
+    err.textContent = 'Usuario o contraseña incorrectos';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+  }
+}
+
+// Enter en los campos del login
+document.addEventListener('DOMContentLoaded', function(){
+  ['loginUser','loginPass'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') hacerLogin();
+    });
+  });
+});
+
 var SUCURSALES = ['01 PASEO','05 WAVE','09 CIPO SAN MARTIN','10 PERITO MORENO','12 CENTENARIO','14 ROCA'];
 var todosLosPedidos = [];
 var vistaActual = 'hoy'; // hoy | pedidos | reposiciones
@@ -565,9 +681,18 @@ var API_URL = localStorage.getItem('croma_api_url') || '';
   document.getElementById('fechaHoy').textContent =
     dias[hoy.getDay()] + ' ' + hoy.getDate() + ' ' + meses[hoy.getMonth()] + ' ' + hoy.getFullYear();
 
+  // Verificar sesión activa
+  if (sessionStorage.getItem('croma_auth') === '1') {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('dashApp').style.display = '';
+    if (API_URL) {
+      document.getElementById('configBanner').classList.add('hidden');
+      cargarDatos();
+    }
+  }
+
   if (API_URL) {
     document.getElementById('configBanner').classList.add('hidden');
-    cargarDatos();
   }
 
   // Sidebar toggle
