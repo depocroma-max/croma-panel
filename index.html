@@ -277,6 +277,77 @@ td { padding: 10px 16px; vertical-align: middle; }
 .btn-accion.proc { border-color: #d97706; color: #d97706; }
 .btn-accion.proc:hover { background: #d97706; color: var(--white); }
 
+/* ── CAJAS ── */
+.cajas-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; margin-bottom: 1.25rem;
+}
+.cajas-resumen {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 1.5rem;
+}
+.cajas-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem;
+}
+.caja-card {
+  background: var(--white); border: 1px solid var(--gray-100);
+  border-radius: var(--radius-lg); padding: 1.1rem 1.25rem;
+  box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+}
+.caja-card.alerta { border-color: #fca5a5; border-left: 4px solid #dc2626; }
+.caja-card.ok     { border-color: #86efac; border-left: 4px solid #16a34a; }
+.caja-card.sin-cierre { border-color: var(--gray-200); opacity: .65; }
+.caja-card-header {
+  display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px;
+}
+.caja-suc {
+  font-family: var(--font-display); font-size: 16px;
+  letter-spacing: 1px; color: var(--black);
+}
+.caja-hora { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+.caja-encargado { font-size: 12px; color: var(--gray-600); margin-top: 1px; }
+.caja-status-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+}
+.caja-status-dot.ok      { background: #16a34a; }
+.caja-status-dot.alerta  { background: #dc2626; }
+.caja-status-dot.sin-cierre { background: var(--gray-300); }
+.caja-checks {
+  display: flex; flex-direction: column; gap: 6px;
+  border-top: 1px solid var(--gray-100); padding-top: 10px; margin-bottom: 10px;
+}
+.caja-check-row {
+  display: flex; align-items: center; justify-content: space-between; font-size: 12px;
+}
+.caja-check-label { color: var(--gray-600); }
+.caja-check-val { font-weight: 600; }
+.caja-check-val.ok  { color: #16a34a; }
+.caja-check-val.bad { color: #dc2626; }
+.caja-check-val.neutral { color: var(--gray-400); }
+.caja-extras { display: flex; flex-direction: column; gap: 5px; border-top: 1px solid var(--gray-100); padding-top: 10px; }
+.caja-extra-row { display: flex; gap: 8px; font-size: 12px; }
+.caja-extra-icon { flex-shrink: 0; color: var(--gray-400); }
+.caja-extra-text { color: var(--gray-600); line-height: 1.4; }
+.caja-sin-cierre-msg {
+  text-align: center; padding: 1.5rem 0;
+  color: var(--gray-400); font-size: 13px;
+}
+.date-picker-wrap { display: flex; align-items: center; gap: 8px; }
+.date-picker-wrap input[type=date] {
+  padding: 6px 12px; border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm); font-size: 13px;
+  font-family: var(--font-body); background: var(--white);
+}
+.date-picker-wrap input:focus { outline: none; border-color: var(--black); }
+.btn-date { 
+  padding: 6px 14px; border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm); font-size: 13px;
+  font-family: var(--font-body); background: var(--white);
+  cursor: pointer; color: var(--gray-600); transition: all .15s;
+}
+.btn-date:hover { background: var(--black); color: var(--white); border-color: var(--black); }
+@media(max-width:900px){ .cajas-grid{ grid-template-columns: repeat(2,1fr); } }
+@media(max-width:600px){ .cajas-grid{ grid-template-columns: 1fr; } .cajas-resumen{ grid-template-columns: 1fr 1fr; } }
+
 /* ── EMPTY / LOADING ── */
 .empty-state { text-align: center; padding: 3rem; color: var(--gray-400); font-size: 14px; }
 .loading-state { text-align: center; padding: 3rem; color: var(--gray-400); }
@@ -348,6 +419,11 @@ td { padding: 10px 16px; vertical-align: middle; }
       <button class="sidebar-nav-btn" onclick="setVista('reposiciones')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
         <span class="nav-label">Solo Reposiciones</span>
+      </button>
+      <button class="sidebar-nav-btn" onclick="setVista('cajas')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        <span class="nav-label">Cajas de locales</span>
+        <span class="nav-badge" id="badge-alertas" style="background:#dc2626;display:none">!</span>
       </button>
     </nav>
 
@@ -434,6 +510,37 @@ td { padding: 10px 16px; vertical-align: middle; }
         <div class="empty-state">Configurá la URL de tu Apps Script para comenzar.</div>
       </div>
 
+      <!-- VISTA CAJAS -->
+      <div id="cajasBody" style="display:none">
+        <div class="cajas-header">
+          <div style="font-family:var(--font-display);font-size:18px;letter-spacing:1px">Cierre de locales</div>
+          <div class="date-picker-wrap">
+            <input type="date" id="cajasfecha" onchange="cargarCajas()">
+            <button class="btn-date" onclick="irHoyCajas()">Hoy</button>
+          </div>
+        </div>
+        <div class="cajas-resumen">
+          <div class="stat-card">
+            <div class="stat-label">Cerraron</div>
+            <div class="stat-val sol" id="cajaStat-cerro">—</div>
+            <div class="stat-sub">de 6 sucursales</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Sin cierre</div>
+            <div class="stat-val rev" id="cajaStat-sinCierre">—</div>
+            <div class="stat-sub">todavía no enviaron</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Con alertas</div>
+            <div class="stat-val" id="cajaStat-alertas" style="color:#dc2626">—</div>
+            <div class="stat-sub">requieren atención</div>
+          </div>
+        </div>
+        <div class="cajas-grid" id="cajasGrid">
+          <div class="loading-state"><div class="spinner"></div></div>
+        </div>
+      </div>
+
     </div>
   </main>
 </div>
@@ -492,12 +599,21 @@ var API_URL = localStorage.getItem('croma_api_url') || '';
 // ── VISTAS ──
 function setVista(v) {
   vistaActual = v;
-  var titulos = { hoy: 'Pedidos de hoy', pedidos: 'Solo Pedidos', reposiciones: 'Solo Reposiciones' };
+  var titulos = { hoy: 'Pedidos de hoy', pedidos: 'Solo Pedidos', reposiciones: 'Solo Reposiciones', cajas: 'Cajas de locales' };
   document.getElementById('headerTitle').textContent = titulos[v] || 'Rotación';
   document.querySelectorAll('.sidebar-nav-btn').forEach(function(b, i){
-    b.classList.toggle('active', ['hoy','pedidos','reposiciones'][i] === v);
+    b.classList.toggle('active', ['hoy','pedidos','reposiciones','cajas'][i] === v);
   });
-  renderPanel();
+  var esCajas = v === 'cajas';
+  document.getElementById('panelBody').style.display  = esCajas ? 'none' : '';
+  document.getElementById('cajasBody').style.display  = esCajas ? '' : 'none';
+  // ocultar filtros en vista cajas
+  document.querySelector('.filters-bar').style.display = esCajas ? 'none' : '';
+  if (esCajas) {
+    irHoyCajas();
+  } else {
+    renderPanel();
+  }
 }
 
 // ── CONFIG ──
@@ -656,6 +772,122 @@ function renderPanel() {
     html += '</tbody></table></div></div>';
   });
   body.innerHTML = html;
+}
+
+// ── CAJAS ──
+function irHoyCajas() {
+  var hoy = new Date();
+  var yyyy = hoy.getFullYear();
+  var mm   = String(hoy.getMonth()+1).padStart(2,'0');
+  var dd   = String(hoy.getDate()).padStart(2,'0');
+  document.getElementById('cajasfecha').value = yyyy+'-'+mm+'-'+dd;
+  cargarCajas();
+}
+
+async function cargarCajas() {
+  if (!API_URL) return;
+  var fecha = document.getElementById('cajasfecha').value;
+  document.getElementById('cajasGrid').innerHTML =
+    '<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div><p>Cargando cierres...</p></div>';
+  try {
+    var resp = await fetch(API_URL + '?accion=obtenerCajas&fecha=' + encodeURIComponent(fecha));
+    var data = await resp.json();
+    if (data.ok) {
+      renderCajas(data.cajas);
+    } else {
+      document.getElementById('cajasGrid').innerHTML =
+        '<div class="empty-state" style="grid-column:1/-1">⚠ ' + (data.error||'Error') + '</div>';
+    }
+  } catch(e) {
+    document.getElementById('cajasGrid').innerHTML =
+      '<div class="empty-state" style="grid-column:1/-1">⚠ Error de conexión</div>';
+  }
+}
+
+function renderCajas(cajas) {
+  var cerro    = cajas.filter(function(c){ return !c.sinCierre; }).length;
+  var sinCierre= cajas.filter(function(c){ return c.sinCierre; }).length;
+  var alertas  = cajas.filter(function(c){ return c.alerta; }).length;
+
+  document.getElementById('cajaStat-cerro').textContent     = cerro;
+  document.getElementById('cajaStat-sinCierre').textContent = sinCierre;
+  document.getElementById('cajaStat-alertas').textContent   = alertas;
+
+  // badge en sidebar
+  var badgeAlertas = document.getElementById('badge-alertas');
+  if (alertas > 0) {
+    badgeAlertas.style.display = '';
+    badgeAlertas.textContent = alertas;
+  } else {
+    badgeAlertas.style.display = 'none';
+  }
+
+  var html = '';
+  cajas.forEach(function(c) {
+    if (c.sinCierre) {
+      html += '<div class="caja-card sin-cierre">';
+      html += '<div class="caja-card-header">';
+      html += '<div><div class="caja-suc">' + c.sucursal + '</div></div>';
+      html += '<div class="caja-status-dot sin-cierre"></div>';
+      html += '</div>';
+      html += '<div class="caja-sin-cierre-msg">Sin cierre registrado</div>';
+      html += '</div>';
+      return;
+    }
+
+    var clase = c.alerta ? 'alerta' : 'ok';
+    html += '<div class="caja-card ' + clase + '">';
+    html += '<div class="caja-card-header">';
+    html += '<div>';
+    html += '<div class="caja-suc">' + c.sucursal + '</div>';
+    html += '<div class="caja-hora">Cierre: ' + (c.hora || '—') + '</div>';
+    html += '<div class="caja-encargado">' + (c.encargado || '') + '</div>';
+    html += '</div>';
+    html += '<div class="caja-status-dot ' + clase + '"></div>';
+    html += '</div>';
+
+    // Checks operativos
+    html += '<div class="caja-checks">';
+    html += checkRow('Remitos cargados',  c.remitos);
+    html += checkRow('Salidas registradas', c.salidas);
+    html += checkRow('Diferencia cupón',  c.diferencia, true);
+    html += '</div>';
+
+    // Extras
+    var tieneExtra = c.ausente || c.franquero || c.mantenimiento;
+    if (tieneExtra) {
+      html += '<div class="caja-extras">';
+      if (c.ausente)       html += extraRow('👤', 'Ausente: ' + c.ausente);
+      if (c.franquero)     html += extraRow('⭐', 'Franquero: ' + c.franquero + (c.gustoFranquero ? ' · ' + c.gustoFranquero : ''));
+      if (c.mantenimiento) html += extraRow('🔧', c.mantenimiento);
+      html += '</div>';
+    }
+
+    html += '</div>';
+  });
+
+  document.getElementById('cajasGrid').innerHTML = html;
+}
+
+function checkRow(label, val, invertido) {
+  // invertido = true significa que "Si" es malo (ej: diferencia de cupón)
+  var esOk = invertido ? (val === 'No' || val === '') : (val === 'Si');
+  var esBad = invertido ? (val === 'Si') : (val === 'No');
+  var clase = esOk ? 'ok' : (esBad ? 'bad' : 'neutral');
+  var texto = val || '—';
+  if (val === 'Si') texto = '✓ Sí';
+  if (val === 'No') texto = '✗ No';
+  return '<div class="caja-check-row">' +
+    '<span class="caja-check-label">' + label + '</span>' +
+    '<span class="caja-check-val ' + clase + '">' + texto + '</span>' +
+    '</div>';
+}
+
+function extraRow(icon, text) {
+  return '<div class="caja-extra-row">' +
+    '<span class="caja-extra-icon">' + icon + '</span>' +
+    '<span class="caja-extra-text">' + text + '</span>' +
+    '</div>';
 }
 
 // ── ÚLTIMA ACTUALIZACIÓN ──
