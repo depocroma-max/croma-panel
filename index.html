@@ -2,290 +2,635 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Panel Rotación · Croma</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rotación · Croma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --rojo:#8B1A1A;
-  --rojo-oscuro:#6B1212;
-  --rojo-claro:#FDF2F2;
-  --rojo-borde:#F0D0D0;
-  --rojo-acento:#B22222;
-  --rojo-suave:#FAE8E8;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --black:    #0d0d0d;
+  --white:    #ffffff;
+  --gray-50:  #f7f7f5;
+  --gray-100: #efefec;
+  --gray-200: #ddddd8;
+  --gray-400: #a0a09a;
+  --gray-600: #666660;
+  --gray-800: #333330;
+  --accent:   #e8251a;
+  --accent-light: #fde8e7;
+  --success:  #22c55e;
+  --warning:  #f59e0b;
+  --danger:   #ef4444;
+  --sidebar-w: 240px;
+  --sidebar-w-collapsed: 64px;
+  --header-h: 56px;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
 }
-body{font-family:'Segoe UI',Arial,sans-serif;background:#f0ecec;color:#222;min-height:100vh}
+html { font-size: 16px; }
+body { font-family: var(--font-body); background: var(--gray-50); color: var(--black); min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
-/* CONFIG BANNER — solo visible hasta que se configure la URL */
-.config-banner{background:#fef3c7;border-bottom:1px solid #fbbf24;padding:.75rem 1.5rem;font-size:13px;color:#92400e;display:flex;align-items:center;gap:10px}
-.config-banner.hidden{display:none}
-.config-banner input{flex:1;padding:6px 10px;border:1px solid #fbbf24;border-radius:6px;font-size:13px;font-family:inherit;background:#fff}
-.config-banner button{padding:6px 14px;background:#92400e;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap}
+/* ── LAYOUT ── */
+.dash-app { display: flex; min-height: 100vh; }
 
-.top-bar{background:var(--rojo);padding:.875rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(139,26,26,.3)}
-.top-bar h1{color:#fff;font-size:17px;font-weight:600;display:flex;align-items:center;gap:8px}
-.fecha-badge{background:rgba(255,255,255,.18);color:#fff;font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.3)}
-.btn-top{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .2s;text-decoration:none;font-family:inherit}
-.btn-top:hover{background:rgba(255,255,255,.28)}
-
-.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:1.25rem 1.5rem}
-.stat{background:#fff;border-radius:10px;border:1px solid #e8dede;padding:.875rem 1rem;box-shadow:0 1px 3px rgba(139,26,26,.06)}
-.stat-label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
-.stat-val{font-size:24px;font-weight:700;color:#222}
-.stat-val.pend{color:#b45309}
-.stat-val.proc{color:#1D9E75}
-.stat-val.env{color:#185FA5}
-
-.filters{padding:0 1.5rem .875rem;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.filters select,.filters input{
-  padding:7px 12px;border:1px solid #ddd;border-radius:8px;
-  font-size:13px;background:#fff;color:#222;font-family:inherit
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); background: var(--black);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 100; transition: width 0.25s ease; overflow: hidden;
 }
-.filters input{min-width:180px}
-.filters select:focus,.filters input:focus{outline:none;border-color:var(--rojo)}
+.sidebar.collapsed { width: var(--sidebar-w-collapsed); }
+.sidebar-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; height: var(--header-h);
+  border-bottom: 1px solid #1a1a1a; flex-shrink: 0;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-display); font-size: 20px;
+  letter-spacing: 2px; color: var(--white);
+  white-space: nowrap; overflow: hidden;
+}
+.sidebar-logo img { height: 24px; flex-shrink: 0; }
+.sidebar-toggle {
+  background: transparent; border: 1px solid #333;
+  border-radius: var(--radius-sm); color: var(--gray-400);
+  width: 28px; height: 28px; cursor: pointer; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.sidebar-toggle:hover { color: var(--white); border-color: #555; }
+.sidebar.collapsed .sidebar-toggle { transform: rotate(180deg); }
 
-.badge-tipo{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
-.badge-tipo.PEDIDO{background:#fef3c7;color:#92400e}
-.badge-tipo.REPOSICION{background:#dbeafe;color:#1e40af}
+.sidebar-section-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--gray-600);
+  padding: 16px 20px 6px; white-space: nowrap; overflow: hidden;
+}
+.sidebar.collapsed .sidebar-section-label { opacity: 0; }
 
-.suc-section{margin:0 1.5rem 1.25rem;background:#fff;border-radius:12px;border:1px solid #e8dede;overflow:hidden;box-shadow:0 1px 4px rgba(139,26,26,.06)}
-.suc-header{padding:.875rem 1.25rem;background:var(--rojo-claro);border-bottom:1px solid var(--rojo-borde);display:flex;align-items:center;gap:10px}
-.suc-badge{background:var(--rojo);color:#fff;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px}
-.suc-counts{font-size:12px;color:#888}
+.sidebar-nav { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+.sidebar-nav-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border: none; background: transparent;
+  color: var(--gray-400); font-family: var(--font-body);
+  font-size: 13px; font-weight: 400; cursor: pointer;
+  border-radius: var(--radius-md); transition: all 0.15s;
+  text-align: left; width: 100%; white-space: nowrap;
+}
+.sidebar-nav-btn:hover { background: rgba(255,255,255,0.06); color: var(--white); }
+.sidebar-nav-btn.active { background: rgba(232,37,26,0.15); color: var(--white); font-weight: 500; }
+.sidebar-nav-btn.active svg { color: var(--accent); }
+.sidebar-nav-btn svg { flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; background: var(--accent); color: var(--white);
+  font-size: 10px; font-weight: 600; padding: 1px 6px;
+  border-radius: 10px; flex-shrink: 0;
+}
+.sidebar.collapsed .nav-label, .sidebar.collapsed .nav-badge,
+.sidebar.collapsed .sidebar-section-label { display: none; }
 
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--rojo-borde);white-space:nowrap;background:#fffafa}
-tbody tr{border-bottom:1px solid #faf0f0;transition:background .15s}
-tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:var(--rojo-claro)}
-td{padding:9px 12px;vertical-align:middle}
-.cod{font-family:monospace;font-size:12px;font-weight:700;color:var(--rojo);background:var(--rojo-suave);padding:2px 6px;border-radius:5px}
-.hora{color:#aaa;font-size:12px;white-space:nowrap}
-.encargado{color:#888;font-size:12px}
+.sidebar-bottom { padding: 12px 8px; border-top: 1px solid #1a1a1a; flex-shrink: 0; }
+.sidebar-config-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border: none; background: transparent;
+  color: var(--gray-600); font-family: var(--font-body);
+  font-size: 13px; cursor: pointer; border-radius: var(--radius-md);
+  transition: all 0.15s; width: 100%; white-space: nowrap;
+}
+.sidebar-config-btn:hover { background: rgba(255,255,255,0.06); color: var(--white); }
 
-.badge-estado{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
-.badge-estado.Pendiente{background:#fef3c7;color:#92400e}
-.badge-estado.Procesado{background:#d1fae5;color:#065f46}
-.badge-estado.Enviado{background:#dbeafe;color:#1e40af}
+/* ── MAIN ── */
+.dash-main {
+  flex: 1; margin-left: var(--sidebar-w);
+  display: flex; flex-direction: column;
+  transition: margin-left 0.25s ease; min-height: 100vh;
+}
+.dash-main.sidebar-collapsed { margin-left: var(--sidebar-w-collapsed); }
 
-.actions{display:flex;gap:5px;flex-wrap:nowrap}
-.btn-accion{padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;border:1px solid;cursor:pointer;white-space:nowrap;transition:all .15s;background:#fff;font-family:inherit}
-.btn-accion.proc{border-color:#1D9E75;color:#1D9E75}
-.btn-accion.proc:hover{background:#d1fae5}
-.btn-accion.env{border-color:#185FA5;color:#185FA5}
-.btn-accion.env:hover{background:#dbeafe}
+/* ── HEADER ── */
+.dash-header {
+  height: var(--header-h); background: var(--white);
+  border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0 1.5rem; position: sticky; top: 0; z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
+.mobile-menu-btn {
+  display: none; flex-direction: column; gap: 5px;
+  background: transparent; border: none; cursor: pointer; padding: 4px;
+}
+.mobile-menu-btn span { display: block; width: 20px; height: 2px; background: var(--black); border-radius: 2px; }
+.dash-header-title { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; color: var(--black); flex: 1; }
+.dash-header-right { display: flex; align-items: center; gap: 10px; }
+.fecha-badge {
+  font-size: 12px; color: var(--gray-600);
+  background: var(--gray-50); border: 1px solid var(--gray-200);
+  padding: 4px 12px; border-radius: 20px;
+}
+.btn-refresh {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md); background: transparent;
+  font-family: var(--font-body); font-size: 13px;
+  color: var(--gray-600); cursor: pointer; transition: all 0.15s;
+}
+.btn-refresh:hover { background: var(--black); color: var(--white); border-color: var(--black); }
 
-.empty{text-align:center;padding:3rem 1.5rem;color:#aaa}
-.loading{text-align:center;padding:3rem;color:var(--rojo)}
-.spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--rojo-borde);border-top-color:var(--rojo);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ── CONTENT ── */
+.dash-content { padding: 1.5rem; }
 
-.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;white-space:nowrap}
-.toast.show{opacity:1}
-.toast.ok{background:#1D9E75}
-.toast.err{background:var(--rojo-acento)}
+/* ── CONFIG BANNER ── */
+.config-banner {
+  background: #fef3c7; border: 1px solid #fbbf24;
+  border-radius: var(--radius-md); padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: #92400e; margin-bottom: 1.5rem;
+}
+.config-banner.hidden { display: none; }
+.config-banner input {
+  flex: 1; padding: 6px 10px; border: 1px solid #fbbf24;
+  border-radius: var(--radius-sm); font-size: 13px;
+  font-family: var(--font-body); background: var(--white);
+}
+.config-banner button {
+  padding: 6px 14px; background: #92400e; color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  font-size: 13px; font-family: var(--font-body);
+  cursor: pointer; white-space: nowrap;
+}
 
-@media(max-width:600px){
-  .stats-bar{grid-template-columns:1fr 1fr}
-  .filters{flex-direction:column;align-items:stretch}
-  .filters input,.filters select{width:100%}
-  .suc-section{margin:0 .75rem 1rem}
+/* ── STATS ── */
+.dash-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 1.5rem; }
+.stat-card {
+  background: var(--white); border: 1px solid var(--gray-100);
+  border-radius: var(--radius-lg); padding: 1.1rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+.stat-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-400); margin-bottom: 6px; }
+.stat-val { font-family: var(--font-display); font-size: 32px; letter-spacing: 1px; color: var(--black); line-height: 1; }
+.stat-val.pend { color: #b45309; }
+.stat-val.proc { color: #15803d; }
+.stat-val.env  { color: #1d4ed8; }
+.stat-sub { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+
+/* ── FILTROS ── */
+.filters-bar {
+  background: var(--white); border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md); padding: 12px 16px;
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);
+}
+.filters-bar select, .filters-bar input {
+  padding: 7px 12px; border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm); font-size: 13px;
+  font-family: var(--font-body); background: var(--white); color: var(--black);
+}
+.filters-bar input { min-width: 180px; }
+.filters-bar select:focus, .filters-bar input:focus { outline: none; border-color: var(--black); }
+
+/* ── SUCURSAL SECTION ── */
+.suc-section {
+  background: var(--white); border: 1px solid var(--gray-100);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow-sm); margin-bottom: 1.25rem;
+}
+.suc-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px; border-bottom: 1px solid var(--gray-100);
+  background: var(--gray-50);
+}
+.suc-badge {
+  font-family: var(--font-display); font-size: 15px; letter-spacing: 1px;
+  background: var(--black); color: var(--white);
+  padding: 3px 12px; border-radius: var(--radius-sm);
+}
+.suc-counts { font-size: 12px; color: var(--gray-400); }
+.suc-pend-badge {
+  margin-left: auto; background: var(--accent-light);
+  color: var(--accent); font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 10px;
+}
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  padding: 8px 16px; text-align: left; font-size: 10px;
+  font-weight: 600; color: var(--gray-400); text-transform: uppercase;
+  letter-spacing: 0.5px; border-bottom: 1px solid var(--gray-100);
+  white-space: nowrap; background: var(--white);
+}
+tbody tr { border-bottom: 1px solid var(--gray-100); transition: background 0.12s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--gray-50); }
+td { padding: 10px 16px; vertical-align: middle; }
+.cod {
+  font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700;
+  color: var(--accent); background: var(--accent-light);
+  padding: 2px 7px; border-radius: var(--radius-sm);
+}
+.hora { color: var(--gray-400); font-size: 12px; white-space: nowrap; }
+.encargado-cell { color: var(--gray-600); font-size: 12px; }
+.obs-cell {
+  font-size: 12px; color: var(--gray-600); font-style: italic;
+  max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ── BADGES TIPO ── */
+.badge-tipo {
+  display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm);
+  font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+}
+.badge-tipo.PEDIDO   { background: #fef3c7; color: #92400e; }
+.badge-tipo.REPOSICION { background: #dbeafe; color: #1e40af; }
+
+/* ── BADGES ESTADO ── */
+.badge-estado {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.badge-estado.Pendiente { background: #fef3c7; color: #92400e; }
+.badge-estado.Procesado { background: #dcfce7; color: #15803d; }
+.badge-estado.Enviado   { background: #dbeafe; color: #1d4ed8; }
+
+/* ── BOTONES ACCIÓN ── */
+.actions { display: flex; gap: 5px; }
+.btn-accion {
+  padding: 4px 10px; border-radius: var(--radius-sm);
+  font-size: 11px; font-weight: 600; border: 1px solid;
+  cursor: pointer; white-space: nowrap; transition: all 0.12s;
+  background: var(--white); font-family: var(--font-body);
+}
+.btn-accion.proc { border-color: #16a34a; color: #16a34a; }
+.btn-accion.proc:hover { background: #16a34a; color: var(--white); }
+.btn-accion.env  { border-color: #2563eb; color: #2563eb; }
+.btn-accion.env:hover  { background: #2563eb; color: var(--white); }
+
+/* ── EMPTY / LOADING ── */
+.empty-state { text-align: center; padding: 3rem; color: var(--gray-400); font-size: 14px; }
+.loading-state { text-align: center; padding: 3rem; color: var(--gray-400); }
+.spinner {
+  display: inline-block; width: 24px; height: 24px;
+  border: 2px solid var(--gray-200); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── TOAST ── */
+.dash-toast {
+  position: fixed; bottom: 2rem; right: 2rem;
+  background: var(--black); color: var(--white);
+  padding: 12px 20px; border-radius: var(--radius-md);
+  font-size: 13px; box-shadow: var(--shadow-md);
+  opacity: 0; transform: translateY(8px);
+  transition: all 0.25s; pointer-events: none; z-index: 999;
+}
+.dash-toast.show { opacity: 1; transform: translateY(0); }
+.dash-toast.success { background: #065f46; }
+.dash-toast.error   { background: #991b1b; }
+
+/* ── SIDEBAR OVERLAY MOBILE ── */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+.sidebar-overlay.open { display: block; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; width: var(--sidebar-w) !important; }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .sidebar-toggle { display: none; }
+  .dash-main { margin-left: 0 !important; }
+  .mobile-menu-btn { display: flex; }
+  .dash-content { padding: 1rem; }
+  .dash-stats { grid-template-columns: 1fr 1fr; }
+  .filters-bar { flex-direction: column; align-items: stretch; }
+  .filters-bar input, .filters-bar select { width: 100%; }
+  .suc-section { margin: 0 0 1rem; }
 }
 </style>
 </head>
 <body>
 
-<!-- Banner de configuración — se oculta una vez guardada la URL -->
-<div class="config-banner" id="config-banner">
-  ⚙️ <strong>Primera vez:</strong> Pegá la URL de tu Apps Script y guardá.
-  <input type="text" id="input-url" placeholder="https://script.google.com/macros/s/TU_ID/exec">
-  <button onclick="guardarURL()">Guardar URL</button>
+<div class="dash-app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <img src="https://depocroma-max.github.io/croma-dashboard/tridente_solo.png" alt="Croma">
+        <span>CROMA</span>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle">&#8249;</button>
+    </div>
+
+    <div class="sidebar-section-label">Rotación</div>
+
+    <nav class="sidebar-nav">
+      <button class="sidebar-nav-btn active" onclick="setVista('hoy')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="nav-label">Pedidos de hoy</span>
+        <span class="nav-badge" id="badge-pend">0</span>
+      </button>
+      <button class="sidebar-nav-btn" onclick="setVista('pedidos')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span class="nav-label">Solo Pedidos</span>
+      </button>
+      <button class="sidebar-nav-btn" onclick="setVista('reposiciones')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <span class="nav-label">Solo Reposiciones</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <button class="sidebar-config-btn" onclick="cambiarURL()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        <span class="nav-label">Configurar API</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="dash-main" id="dashMain">
+
+    <!-- HEADER -->
+    <header class="dash-header">
+      <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="dash-header-title" id="headerTitle">Pedidos de hoy</div>
+      <div class="dash-header-right">
+        <span class="fecha-badge" id="fechaHoy"></span>
+        <button class="btn-refresh" onclick="cargarDatos()">↻ Actualizar</button>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="dash-content">
+
+      <!-- Config banner -->
+      <div class="config-banner" id="configBanner">
+        ⚙ <strong>Primera vez:</strong> Pegá la URL de tu Apps Script.
+        <input type="text" id="inputUrl" placeholder="https://script.google.com/macros/s/.../exec">
+        <button onclick="guardarURL()">Guardar</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="dash-stats">
+        <div class="stat-card">
+          <div class="stat-label">Artículos hoy</div>
+          <div class="stat-val" id="statTotal">—</div>
+          <div class="stat-sub">pedidos + reposiciones</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pendientes</div>
+          <div class="stat-val pend" id="statPend">—</div>
+          <div class="stat-sub">sin procesar</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Procesados</div>
+          <div class="stat-val proc" id="statProc">—</div>
+          <div class="stat-sub">listos para enviar</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Enviados</div>
+          <div class="stat-val env" id="statEnv">—</div>
+          <div class="stat-sub">completados</div>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filters-bar">
+        <select id="filtroSuc" onchange="renderPanel()">
+          <option value="">Todas las sucursales</option>
+          <option>01 PASEO</option>
+          <option>05 WAVE</option>
+          <option>09 CIPO SAN MARTIN</option>
+          <option>10 PERITO MORENO</option>
+          <option>12 CENTENARIO</option>
+          <option>14 ROCA</option>
+        </select>
+        <select id="filtroEstado" onchange="renderPanel()">
+          <option value="">Todos los estados</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="Procesado">Procesado</option>
+          <option value="Enviado">Enviado</option>
+        </select>
+        <input type="text" id="filtroCod" placeholder="Buscar COD..." oninput="renderPanel()">
+      </div>
+
+      <!-- Panel -->
+      <div id="panelBody">
+        <div class="empty-state">Configurá la URL de tu Apps Script para comenzar.</div>
+      </div>
+
+    </div>
+  </main>
 </div>
 
-<div class="top-bar">
-  <h1>🔄 Panel Rotación · Croma</h1>
-  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-    <span class="fecha-badge" id="fecha-hoy"></span>
-    <button class="btn-top" onclick="cargarDatos()">↻ Actualizar</button>
-    <button class="btn-top" onclick="cambiarURL()" title="Cambiar URL de Apps Script">⚙</button>
-  </div>
-</div>
+<!-- TOAST -->
+<div class="dash-toast" id="dashToast"></div>
 
-<div class="stats-bar">
-  <div class="stat"><div class="stat-label">Artículos hoy</div><div class="stat-val" id="stat-total">—</div></div>
-  <div class="stat"><div class="stat-label">Pendientes</div><div class="stat-val pend" id="stat-pend">—</div></div>
-  <div class="stat"><div class="stat-label">Procesados</div><div class="stat-val proc" id="stat-proc">—</div></div>
-  <div class="stat"><div class="stat-label">Enviados</div><div class="stat-val env" id="stat-env">—</div></div>
-</div>
-
-<div class="filters">
-  <select id="filtro-suc" onchange="renderPanel()">
-    <option value="">Todas las sucursales</option>
-    <option>01 PASEO</option>
-    <option>05 WAVE</option>
-    <option>09 CIPO SAN MARTIN</option>
-    <option>10 PERITO MORENO</option>
-    <option>12 CENTENARIO</option>
-    <option>14 ROCA</option>
-  </select>
-  <select id="filtro-tipo" onchange="renderPanel()">
-    <option value="">Pedidos y Reposiciones</option>
-    <option value="PEDIDO">Solo Pedidos</option>
-    <option value="REPOSICION">Solo Reposiciones</option>
-  </select>
-  <select id="filtro-estado" onchange="renderPanel()">
-    <option value="">Todos los estados</option>
-    <option value="Pendiente">Pendiente</option>
-    <option value="Procesado">Procesado</option>
-    <option value="Enviado">Enviado</option>
-  </select>
-  <input type="text" id="filtro-cod" placeholder="Buscar COD..." oninput="renderPanel()">
-</div>
-
-<div id="panel-body">
-  <div class="empty">Configurá la URL de tu Apps Script para comenzar.</div>
-</div>
-
-<div class="toast" id="toast"></div>
+<!-- SIDEBAR OVERLAY MOBILE -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <script>
-var SUCURSALES_ORDEN = ['01 PASEO','05 WAVE','09 CIPO SAN MARTIN','10 PERITO MORENO','12 CENTENARIO','14 ROCA'];
+var SUCURSALES = ['01 PASEO','05 WAVE','09 CIPO SAN MARTIN','10 PERITO MORENO','12 CENTENARIO','14 ROCA'];
 var todosLosPedidos = [];
-var APPS_SCRIPT_URL = localStorage.getItem('croma_api_url') || '';
+var vistaActual = 'hoy'; // hoy | pedidos | reposiciones
+var API_URL = localStorage.getItem('croma_api_url') || '';
 
-// Init
+// ── INIT ──
 (function(){
   var hoy = new Date();
   var dias  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   var meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-  document.getElementById('fecha-hoy').textContent =
-    dias[hoy.getDay()]+' '+hoy.getDate()+' '+meses[hoy.getMonth()]+' '+hoy.getFullYear();
+  document.getElementById('fechaHoy').textContent =
+    dias[hoy.getDay()] + ' ' + hoy.getDate() + ' ' + meses[hoy.getMonth()] + ' ' + hoy.getFullYear();
 
-  if (APPS_SCRIPT_URL) {
-    document.getElementById('config-banner').classList.add('hidden');
+  if (API_URL) {
+    document.getElementById('configBanner').classList.add('hidden');
     cargarDatos();
-  } else {
-    document.getElementById('input-url').value = '';
   }
+
+  // Sidebar toggle
+  document.getElementById('sidebarToggle').addEventListener('click', function(){
+    var sb = document.getElementById('sidebar');
+    var main = document.getElementById('dashMain');
+    sb.classList.toggle('collapsed');
+    main.classList.toggle('sidebar-collapsed');
+  });
+
+  // Mobile menu
+  document.getElementById('mobileMenuBtn').addEventListener('click', function(){
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+    document.getElementById('sidebarOverlay').classList.toggle('open');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', function(){
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+  });
 })();
 
+// ── VISTAS ──
+function setVista(v) {
+  vistaActual = v;
+  var titulos = { hoy: 'Pedidos de hoy', pedidos: 'Solo Pedidos', reposiciones: 'Solo Reposiciones' };
+  document.getElementById('headerTitle').textContent = titulos[v] || 'Rotación';
+  document.querySelectorAll('.sidebar-nav-btn').forEach(function(b, i){
+    b.classList.toggle('active', ['hoy','pedidos','reposiciones'][i] === v);
+  });
+  renderPanel();
+}
+
+// ── CONFIG ──
 function guardarURL() {
-  var url = document.getElementById('input-url').value.trim();
+  var url = document.getElementById('inputUrl').value.trim();
   if (!url || !url.startsWith('https://script.google.com')) {
-    mostrarToast('⚠ URL inválida — debe empezar con https://script.google.com', 'err');
-    return;
+    toast('URL inválida', 'error'); return;
   }
-  APPS_SCRIPT_URL = url;
+  API_URL = url;
   localStorage.setItem('croma_api_url', url);
-  document.getElementById('config-banner').classList.add('hidden');
-  mostrarToast('✓ URL guardada', 'ok');
+  document.getElementById('configBanner').classList.add('hidden');
+  toast('URL guardada ✓', 'success');
   cargarDatos();
 }
-
 function cambiarURL() {
-  document.getElementById('config-banner').classList.remove('hidden');
-  document.getElementById('input-url').value = APPS_SCRIPT_URL;
-  document.getElementById('input-url').focus();
+  var banner = document.getElementById('configBanner');
+  banner.classList.remove('hidden');
+  document.getElementById('inputUrl').value = API_URL;
+  document.getElementById('inputUrl').focus();
 }
 
-async function apiCall(accion, params) {
-  params = params || {};
-  params.accion = accion;
-  var qs = Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&');
-  var url = APPS_SCRIPT_URL + '?' + qs;
-  var resp = await fetch(url);
-  return await resp.json();
-}
-
+// ── API ──
 async function cargarDatos() {
-  if (!APPS_SCRIPT_URL) return;
-  document.getElementById('panel-body').innerHTML =
-    '<div class="loading"><div class="spinner"></div><p style="margin-top:12px;font-size:14px;color:#888">Cargando pedidos...</p></div>';
+  if (!API_URL) return;
+  document.getElementById('panelBody').innerHTML =
+    '<div class="loading-state"><div class="spinner"></div><p>Cargando pedidos...</p></div>';
   try {
-    var data = await apiCall('obtenerPedidosHoy');
+    var resp = await fetch(API_URL + '?accion=obtenerPedidosHoy');
+    var data = await resp.json();
     if (data.ok) {
       todosLosPedidos = data.pedidos || [];
       actualizarStats();
       renderPanel();
     } else {
-      mostrarError('Error: ' + (data.error || 'desconocido'));
+      document.getElementById('panelBody').innerHTML =
+        '<div class="empty-state">⚠ ' + (data.error || 'Error desconocido') + '</div>';
     }
   } catch(e) {
-    mostrarError('No se pudo conectar con Apps Script. Verificá la URL y los permisos CORS.');
+    document.getElementById('panelBody').innerHTML =
+      '<div class="empty-state">⚠ No se pudo conectar. Verificá la URL y los permisos.</div>';
   }
 }
 
-function actualizarStats() {
-  var total = todosLosPedidos.length;
-  var pend  = todosLosPedidos.filter(function(p){ return p.estado==='Pendiente'; }).length;
-  var proc  = todosLosPedidos.filter(function(p){ return p.estado==='Procesado'; }).length;
-  var env   = todosLosPedidos.filter(function(p){ return p.estado==='Enviado'; }).length;
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-pend').textContent  = pend;
-  document.getElementById('stat-proc').textContent  = proc;
-  document.getElementById('stat-env').textContent   = env;
+async function cambiarEstado(id, cod, talle, nuevoEstado, bkey) {
+  var badge = document.getElementById('b-' + bkey);
+  if (badge) { badge.textContent = '...'; badge.className = 'badge-estado'; }
+  try {
+    var url = API_URL + '?accion=actualizarEstado&id=' + encodeURIComponent(id) +
+      '&cod=' + encodeURIComponent(cod) + '&talle=' + encodeURIComponent(talle) +
+      '&estado=' + encodeURIComponent(nuevoEstado);
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (data.ok) {
+      todosLosPedidos.forEach(function(p){
+        if (p.id === id && p.cod === cod && p.talle === talle) p.estado = nuevoEstado;
+      });
+      actualizarStats();
+      renderPanel();
+      toast('Estado actualizado: ' + nuevoEstado, 'success');
+    } else { toast('Error: ' + (data.error||'desconocido'), 'error'); }
+  } catch(e) { toast('Error de conexión', 'error'); }
 }
 
-function filtrarPedidos() {
-  var suc    = document.getElementById('filtro-suc').value;
-  var tipo   = document.getElementById('filtro-tipo').value;
-  var estado = document.getElementById('filtro-estado').value;
-  var cod    = document.getElementById('filtro-cod').value.trim().toUpperCase();
+// ── STATS ──
+function actualizarStats() {
+  var total = todosLosPedidos.length;
+  var pend  = todosLosPedidos.filter(function(p){ return p.estado === 'Pendiente'; }).length;
+  var proc  = todosLosPedidos.filter(function(p){ return p.estado === 'Procesado'; }).length;
+  var env   = todosLosPedidos.filter(function(p){ return p.estado === 'Enviado'; }).length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statPend').textContent  = pend;
+  document.getElementById('statProc').textContent  = proc;
+  document.getElementById('statEnv').textContent   = env;
+  document.getElementById('badge-pend').textContent = pend;
+}
+
+// ── FILTRADO ──
+function filtrar() {
+  var suc    = document.getElementById('filtroSuc').value;
+  var estado = document.getElementById('filtroEstado').value;
+  var cod    = document.getElementById('filtroCod').value.trim().toUpperCase();
   return todosLosPedidos.filter(function(p) {
+    if (vistaActual === 'pedidos'      && p.tipo !== 'PEDIDO')      return false;
+    if (vistaActual === 'reposiciones' && p.tipo !== 'REPOSICION')  return false;
     if (suc    && p.sucursal !== suc)     return false;
-    if (tipo   && p.tipo !== tipo)         return false;
-    if (estado && p.estado !== estado)     return false;
-    if (cod    && p.cod.indexOf(cod) < 0)  return false;
+    if (estado && p.estado !== estado)    return false;
+    if (cod    && p.cod.indexOf(cod) < 0) return false;
     return true;
   });
 }
 
+// ── RENDER ──
 function renderPanel() {
-  var pedidos = filtrarPedidos();
-  var body = document.getElementById('panel-body');
+  var pedidos = filtrar();
+  var body = document.getElementById('panelBody');
   if (pedidos.length === 0) {
-    body.innerHTML = '<div class="empty">📭 No hay artículos con esos filtros para hoy.</div>';
+    body.innerHTML = '<div class="empty-state">📭 No hay artículos para mostrar.</div>';
     return;
   }
+
   var grupos = {};
-  SUCURSALES_ORDEN.forEach(function(s){ grupos[s] = []; });
-  pedidos.forEach(function(p) {
+  SUCURSALES.forEach(function(s){ grupos[s] = []; });
+  pedidos.forEach(function(p){
     if (!grupos[p.sucursal]) grupos[p.sucursal] = [];
     grupos[p.sucursal].push(p);
   });
 
   var html = '';
-  SUCURSALES_ORDEN.forEach(function(suc) {
+  SUCURSALES.forEach(function(suc){
     var lista = grupos[suc];
     if (!lista || lista.length === 0) return;
-    var pend = lista.filter(function(p){ return p.estado==='Pendiente'; }).length;
+    var pend = lista.filter(function(p){ return p.estado === 'Pendiente'; }).length;
+
     html += '<div class="suc-section">';
-    html += '<div class="suc-header"><span class="suc-badge">'+suc+'</span>';
-    html += '<span class="suc-counts">'+lista.length+' artículo'+(lista.length!==1?'s':'')+' · '+pend+' pendiente'+(pend!==1?'s':'')+'</span></div>';
+    html += '<div class="suc-header">';
+    html += '<span class="suc-badge">' + suc + '</span>';
+    html += '<span class="suc-counts">' + lista.length + ' artículo' + (lista.length !== 1 ? 's' : '') + '</span>';
+    if (pend > 0) html += '<span class="suc-pend-badge">' + pend + ' pendiente' + (pend !== 1 ? 's' : '') + '</span>';
+    html += '</div>';
+
     html += '<div class="table-wrap"><table>';
     html += '<thead><tr><th>Hora</th><th>Tipo</th><th>COD</th><th>Talle</th><th>Color</th><th>Cant.</th><th>Observación</th><th>Encargado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
-    lista.forEach(function(p) {
-      var uid = p.id+'__'+p.cod+'__'+p.talle;
+
+    lista.forEach(function(p){
+      var bkey = btoa(p.id + '|' + p.cod + '|' + p.talle).replace(/[+=\/]/g,'');
       html += '<tr>';
-      html += '<td class="hora">'+p.hora+'</td>';
-      html += '<td><span class="badge-tipo '+p.tipo+'">'+p.tipo+'</span></td>';
-      html += '<td><span class="cod">'+p.cod+'</span></td>';
-      html += '<td>'+(p.talle||'—')+'</td>';
-      html += '<td>'+(p.color||'—')+'</td>';
-      html += '<td style="font-weight:600">'+p.cantidad+'</td>';
-      html += '<td class="encargado" style="font-style:italic;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(p.obs||'')+'">'+( p.obs ? p.obs : '<span style="color:#ccc">—</span>' )+'</td>';
-      html += '<td class="encargado">'+p.encargado+'</td>';
-      html += '<td><span class="badge-estado '+p.estado+'" id="badge-'+btoa(uid).replace(/=/g,'')+'">'+p.estado+'</span></td>';
+      html += '<td class="hora">' + p.hora + '</td>';
+      html += '<td><span class="badge-tipo ' + p.tipo + '">' + p.tipo + '</span></td>';
+      html += '<td><span class="cod">' + p.cod + '</span></td>';
+      html += '<td>' + (p.talle || '—') + '</td>';
+      html += '<td>' + (p.color || '—') + '</td>';
+      html += '<td style="font-weight:600">' + p.cantidad + '</td>';
+      html += '<td class="obs-cell" title="' + (p.obs||'') + '">' + (p.obs || '<span style="color:#ccc">—</span>') + '</td>';
+      html += '<td class="encargado-cell">' + p.encargado + '</td>';
+      html += '<td><span class="badge-estado ' + p.estado + '" id="b-' + bkey + '">' + p.estado + '</span></td>';
       html += '<td><div class="actions">';
-      var bkey = btoa(uid).replace(/=/g,'');
-      if (p.estado==='Pendiente') {
-        html += '<button class="btn-accion proc" onclick="cambiarEstado(\''+p.id+'\',\''+p.cod+'\',\''+p.talle+'\',\'Procesado\',\''+bkey+'\')">✓ Procesar</button>';
-        html += '<button class="btn-accion env"  onclick="cambiarEstado(\''+p.id+'\',\''+p.cod+'\',\''+p.talle+'\',\'Enviado\',\''+bkey+'\')">↗ Enviar</button>';
-      } else if (p.estado==='Procesado') {
-        html += '<button class="btn-accion env"  onclick="cambiarEstado(\''+p.id+'\',\''+p.cod+'\',\''+p.talle+'\',\'Enviado\',\''+bkey+'\')">↗ Enviar</button>';
+      if (p.estado === 'Pendiente') {
+        html += '<button class="btn-accion proc" onclick="cambiarEstado(\'' + p.id + '\',\'' + p.cod + '\',\'' + p.talle + '\',\'Procesado\',\'' + bkey + '\')">✓ Procesar</button>';
+        html += '<button class="btn-accion env"  onclick="cambiarEstado(\'' + p.id + '\',\'' + p.cod + '\',\'' + p.talle + '\',\'Enviado\',\''   + bkey + '\')">↗ Enviar</button>';
+      } else if (p.estado === 'Procesado') {
+        html += '<button class="btn-accion env"  onclick="cambiarEstado(\'' + p.id + '\',\'' + p.cod + '\',\'' + p.talle + '\',\'Enviado\',\''   + bkey + '\')">↗ Enviar</button>';
       } else {
-        html += '<span style="color:#aaa;font-size:12px">✓ Enviado</span>';
+        html += '<span style="color:var(--gray-400);font-size:12px">✓ Completado</span>';
       }
       html += '</div></td></tr>';
     });
@@ -294,35 +639,12 @@ function renderPanel() {
   body.innerHTML = html;
 }
 
-async function cambiarEstado(id, cod, talle, nuevoEstado, bkey) {
-  var badge = document.getElementById('badge-'+bkey);
-  if (badge) { badge.textContent='...'; badge.className='badge-estado'; }
-  try {
-    var data = await apiCall('actualizarEstado', { id:id, cod:cod, talle:talle, estado:nuevoEstado });
-    if (data.ok) {
-      todosLosPedidos.forEach(function(p) {
-        if (p.id===id && p.cod===cod && p.talle===talle) p.estado=nuevoEstado;
-      });
-      actualizarStats();
-      renderPanel();
-      mostrarToast('Estado actualizado: ' + nuevoEstado, 'ok');
-    } else {
-      mostrarToast('Error: '+(data.error||'desconocido'), 'err');
-    }
-  } catch(e) {
-    mostrarToast('Error de conexión', 'err');
-  }
-}
-
-function mostrarToast(msg, tipo) {
-  var t = document.getElementById('toast');
+// ── TOAST ──
+function toast(msg, tipo) {
+  var t = document.getElementById('dashToast');
   t.textContent = msg;
-  t.className = 'toast show '+(tipo||'');
-  setTimeout(function(){ t.className='toast'; }, 3000);
-}
-
-function mostrarError(msg) {
-  document.getElementById('panel-body').innerHTML='<div class="empty" style="color:#8B1A1A">⚠ '+msg+'</div>';
+  t.className = 'dash-toast show' + (tipo ? ' ' + tipo : '');
+  setTimeout(function(){ t.className = 'dash-toast'; }, 3000);
 }
 </script>
 </body>
