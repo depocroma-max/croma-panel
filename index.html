@@ -645,42 +645,29 @@ td { padding: 10px 16px; vertical-align: middle; }
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <script>
-
-// ── LOGIN ──
+var SUCURSALES = ['01 PASEO','05 WAVE','09 CIPO SAN MARTIN','10 PERITO MORENO','12 CENTENARIO','14 ROCA'];
+var todosLosPedidos = [];
+var vistaActual = 'hoy';
+var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04N6VzJktRa3xvvI_7t0Zq3l6LcMY-rW2pgcKjuj9Xwp/exec';
 var CREDENCIALES = { admin: 'cromacajas' };
 
+// ── LOGIN ──
 function hacerLogin() {
   var user = document.getElementById('loginUser').value.trim();
   var pass = document.getElementById('loginPass').value;
   var err  = document.getElementById('loginError');
-
   if (CREDENCIALES[user] && CREDENCIALES[user] === pass) {
     sessionStorage.setItem('croma_auth', '1');
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('dashApp').style.display = '';
     err.textContent = '';
-    if (API_URL) cargarDatos();
+    cargarDatos();
   } else {
     err.textContent = 'Usuario o contraseña incorrectos';
     document.getElementById('loginPass').value = '';
     document.getElementById('loginPass').focus();
   }
 }
-
-// Enter en los campos del login
-document.addEventListener('DOMContentLoaded', function(){
-  ['loginUser','loginPass'].forEach(function(id){
-    var el = document.getElementById(id);
-    if (el) el.addEventListener('keydown', function(e){
-      if (e.key === 'Enter') hacerLogin();
-    });
-  });
-});
-
-var SUCURSALES = ['01 PASEO','05 WAVE','09 CIPO SAN MARTIN','10 PERITO MORENO','12 CENTENARIO','14 ROCA'];
-var todosLosPedidos = [];
-var vistaActual = 'hoy'; // hoy | pedidos | reposiciones
-var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04N6VzJktRa3xvvI_7t0Zq3l6LcMY-rW2pgcKjuj9Xwp/exec';
 
 // ── INIT ──
 (function(){
@@ -690,22 +677,23 @@ var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04
   document.getElementById('fechaHoy').textContent =
     dias[hoy.getDay()] + ' ' + hoy.getDate() + ' ' + meses[hoy.getMonth()] + ' ' + hoy.getFullYear();
 
-  // Verificar sesión activa
   if (sessionStorage.getItem('croma_auth') === '1') {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('dashApp').style.display = '';
     cargarDatos();
   }
 
-  // Sidebar toggle
-  document.getElementById('sidebarToggle').addEventListener('click', function(){
-    var sb = document.getElementById('sidebar');
-    var main = document.getElementById('dashMain');
-    sb.classList.toggle('collapsed');
-    main.classList.toggle('sidebar-collapsed');
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && document.getElementById('loginScreen') &&
+        !document.getElementById('loginScreen').classList.contains('hidden')) {
+      hacerLogin();
+    }
   });
 
-  // Mobile menu
+  document.getElementById('sidebarToggle').addEventListener('click', function(){
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('dashMain').classList.toggle('sidebar-collapsed');
+  });
   document.getElementById('mobileMenuBtn').addEventListener('click', function(){
     document.getElementById('sidebar').classList.toggle('mobile-open');
     document.getElementById('sidebarOverlay').classList.toggle('open');
@@ -715,50 +703,38 @@ var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04
     document.getElementById('sidebarOverlay').classList.remove('open');
   });
 
-  // Auto-refresh cada 2 minutos
-  setInterval(function(){
-    if (API_URL) {
-      cargarDatos();
-    }
-  }, 2 * 60 * 1000);
+  setInterval(function(){ cargarDatos(); }, 2 * 60 * 1000);
 })();
 
 // ── VISTAS ──
 function setVista(v) {
   vistaActual = v;
-  var titulos = { hoy: 'Pedidos de hoy', pedidos: 'Solo Pedidos', reposiciones: 'Solo Reposiciones', cajas: 'Cajas de locales' };
+  var titulos = { hoy:'Pedidos de hoy', pedidos:'Solo Pedidos', reposiciones:'Solo Reposiciones', cajas:'Cajas de locales' };
   document.getElementById('headerTitle').textContent = titulos[v] || 'Rotación';
   document.querySelectorAll('.sidebar-nav-btn').forEach(function(b, i){
     b.classList.toggle('active', ['hoy','pedidos','reposiciones','cajas'][i] === v);
   });
   var esCajas = v === 'cajas';
-  document.getElementById('panelPendientes').style.display  = esCajas ? 'none' : '';
+  document.getElementById('panelPendientes').style.display   = esCajas ? 'none' : '';
   document.getElementById('panelSolucionados').style.display = esCajas ? 'none' : '';
-  document.getElementById('cajasBody').style.display  = esCajas ? '' : 'none';
-  // ocultar filtros en vista cajas
-  document.querySelector('.filters-bar').style.display = esCajas ? 'none' : '';
-  if (esCajas) {
-    irHoyCajas();
-  } else {
-    renderPanel();
-  }
+  document.getElementById('cajasBody').style.display         = esCajas ? '' : 'none';
+  document.querySelector('.filters-bar').style.display       = esCajas ? 'none' : '';
+  if (esCajas) { irHoyCajas(); } else { renderPanel(); }
 }
 
-// ── CONFIG ── (URL hardcodeada)
-
-// ── API ──
+// ── API PEDIDOS ──
 async function cargarDatos() {
+  if (sessionStorage.getItem('croma_auth') !== '1') return;
   document.getElementById('panelPendientes').innerHTML =
     '<div class="loading-state"><div class="spinner"></div><p>Cargando pedidos...</p></div>';
   document.getElementById('panelSolucionados').innerHTML = '';
   try {
-    var dias = document.getElementById('filtroDias') ? document.getElementById('filtroDias').value : '30';
+    var dias = document.getElementById('filtroDias').value || '30';
     var resp = await fetch(API_URL + '?accion=obtenerPedidos&dias=' + dias);
     var data = await resp.json();
     if (data.ok) {
-      todosLosPedidos = (data.pedidos || []).map(function(p){
-        // compatibilidad con estados viejos
-        if (p.estado === 'Pendiente') p.estado = 'EnProceso';
+      todosLosPedidos = (data.pedidos || []).map(function(p) {
+        if (p.estado === 'Pendiente') p.estado = 'SinVer';
         if (p.estado === 'Procesado') p.estado = 'EnProceso';
         if (p.estado === 'Enviado')   p.estado = 'Solucionado';
         return p;
@@ -793,7 +769,8 @@ async function cambiarEstado(idx, nuevoEstado) {
       todosLosPedidos[idx].estado = nuevoEstado;
       actualizarStats();
       renderPanel();
-      toast('Estado actualizado: ' + nuevoEstado, 'success');
+      var labels = { SinVer:'Sin ver', EnProceso:'En proceso', Revisar:'Revisar', Solucionado:'Solucionado' };
+      toast('✓ ' + (labels[nuevoEstado] || nuevoEstado), 'success');
       mostrarUltimaActualizacion();
     } else { toast('Error: ' + (data.error || 'desconocido'), 'error'); }
   } catch(e) { toast('Error de conexión', 'error'); }
@@ -801,10 +778,10 @@ async function cambiarEstado(idx, nuevoEstado) {
 
 // ── STATS ──
 function actualizarStats() {
-  var total   = todosLosPedidos.length;
-  var sinVer  = todosLosPedidos.filter(function(p){ return p.estado === 'SinVer'; }).length;
-  var proc    = todosLosPedidos.filter(function(p){ return p.estado === 'EnProceso' || p.estado === 'Revisar'; }).length;
-  var sol     = todosLosPedidos.filter(function(p){ return p.estado === 'Solucionado'; }).length;
+  var total  = todosLosPedidos.length;
+  var sinVer = todosLosPedidos.filter(function(p){ return p.estado === 'SinVer'; }).length;
+  var proc   = todosLosPedidos.filter(function(p){ return p.estado === 'EnProceso' || p.estado === 'Revisar'; }).length;
+  var sol    = todosLosPedidos.filter(function(p){ return p.estado === 'Solucionado'; }).length;
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statPend').textContent  = sinVer;
   document.getElementById('statProc').textContent  = proc;
@@ -815,16 +792,16 @@ function actualizarStats() {
 // ── FILTRADO ──
 function filtrar(soloSolucionados) {
   var suc  = document.getElementById('filtroSuc').value;
-  var tipo = document.getElementById('filtroTipo') ? document.getElementById('filtroTipo').value : '';
+  var tipo = document.getElementById('filtroTipo').value;
   var cod  = document.getElementById('filtroCod').value.trim().toUpperCase();
   return todosLosPedidos.filter(function(p) {
     if (vistaActual === 'pedidos'      && p.tipo !== 'PEDIDO')     return false;
     if (vistaActual === 'reposiciones' && p.tipo !== 'REPOSICION') return false;
-    if (tipo && p.tipo !== tipo)        return false;
-    if (suc  && p.sucursal !== suc)     return false;
-    if (cod  && p.cod.indexOf(cod) < 0) return false;
+    if (tipo && p.tipo !== tipo)         return false;
+    if (suc  && p.sucursal !== suc)      return false;
+    if (cod  && String(p.cod).toUpperCase().indexOf(cod) < 0) return false;
     var esSol = p.estado === 'Solucionado';
-    if (soloSolucionados  && !esSol) return false;
+    if ( soloSolucionados && !esSol) return false;
     if (!soloSolucionados &&  esSol) return false;
     return true;
   });
@@ -833,26 +810,27 @@ function filtrar(soloSolucionados) {
 // ── RENDER ──
 function buildFila(p) {
   var idx = todosLosPedidos.indexOf(p);
-  var fechaDisplay = p.fecha ? p.fecha.substring(8,10)+'/'+p.fecha.substring(5,7) : '—';
+  var fechaDisplay = p.fecha ? p.fecha.substring(8,10) + '/' + p.fecha.substring(5,7) : '—';
   var esSol = p.estado === 'Solucionado';
+  var obs = (p.obs || '').replace(/"/g, '&quot;');
   var html = '<tr>';
   html += '<td class="hora">' + fechaDisplay + '</td>';
-  html += '<td class="hora">' + p.hora + '</td>';
+  html += '<td class="hora">' + (p.hora || '—') + '</td>';
   html += '<td><span class="badge-tipo ' + p.tipo + '">' + p.tipo + '</span></td>';
   html += '<td><span class="cod">' + p.cod + '</span></td>';
   html += '<td>' + (p.talle || '—') + '</td>';
   html += '<td>' + (p.color || '—') + '</td>';
   html += '<td style="font-weight:600">' + p.cantidad + '</td>';
-  html += '<td class="obs-cell" title="' + (p.obs||'') + '">' + (p.obs || '<span style="color:#ccc">—</span>') + '</td>';
+  html += '<td class="obs-cell" title="' + obs + '">' + (p.obs || '<span style="color:#ccc">—</span>') + '</td>';
   html += '<td class="encargado-cell">' + p.encargado + '</td>';
   html += '<td><span class="badge-estado ' + p.estado + '" id="b-' + idx + '">' + p.estado + '</span></td>';
   html += '<td><div class="actions">';
   if (!esSol) {
-    html += '<button class="btn-accion sol"  onclick="cambiarEstado('+idx+','Solucionado')">✓ Sol.</button>';
-    html += '<button class="btn-accion proc" onclick="cambiarEstado('+idx+','EnProceso')">⏳ Proceso</button>';
-    html += '<button class="btn-accion rev"  onclick="cambiarEstado('+idx+','Revisar')">⚠ Revisar</button>';
+    html += '<button class="btn-accion sol"  onclick="cambiarEstado(' + idx + ', 'Solucionado')">✓ Sol.</button>';
+    html += '<button class="btn-accion proc" onclick="cambiarEstado(' + idx + ', 'EnProceso')">⏳ Proceso</button>';
+    html += '<button class="btn-accion rev"  onclick="cambiarEstado(' + idx + ', 'Revisar')">⚠ Revisar</button>';
   } else {
-    html += '<button class="btn-accion proc" onclick="cambiarEstado('+idx+','SinVer')">↩ Reabrir</button>';
+    html += '<button class="btn-accion proc" onclick="cambiarEstado(' + idx + ', 'SinVer')">↩ Reabrir</button>';
   }
   html += '</div></td></tr>';
   return html;
@@ -860,36 +838,42 @@ function buildFila(p) {
 
 function buildTablaHTML(lista) {
   var html = '<div class="table-wrap"><table>';
-  html += '<thead><tr><th>Fecha</th><th>Hora</th><th>Tipo</th><th>COD</th><th>Talle</th><th>Color</th><th>Cant.</th><th>Observación</th><th>Encargado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
-  lista.forEach(function(p){ html += buildFila(p); });
+  html += '<thead><tr>';
+  html += '<th>Fecha</th><th>Hora</th><th>Tipo</th><th>COD</th>';
+  html += '<th>Talle</th><th>Color</th><th>Cant.</th>';
+  html += '<th>Observación</th><th>Encargado</th><th>Estado</th><th>Acciones</th>';
+  html += '</tr></thead><tbody>';
+  lista.forEach(function(p) { html += buildFila(p); });
   html += '</tbody></table></div>';
   return html;
 }
 
 function renderPanel() {
   if (vistaActual === 'cajas') return;
-
   var pendientes   = filtrar(false);
   var solucionados = filtrar(true);
 
-  // Sección pendientes agrupada por sucursal
+  // Pendientes agrupados por sucursal
   var htmlPend = '';
   if (pendientes.length === 0) {
     htmlPend = '<div class="empty-state">📭 Sin artículos pendientes.</div>';
   } else {
     var grupos = {};
-    SUCURSALES.forEach(function(s){ grupos[s] = []; });
-    pendientes.forEach(function(p){
+    SUCURSALES.forEach(function(s) { grupos[s] = []; });
+    pendientes.forEach(function(p) {
       if (!grupos[p.sucursal]) grupos[p.sucursal] = [];
       grupos[p.sucursal].push(p);
     });
-    SUCURSALES.forEach(function(suc){
+    SUCURSALES.forEach(function(suc) {
       var lista = grupos[suc];
       if (!lista || lista.length === 0) return;
-      var sinRes = lista.filter(function(p){ return p.estado==='SinVer'||p.estado==='Revisar'; }).length;
+      var sinRes = lista.filter(function(p) {
+        return p.estado === 'SinVer' || p.estado === 'Revisar';
+      }).length;
       htmlPend += '<div class="suc-section">';
-      htmlPend += '<div class="suc-header"><span class="suc-badge">' + suc + '</span>';
-      htmlPend += '<span class="suc-counts">' + lista.length + ' artículo' + (lista.length!==1?'s':'') + '</span>';
+      htmlPend += '<div class="suc-header">';
+      htmlPend += '<span class="suc-badge">' + suc + '</span>';
+      htmlPend += '<span class="suc-counts">' + lista.length + ' artículo' + (lista.length !== 1 ? 's' : '') + '</span>';
       if (sinRes > 0) htmlPend += '<span class="suc-pend-badge">' + sinRes + ' sin resolver</span>';
       htmlPend += '</div>';
       htmlPend += buildTablaHTML(lista);
@@ -898,7 +882,7 @@ function renderPanel() {
   }
   document.getElementById('panelPendientes').innerHTML = htmlPend;
 
-  // Sección solucionados colapsable
+  // Solucionados colapsables
   var htmlSol = '';
   if (solucionados.length > 0) {
     htmlSol += '<div class="section-label" onclick="toggleSolucionados()">';
@@ -918,32 +902,30 @@ function toggleSolucionados() {
   var btn = document.getElementById('solToggleBtn');
   if (!el) return;
   var collapsed = el.classList.toggle('sol-collapsed');
-  btn.textContent = collapsed ? '▼ mostrar' : '▲ ocultar';
+  if (btn) btn.textContent = collapsed ? '▼ mostrar' : '▲ ocultar';
 }
 
 // ── CAJAS ──
 function irHoyCajas() {
   var hoy = new Date();
-  var yyyy = hoy.getFullYear();
-  var mm   = String(hoy.getMonth()+1).padStart(2,'0');
-  var dd   = String(hoy.getDate()).padStart(2,'0');
-  document.getElementById('cajasfecha').value = yyyy+'-'+mm+'-'+dd;
+  document.getElementById('cajasfecha').value =
+    hoy.getFullYear() + '-' +
+    String(hoy.getMonth()+1).padStart(2,'0') + '-' +
+    String(hoy.getDate()).padStart(2,'0');
   cargarCajas();
 }
 
 async function cargarCajas() {
-  if (!API_URL) return;
   var fecha = document.getElementById('cajasfecha').value;
   document.getElementById('cajasGrid').innerHTML =
-    '<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div><p>Cargando cierres...</p></div>';
+    '<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div><p>Cargando...</p></div>';
   try {
     var resp = await fetch(API_URL + '?accion=obtenerCajas&fecha=' + encodeURIComponent(fecha));
     var data = await resp.json();
-    if (data.ok) {
-      renderCajas(data.cajas);
-    } else {
+    if (data.ok) { renderCajas(data.cajas); }
+    else {
       document.getElementById('cajasGrid').innerHTML =
-        '<div class="empty-state" style="grid-column:1/-1">⚠ ' + (data.error||'Error') + '</div>';
+        '<div class="empty-state" style="grid-column:1/-1">⚠ ' + (data.error || 'Error') + '</div>';
     }
   } catch(e) {
     document.getElementById('cajasGrid').innerHTML =
@@ -952,102 +934,73 @@ async function cargarCajas() {
 }
 
 function renderCajas(cajas) {
-  var cerro    = cajas.filter(function(c){ return !c.sinCierre; }).length;
-  var sinCierre= cajas.filter(function(c){ return c.sinCierre; }).length;
-  var alertas  = cajas.filter(function(c){ return c.alerta; }).length;
-
+  var cerro     = cajas.filter(function(c){ return !c.sinCierre; }).length;
+  var sinCierre = cajas.filter(function(c){ return  c.sinCierre; }).length;
+  var alertas   = cajas.filter(function(c){ return  c.alerta; }).length;
   document.getElementById('cajaStat-cerro').textContent     = cerro;
   document.getElementById('cajaStat-sinCierre').textContent = sinCierre;
   document.getElementById('cajaStat-alertas').textContent   = alertas;
-
-  // badge en sidebar
   var badgeAlertas = document.getElementById('badge-alertas');
-  if (alertas > 0) {
-    badgeAlertas.style.display = '';
-    badgeAlertas.textContent = alertas;
-  } else {
-    badgeAlertas.style.display = 'none';
-  }
+  badgeAlertas.style.display = alertas > 0 ? '' : 'none';
+  if (alertas > 0) badgeAlertas.textContent = alertas;
 
   var html = '';
   cajas.forEach(function(c) {
     if (c.sinCierre) {
       html += '<div class="caja-card sin-cierre">';
-      html += '<div class="caja-card-header">';
-      html += '<div><div class="caja-suc">' + c.sucursal + '</div></div>';
-      html += '<div class="caja-status-dot sin-cierre"></div>';
-      html += '</div>';
-      html += '<div class="caja-sin-cierre-msg">Sin cierre registrado</div>';
-      html += '</div>';
+      html += '<div class="caja-card-header"><div><div class="caja-suc">' + c.sucursal + '</div></div>';
+      html += '<div class="caja-status-dot sin-cierre"></div></div>';
+      html += '<div class="caja-sin-cierre-msg">Sin cierre registrado</div></div>';
       return;
     }
-
     var clase = c.alerta ? 'alerta' : 'ok';
     html += '<div class="caja-card ' + clase + '">';
-    html += '<div class="caja-card-header">';
-    html += '<div>';
+    html += '<div class="caja-card-header"><div>';
     html += '<div class="caja-suc">' + c.sucursal + '</div>';
     html += '<div class="caja-hora">Cierre: ' + (c.hora || '—') + '</div>';
     html += '<div class="caja-encargado">' + (c.encargado || '') + '</div>';
-    html += '</div>';
-    html += '<div class="caja-status-dot ' + clase + '"></div>';
-    html += '</div>';
-
-    // Checks operativos
+    html += '</div><div class="caja-status-dot ' + clase + '"></div></div>';
     html += '<div class="caja-checks">';
-    html += checkRow('Remitos cargados',  c.remitos);
-    html += checkRow('Salidas registradas', c.salidas);
-    html += checkRow('Diferencia cupón',  c.diferencia, true);
+    html += checkRow('Remitos cargados', c.remitos, false);
+    html += checkRow('Salidas registradas', c.salidas, false);
+    html += checkRow('Diferencia cupón', c.diferencia, true);
     html += '</div>';
-
-    // Extras
-    var tieneExtra = c.ausente || c.franquero || c.mantenimiento;
-    if (tieneExtra) {
+    if (c.ausente || c.franquero || c.mantenimiento) {
       html += '<div class="caja-extras">';
       if (c.ausente)       html += extraRow('👤', 'Ausente: ' + c.ausente);
       if (c.franquero)     html += extraRow('⭐', 'Franquero: ' + c.franquero + (c.gustoFranquero ? ' · ' + c.gustoFranquero : ''));
       if (c.mantenimiento) html += extraRow('🔧', c.mantenimiento);
       html += '</div>';
     }
-
     html += '</div>';
   });
-
   document.getElementById('cajasGrid').innerHTML = html;
 }
 
 function checkRow(label, val, invertido) {
-  // invertido = true significa que "Si" es malo (ej: diferencia de cupón)
-  var esOk = invertido ? (val === 'No' || val === '') : (val === 'Si');
+  var esOk  = invertido ? (val === 'No' || val === '') : (val === 'Si');
   var esBad = invertido ? (val === 'Si') : (val === 'No');
   var clase = esOk ? 'ok' : (esBad ? 'bad' : 'neutral');
-  var texto = val || '—';
-  if (val === 'Si') texto = '✓ Sí';
-  if (val === 'No') texto = '✗ No';
+  var texto = val === 'Si' ? '✓ Sí' : val === 'No' ? '✗ No' : '—';
   return '<div class="caja-check-row">' +
     '<span class="caja-check-label">' + label + '</span>' +
-    '<span class="caja-check-val ' + clase + '">' + texto + '</span>' +
-    '</div>';
+    '<span class="caja-check-val ' + clase + '">' + texto + '</span></div>';
 }
 
 function extraRow(icon, text) {
   return '<div class="caja-extra-row">' +
     '<span class="caja-extra-icon">' + icon + '</span>' +
-    '<span class="caja-extra-text">' + text + '</span>' +
-    '</div>';
+    '<span class="caja-extra-text">' + text + '</span></div>';
 }
 
-// ── ÚLTIMA ACTUALIZACIÓN ──
+// ── UTILS ──
 function mostrarUltimaActualizacion() {
   var el = document.getElementById('ultimaActualizacion');
   if (!el) return;
   var ahora = new Date();
-  var h = String(ahora.getHours()).padStart(2,'0');
-  var m = String(ahora.getMinutes()).padStart(2,'0');
-  el.textContent = 'Actualizado ' + h + ':' + m;
+  el.textContent = 'Actualizado ' + String(ahora.getHours()).padStart(2,'0') + ':' + String(ahora.getMinutes()).padStart(2,'0');
 }
 
-// ── TOAST ──
 function toast(msg, tipo) {
   var t = document.getElementById('dashToast');
   t.textContent = msg;
