@@ -350,6 +350,14 @@ td { padding: 10px 16px; vertical-align: middle; }
 @media(max-width:900px){ .cajas-grid{ grid-template-columns: repeat(2,1fr); } }
 @media(max-width:600px){ .cajas-grid{ grid-template-columns: 1fr; } .cajas-resumen{ grid-template-columns: 1fr 1fr; } }
 
+/* ── COLORES POR SUCURSAL ── */
+.suc-badge[data-suc="01 PASEO"]        { background: #1d4ed8; } /* azul */
+.suc-badge[data-suc="05 WAVE"]         { background: #0f766e; } /* verde azulado */
+.suc-badge[data-suc="09 CIPO SAN MARTIN"] { background: #7c3aed; } /* violeta */
+.suc-badge[data-suc="10 PERITO MORENO"]{ background: #b45309; } /* naranja */
+.suc-badge[data-suc="12 CENTENARIO"]   { background: #be123c; } /* rosa oscuro */
+.suc-badge[data-suc="14 ROCA"]         { background: #15803d; } /* verde */
+
 /* ── SECCIÓN SOLUCIONADOS ── */
 .section-label {
   display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; cursor: pointer;
@@ -572,6 +580,12 @@ tbody tr { cursor: pointer; }
 /* Tarjeta clickeable */
 .caja-card { cursor: pointer; transition: box-shadow .15s; }
 .caja-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+.caja-card[data-suc="01 PASEO"]         { border-top: 3px solid #1d4ed8; }
+.caja-card[data-suc="05 WAVE"]          { border-top: 3px solid #0f766e; }
+.caja-card[data-suc="09 CIPO SAN MARTIN"]{ border-top: 3px solid #7c3aed; }
+.caja-card[data-suc="10 PERITO MORENO"] { border-top: 3px solid #b45309; }
+.caja-card[data-suc="12 CENTENARIO"]    { border-top: 3px solid #be123c; }
+.caja-card[data-suc="14 ROCA"]          { border-top: 3px solid #15803d; }
 
 /* Fecha + encargado en tarjeta */
 .caja-meta { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
@@ -1182,7 +1196,7 @@ function renderPanel() {
       }).length;
       htmlPend += '<div class="suc-section">';
       htmlPend += '<div class="suc-header">';
-      htmlPend += '<span class="suc-badge">' + suc + '</span>';
+      htmlPend += '<span class="suc-badge" data-suc="' + suc + '">' + suc + '</span>';
       htmlPend += '<span class="suc-counts">' + lista.length + ' artículo' + (lista.length !== 1 ? 's' : '') + '</span>';
       if (sinRes > 0) htmlPend += '<span class="suc-pend-badge">' + sinRes + ' sin resolver</span>';
       htmlPend += '</div>';
@@ -1261,7 +1275,7 @@ function renderCajas(cajas) {
   var html = '';
   cajas.forEach(function(c, idx) {
     if (c.sinCierre) {
-      html += '<div class="caja-card sin-cierre" onclick="abrirModalCaja(' + idx + ')">';
+      html += '<div class="caja-card sin-cierre" data-suc="' + c.sucursal + '" onclick="abrirModalCaja(' + idx + ')">';
       html += '<div class="caja-card-header"><div><div class="caja-suc">' + c.sucursal + '</div></div>';
       html += '<div class="caja-status-dot sin-cierre"></div></div>';
       html += '<div class="caja-sin-cierre-msg">Sin cierre registrado</div></div>';
@@ -1270,9 +1284,9 @@ function renderCajas(cajas) {
     var clase = c.alerta ? 'alerta' : 'ok';
     // Formatear fecha dd/mm
     var fechaDisplay = c.fecha ? c.fecha.substring(8,10)+'/'+c.fecha.substring(5,7) : '';
-    html += '<div class="caja-card ' + clase + '" onclick="abrirModalCaja(' + idx + ')">';
+    html += '<div class="caja-card ' + clase + '" data-suc="' + c.sucursal + '" onclick="abrirModalCaja(' + idx + ')">';
     html += '<div class="caja-card-header"><div>';
-    html += '<div class="caja-suc">' + c.sucursal + '</div>';
+    html += '<div class="caja-suc" style="font-family:var(--font-display);letter-spacing:1px">' + c.sucursal + '</div>';
     html += '<div class="caja-meta">Cierre: <span>' + (c.hora||'—') + '</span>' + (fechaDisplay ? ' · ' + fechaDisplay : '') + '</div>';
     html += '<div class="caja-meta">Encargado: <span>' + (c.encargado||'—') + '</span></div>';
     html += '</div><div class="caja-status-dot ' + clase + '"></div></div>';
@@ -1305,7 +1319,9 @@ function abrirModalCaja(idx) {
   if (!c) return;
 
   var fechaDisplay = c.fecha ? c.fecha.substring(8,10)+'/'+c.fecha.substring(5,7)+'/'+c.fecha.substring(0,4) : '—';
-  document.getElementById('mcSucursal').textContent = c.sucursal;
+  var mcSuc = document.getElementById('mcSucursal');
+  mcSuc.textContent = c.sucursal;
+  mcSuc.setAttribute('data-suc', c.sucursal);
   document.getElementById('mcFecha').textContent    = fechaDisplay;
   document.getElementById('mcEncargado').textContent= c.encargado || '—';
   document.getElementById('mcHora').textContent     = c.hora || '—';
