@@ -831,6 +831,96 @@ function filtrar(soloSolucionados) {
 }
 
 // ── RENDER ──
+function buildFila(p) {
+  var idx = todosLosPedidos.indexOf(p);
+  var fechaDisplay = p.fecha ? p.fecha.substring(8,10)+'/'+p.fecha.substring(5,7) : '—';
+  var esSol = p.estado === 'Solucionado';
+  var html = '<tr>';
+  html += '<td class="hora">' + fechaDisplay + '</td>';
+  html += '<td class="hora">' + p.hora + '</td>';
+  html += '<td><span class="badge-tipo ' + p.tipo + '">' + p.tipo + '</span></td>';
+  html += '<td><span class="cod">' + p.cod + '</span></td>';
+  html += '<td>' + (p.talle || '—') + '</td>';
+  html += '<td>' + (p.color || '—') + '</td>';
+  html += '<td style="font-weight:600">' + p.cantidad + '</td>';
+  html += '<td class="obs-cell" title="' + (p.obs||'') + '">' + (p.obs || '<span style="color:#ccc">—</span>') + '</td>';
+  html += '<td class="encargado-cell">' + p.encargado + '</td>';
+  html += '<td><span class="badge-estado ' + p.estado + '" id="b-' + idx + '">' + p.estado + '</span></td>';
+  html += '<td><div class="actions">';
+  if (!esSol) {
+    html += '<button class="btn-accion sol"  onclick="cambiarEstado('+idx+','Solucionado')">✓ Sol.</button>';
+    html += '<button class="btn-accion proc" onclick="cambiarEstado('+idx+','EnProceso')">⏳ Proceso</button>';
+    html += '<button class="btn-accion rev"  onclick="cambiarEstado('+idx+','Revisar')">⚠ Revisar</button>';
+  } else {
+    html += '<button class="btn-accion proc" onclick="cambiarEstado('+idx+','SinVer')">↩ Reabrir</button>';
+  }
+  html += '</div></td></tr>';
+  return html;
+}
+
+function buildTablaHTML(lista) {
+  var html = '<div class="table-wrap"><table>';
+  html += '<thead><tr><th>Fecha</th><th>Hora</th><th>Tipo</th><th>COD</th><th>Talle</th><th>Color</th><th>Cant.</th><th>Observación</th><th>Encargado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
+  lista.forEach(function(p){ html += buildFila(p); });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderPanel() {
+  if (vistaActual === 'cajas') return;
+
+  var pendientes   = filtrar(false);
+  var solucionados = filtrar(true);
+
+  // Sección pendientes agrupada por sucursal
+  var htmlPend = '';
+  if (pendientes.length === 0) {
+    htmlPend = '<div class="empty-state">📭 Sin artículos pendientes.</div>';
+  } else {
+    var grupos = {};
+    SUCURSALES.forEach(function(s){ grupos[s] = []; });
+    pendientes.forEach(function(p){
+      if (!grupos[p.sucursal]) grupos[p.sucursal] = [];
+      grupos[p.sucursal].push(p);
+    });
+    SUCURSALES.forEach(function(suc){
+      var lista = grupos[suc];
+      if (!lista || lista.length === 0) return;
+      var sinRes = lista.filter(function(p){ return p.estado==='SinVer'||p.estado==='Revisar'; }).length;
+      htmlPend += '<div class="suc-section">';
+      htmlPend += '<div class="suc-header"><span class="suc-badge">' + suc + '</span>';
+      htmlPend += '<span class="suc-counts">' + lista.length + ' artículo' + (lista.length!==1?'s':'') + '</span>';
+      if (sinRes > 0) htmlPend += '<span class="suc-pend-badge">' + sinRes + ' sin resolver</span>';
+      htmlPend += '</div>';
+      htmlPend += buildTablaHTML(lista);
+      htmlPend += '</div>';
+    });
+  }
+  document.getElementById('panelPendientes').innerHTML = htmlPend;
+
+  // Sección solucionados colapsable
+  var htmlSol = '';
+  if (solucionados.length > 0) {
+    htmlSol += '<div class="section-label" onclick="toggleSolucionados()">';
+    htmlSol += '<span class="section-label-text">Solucionados</span>';
+    htmlSol += '<span class="section-label-count">' + solucionados.length + '</span>';
+    htmlSol += '<button class="section-toggle" id="solToggleBtn">▼ mostrar</button>';
+    htmlSol += '</div>';
+    htmlSol += '<div id="solContent" class="sol-collapsed">';
+    htmlSol += buildTablaHTML(solucionados);
+    htmlSol += '</div>';
+  }
+  document.getElementById('panelSolucionados').innerHTML = htmlSol;
+}
+
+function toggleSolucionados() {
+  var el  = document.getElementById('solContent');
+  var btn = document.getElementById('solToggleBtn');
+  if (!el) return;
+  var collapsed = el.classList.toggle('sol-collapsed');
+  btn.textContent = collapsed ? '▼ mostrar' : '▲ ocultar';
+}
+
 // ── CAJAS ──
 function irHoyCajas() {
   var hoy = new Date();
