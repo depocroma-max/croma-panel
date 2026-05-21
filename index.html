@@ -1002,17 +1002,21 @@ function abrirModal(idx) {
   var actions = document.getElementById('modalActions');
   if (!esSol) {
     actions.innerHTML =
-      '<button class="modal-btn sol"  onclick="modalAccion('Solucionado')">✓ Solucionado</button>' +
-      '<button class="modal-btn proc" onclick="modalAccion('EnProceso')">⏳ En proceso</button>' +
-      '<button class="modal-btn rev"  onclick="modalAccion('Revisar')">⚠ Revisar</button>' +
+      '<button class="modal-btn sol"  data-estado="Solucionado" onclick="modalAccionBtn(this)">✓ Solucionado</button>' +
+      '<button class="modal-btn proc" data-estado="EnProceso"   onclick="modalAccionBtn(this)">⏳ En proceso</button>' +
+      '<button class="modal-btn rev"  data-estado="Revisar"      onclick="modalAccionBtn(this)">⚠ Revisar</button>' +
       '<button class="modal-btn cancelar" onclick="cerrarModal()">Cancelar</button>';
   } else {
     actions.innerHTML =
-      '<button class="modal-btn reabrir" onclick="modalAccion('SinVer')">↩ Reabrir</button>' +
+      '<button class="modal-btn reabrir" data-estado="SinVer"    onclick="modalAccionBtn(this)">↩ Reabrir</button>' +
       '<button class="modal-btn cancelar" onclick="cerrarModal()">Cancelar</button>';
   }
 
   document.getElementById('modalOverlay').classList.add('open');
+}
+
+function modalAccionBtn(btn) {
+  modalAccion(btn.getAttribute("data-estado"));
 }
 
 function modalAccion(nuevoEstado) {
@@ -1023,7 +1027,7 @@ function modalAccion(nuevoEstado) {
       solBox.classList.add('show');
       // Cambiar botón a "Confirmar"
       var btn = document.querySelector('.modal-btn.sol');
-      if (btn) { btn.textContent = '✓ Confirmar'; btn.onclick = function(){ confirmarSolucionado(); }; }
+      if (btn) { btn.textContent = '✓ Confirmar'; btn.removeAttribute('data-estado'); btn.onclick = confirmarSolucionado; }
       document.getElementById('modalSolObs').focus();
       return;
     }
