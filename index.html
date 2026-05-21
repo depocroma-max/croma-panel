@@ -732,7 +732,8 @@ function setVista(v) {
     b.classList.toggle('active', ['hoy','pedidos','reposiciones','cajas'][i] === v);
   });
   var esCajas = v === 'cajas';
-  document.getElementById('panelBody').style.display  = esCajas ? 'none' : '';
+  document.getElementById('panelPendientes').style.display  = esCajas ? 'none' : '';
+  document.getElementById('panelSolucionados').style.display = esCajas ? 'none' : '';
   document.getElementById('cajasBody').style.display  = esCajas ? '' : 'none';
   // ocultar filtros en vista cajas
   document.querySelector('.filters-bar').style.display = esCajas ? 'none' : '';
@@ -748,8 +749,9 @@ function setVista(v) {
 // ── API ──
 async function cargarDatos() {
   if (!API_URL) return;
-  document.getElementById('panelBody').innerHTML =
+  document.getElementById('panelPendientes').innerHTML =
     '<div class="loading-state"><div class="spinner"></div><p>Cargando pedidos...</p></div>';
+  document.getElementById('panelSolucionados').innerHTML = '';
   try {
     var resp = await fetch(API_URL + '?accion=obtenerPedidosHoy');
     var data = await resp.json();
@@ -765,12 +767,12 @@ async function cargarDatos() {
       renderPanel();
       mostrarUltimaActualizacion();
     } else {
-      document.getElementById('panelBody').innerHTML =
+      document.getElementById('panelPendientes').innerHTML =
         '<div class="empty-state">⚠ ' + (data.error || 'Error desconocido') + '</div>';
     }
   } catch(e) {
-    document.getElementById('panelBody').innerHTML =
-      '<div class="empty-state">⚠ No se pudo conectar. Verificá la URL y los permisos.</div>';
+    document.getElementById('panelPendientes').innerHTML =
+      '<div class="empty-state">⚠ No se pudo conectar.</div>';
   }
 }
 
@@ -831,11 +833,7 @@ function filtrar(soloSolucionados) {
 // ── RENDER ──
 function renderPanel() {
   var pedidos = filtrar();
-  var body = document.getElementById('panelBody');
-  if (pedidos.length === 0) {
-    body.innerHTML = '<div class="empty-state">📭 No hay artículos para mostrar.</div>';
-    return;
-  }
+
 
   var grupos = {};
   SUCURSALES.forEach(function(s){ grupos[s] = []; });
