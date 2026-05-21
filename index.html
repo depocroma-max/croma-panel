@@ -488,7 +488,7 @@ td { padding: 10px 16px; vertical-align: middle; }
         <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
       </div>
       <div class="login-error" id="loginError"></div>
-      <button class="login-btn" id="btnLogin" onclick="hacerLogin()">Ingresar</button>
+      <button class="login-btn" id="btnLogin">Ingresar</button>
     </div>
   </div>
 </div>
@@ -682,6 +682,8 @@ function hacerLogin() {
     document.getElementById('dashApp').style.display = '';
     cargarDatos();
   }
+
+  document.getElementById('btnLogin').addEventListener('click', hacerLogin);
 
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && document.getElementById('loginScreen') &&
