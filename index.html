@@ -828,14 +828,18 @@ function buildFila(p) {
   html += '<td><span class="badge-estado ' + p.estado + '" id="b-' + idx + '">' + p.estado + '</span></td>';
   html += '<td><div class="actions">';
   if (!esSol) {
-    html += '<button class="btn-accion sol"  onclick="cambiarEstado(' + idx + ', 'Solucionado')">✓ Sol.</button>';
-    html += '<button class="btn-accion proc" onclick="cambiarEstado(' + idx + ', 'EnProceso')">⏳ Proceso</button>';
-    html += '<button class="btn-accion rev"  onclick="cambiarEstado(' + idx + ', 'Revisar')">⚠ Revisar</button>';
+    html += '<button class="btn-accion sol"  data-idx="' + idx + '" data-estado="Solucionado" onclick="accion(this)">✓ Sol.</button>';
+    html += '<button class="btn-accion proc" data-idx="' + idx + '" data-estado="EnProceso"   onclick="accion(this)">⏳ Proceso</button>';
+    html += '<button class="btn-accion rev"  data-idx="' + idx + '" data-estado="Revisar"      onclick="accion(this)">⚠ Revisar</button>';
   } else {
-    html += '<button class="btn-accion proc" onclick="cambiarEstado(' + idx + ', 'SinVer')">↩ Reabrir</button>';
+    html += '<button class="btn-accion proc" data-idx="' + idx + '" data-estado="SinVer"       onclick="accion(this)">↩ Reabrir</button>';
   }
   html += '</div></td></tr>';
   return html;
+}
+
+function accion(btn) {
+  cambiarEstado(parseInt(btn.getAttribute("data-idx")), btn.getAttribute("data-estado"));
 }
 
 function buildTablaHTML(lista) {
