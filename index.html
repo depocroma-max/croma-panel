@@ -465,6 +465,89 @@ td { padding: 10px 16px; vertical-align: middle; }
 }
 .login-btn:hover { opacity: .88; }
 
+
+/* ── MODAL DETALLE ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+  z-index: 200; display: flex; align-items: center; justify-content: center;
+  padding: 1rem; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--white); border-radius: var(--radius-lg);
+  width: 100%; max-width: 560px; box-shadow: 0 8px 40px rgba(0,0,0,.25);
+  transform: translateY(12px); transition: transform .2s;
+  overflow: hidden;
+}
+.modal-overlay.open .modal-box { transform: translateY(0); }
+.modal-header {
+  background: var(--black); padding: 1rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header-left { display: flex; align-items: center; gap: 10px; }
+.modal-cod { font-family: monospace; font-size: 18px; font-weight: 700; color: var(--accent); }
+.modal-tipo { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-sm); }
+.modal-tipo.PEDIDO     { background: #fef3c7; color: #92400e; }
+.modal-tipo.REPOSICION { background: #dbeafe; color: #1e40af; }
+.modal-close {
+  background: none; border: none; color: var(--gray-400);
+  font-size: 20px; cursor: pointer; line-height: 1; padding: 4px;
+}
+.modal-close:hover { color: var(--white); }
+.modal-body { padding: 1.25rem; }
+.modal-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.25rem;
+}
+.modal-field { display: flex; flex-direction: column; gap: 4px; }
+.modal-field label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--gray-400);
+}
+.modal-field span { font-size: 14px; color: var(--black); font-weight: 500; }
+.modal-obs-box {
+  background: var(--gray-50); border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md); padding: .875rem; margin-bottom: 1.25rem;
+  font-size: 13px; color: var(--gray-600); font-style: italic; line-height: 1.5;
+}
+.modal-obs-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--gray-400); margin-bottom: 6px; display: block;
+}
+.modal-sol-box {
+  display: none; border-top: 1px solid var(--gray-100); padding-top: 1rem; margin-top: .25rem;
+}
+.modal-sol-box.show { display: block; }
+.modal-sol-box label {
+  font-size: 11px; font-weight: 600; color: var(--gray-600);
+  display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em;
+}
+.modal-sol-box textarea {
+  width: 100%; padding: 9px 12px; border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md); font-family: var(--font-body);
+  font-size: 13px; resize: vertical; min-height: 70px; color: var(--black);
+}
+.modal-sol-box textarea:focus { outline: none; border-color: var(--black); }
+.modal-actions {
+  display: flex; gap: 8px; padding: 1rem 1.25rem;
+  border-top: 1px solid var(--gray-100); flex-wrap: wrap;
+}
+.modal-btn {
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 600; border: 1px solid;
+  cursor: pointer; font-family: var(--font-body); transition: all .12s;
+}
+.modal-btn.sol  { background: #16a34a; border-color: #16a34a; color: #fff; }
+.modal-btn.sol:hover  { background: #15803d; }
+.modal-btn.proc { background: #d97706; border-color: #d97706; color: #fff; }
+.modal-btn.proc:hover { background: #b45309; }
+.modal-btn.rev  { background: #dc2626; border-color: #dc2626; color: #fff; }
+.modal-btn.rev:hover  { background: #b91c1c; }
+.modal-btn.reabrir { background: transparent; border-color: var(--gray-200); color: var(--gray-600); }
+.modal-btn.reabrir:hover { background: var(--gray-50); }
+.modal-btn.cancelar { background: transparent; border-color: var(--gray-200); color: var(--gray-600); margin-left: auto; }
+.modal-btn.cancelar:hover { background: var(--gray-50); }
+tbody tr { cursor: pointer; }
+
 </style>
 </head>
 <body>
@@ -510,7 +593,7 @@ td { padding: 10px 16px; vertical-align: middle; }
     <nav class="sidebar-nav">
       <button class="sidebar-nav-btn active" onclick="setVista('hoy')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span class="nav-label">Pedidos de hoy</span>
+        <span class="nav-label">Pedidos</span>
         <span class="nav-badge" id="badge-pend">0</span>
       </button>
       <button class="sidebar-nav-btn" onclick="setVista('pedidos')">
@@ -638,6 +721,37 @@ td { padding: 10px 16px; vertical-align: middle; }
   </main>
 </div>
 
+
+<!-- MODAL DETALLE -->
+<div class="modal-overlay" id="modalOverlay" onclick="cerrarModalOverlay(event)">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <span class="modal-cod" id="modalCod"></span>
+        <span class="modal-tipo" id="modalTipo"></span>
+      </div>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-grid">
+        <div class="modal-field"><label>Sucursal</label><span id="modalSucursal"></span></div>
+        <div class="modal-field"><label>Fecha</label><span id="modalFecha"></span></div>
+        <div class="modal-field"><label>Talle</label><span id="modalTalle"></span></div>
+        <div class="modal-field"><label>Color</label><span id="modalColor"></span></div>
+        <div class="modal-field"><label>Cantidad</label><span id="modalCantidad"></span></div>
+        <div class="modal-field"><label>Encargado</label><span id="modalEncargado"></span></div>
+      </div>
+      <span class="modal-obs-label">Observación del local</span>
+      <div class="modal-obs-box" id="modalObs"></div>
+      <div class="modal-sol-box" id="modalSolBox">
+        <label>Observación al solucionar</label>
+        <textarea id="modalSolObs" placeholder="Ej: Rote COD 76229 desde 01 PASEO a 12 CENTENARIO..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="dash-toast" id="dashToast"></div>
 
@@ -711,7 +825,7 @@ function hacerLogin() {
 // ── VISTAS ──
 function setVista(v) {
   vistaActual = v;
-  var titulos = { hoy:'Pedidos de hoy', pedidos:'Solo Pedidos', reposiciones:'Solo Reposiciones', cajas:'Cajas de locales' };
+  var titulos = { hoy:'Pedidos', pedidos:'Solo Pedidos', reposiciones:'Solo Reposiciones', cajas:'Cajas de locales' };
   document.getElementById('headerTitle').textContent = titulos[v] || 'Rotación';
   document.querySelectorAll('.sidebar-nav-btn').forEach(function(b, i){
     b.classList.toggle('active', ['hoy','pedidos','reposiciones','cajas'][i] === v);
@@ -721,6 +835,8 @@ function setVista(v) {
   document.getElementById('panelSolucionados').style.display = esCajas ? 'none' : '';
   document.getElementById('cajasBody').style.display         = esCajas ? '' : 'none';
   document.querySelector('.filters-bar').style.display       = esCajas ? 'none' : '';
+  var filtroTipoEl = document.getElementById('filtroTipo');
+  if (filtroTipoEl) filtroTipoEl.style.display = (v === 'pedidos' || v === 'reposiciones') ? 'none' : '';
   if (esCajas) { irHoyCajas(); } else { renderPanel(); }
 }
 
@@ -813,6 +929,24 @@ function filtrar(soloSolucionados) {
 function buildFila(p) {
   var idx = todosLosPedidos.indexOf(p);
   var fechaDisplay = p.fecha ? p.fecha.substring(8,10) + '/' + p.fecha.substring(5,7) : '—';
+  var obs = (p.obs || '').replace(/"/g, '&quot;');
+  var html = '<tr onclick="abrirModal(' + idx + ')">';
+  html += '<td class="hora">' + fechaDisplay + '</td>';
+  html += '<td class="hora">' + (p.hora || '—') + '</td>';
+  html += '<td><span class="badge-tipo ' + p.tipo + '">' + p.tipo + '</span></td>';
+  html += '<td><span class="cod">' + p.cod + '</span></td>';
+  html += '<td>' + (p.talle || '—') + '</td>';
+  html += '<td>' + (p.color || '—') + '</td>';
+  html += '<td style="font-weight:600">' + p.cantidad + '</td>';
+  html += '<td class="obs-cell" title="' + obs + '">' + (p.obs || '<span style="color:#ccc">—</span>') + '</td>';
+  html += '<td class="encargado-cell">' + p.encargado + '</td>';
+  html += '<td><span class="badge-estado ' + p.estado + '" id="b-' + idx + '">' + p.estado + '</span></td>';
+  html += '</tr>';
+  return html;
+}
+function buildFila_OLD(p) {
+  var idx = todosLosPedidos.indexOf(p);
+  var fechaDisplay = p.fecha ? p.fecha.substring(8,10) + '/' + p.fecha.substring(5,7) : '—';
   var esSol = p.estado === 'Solucionado';
   var obs = (p.obs || '').replace(/"/g, '&quot;');
   var html = '<tr>';
@@ -842,12 +976,108 @@ function accion(btn) {
   cambiarEstado(parseInt(btn.getAttribute("data-idx")), btn.getAttribute("data-estado"));
 }
 
+// ── MODAL ──
+var modalIdx = -1;
+
+function abrirModal(idx) {
+  var p = todosLosPedidos[idx];
+  if (!p) return;
+  modalIdx = idx;
+
+  document.getElementById('modalCod').textContent      = p.cod;
+  document.getElementById('modalTipo').textContent     = p.tipo;
+  document.getElementById('modalTipo').className       = 'modal-tipo ' + p.tipo;
+  document.getElementById('modalSucursal').textContent = p.sucursal;
+  document.getElementById('modalFecha').textContent    = p.fecha ? p.fecha.substring(8,10)+'/'+p.fecha.substring(5,7)+'/'+p.fecha.substring(0,4) : '—';
+  document.getElementById('modalTalle').textContent    = p.talle || '—';
+  document.getElementById('modalColor').textContent    = p.color || '—';
+  document.getElementById('modalCantidad').textContent = p.cantidad;
+  document.getElementById('modalEncargado').textContent= p.encargado;
+  document.getElementById('modalObs').textContent      = p.obs || 'Sin observación';
+  document.getElementById('modalSolObs').value         = '';
+  document.getElementById('modalSolBox').classList.remove('show');
+
+  // Armar botones según estado
+  var esSol = p.estado === 'Solucionado';
+  var actions = document.getElementById('modalActions');
+  if (!esSol) {
+    actions.innerHTML =
+      '<button class="modal-btn sol"  onclick="modalAccion('Solucionado')">✓ Solucionado</button>' +
+      '<button class="modal-btn proc" onclick="modalAccion('EnProceso')">⏳ En proceso</button>' +
+      '<button class="modal-btn rev"  onclick="modalAccion('Revisar')">⚠ Revisar</button>' +
+      '<button class="modal-btn cancelar" onclick="cerrarModal()">Cancelar</button>';
+  } else {
+    actions.innerHTML =
+      '<button class="modal-btn reabrir" onclick="modalAccion('SinVer')">↩ Reabrir</button>' +
+      '<button class="modal-btn cancelar" onclick="cerrarModal()">Cancelar</button>';
+  }
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function modalAccion(nuevoEstado) {
+  if (nuevoEstado === 'Solucionado') {
+    // Mostrar campo de observación antes de confirmar
+    var solBox = document.getElementById('modalSolBox');
+    if (!solBox.classList.contains('show')) {
+      solBox.classList.add('show');
+      // Cambiar botón a "Confirmar"
+      var btn = document.querySelector('.modal-btn.sol');
+      if (btn) { btn.textContent = '✓ Confirmar'; btn.onclick = function(){ confirmarSolucionado(); }; }
+      document.getElementById('modalSolObs').focus();
+      return;
+    }
+  }
+  ejecutarCambioEstado(nuevoEstado, '');
+}
+
+function confirmarSolucionado() {
+  var obs = document.getElementById('modalSolObs').value.trim();
+  ejecutarCambioEstado('Solucionado', obs);
+}
+
+async function ejecutarCambioEstado(nuevoEstado, obsExtra) {
+  var p = todosLosPedidos[modalIdx];
+  if (!p) return;
+  cerrarModal();
+  var badge = document.getElementById('b-' + modalIdx);
+  if (badge) { badge.textContent = '...'; badge.className = 'badge-estado'; }
+  try {
+    var url = API_URL + '?accion=actualizarEstado' +
+      '&id='      + encodeURIComponent(p.id) +
+      '&cod='     + encodeURIComponent(p.cod) +
+      '&talle='   + encodeURIComponent(p.talle || '') +
+      '&estado='  + encodeURIComponent(nuevoEstado) +
+      '&obsExtra='+ encodeURIComponent(obsExtra);
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (data.ok) {
+      todosLosPedidos[modalIdx].estado = nuevoEstado;
+      if (obsExtra) todosLosPedidos[modalIdx].obsExtra = obsExtra;
+      actualizarStats();
+      renderPanel();
+      var labels = { SinVer:'Sin ver', EnProceso:'En proceso', Revisar:'Revisar', Solucionado:'Solucionado' };
+      toast('✓ ' + (labels[nuevoEstado] || nuevoEstado), 'success');
+      mostrarUltimaActualizacion();
+    } else { toast('Error: ' + (data.error || 'desconocido'), 'error'); }
+  } catch(e) { toast('Error de conexión', 'error'); }
+}
+
+function cerrarModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  modalIdx = -1;
+}
+
+function cerrarModalOverlay(e) {
+  if (e.target === document.getElementById('modalOverlay')) cerrarModal();
+}
+
 function buildTablaHTML(lista) {
   var html = '<div class="table-wrap"><table>';
   html += '<thead><tr>';
   html += '<th>Fecha</th><th>Hora</th><th>Tipo</th><th>COD</th>';
   html += '<th>Talle</th><th>Color</th><th>Cant.</th>';
-  html += '<th>Observación</th><th>Encargado</th><th>Estado</th><th>Acciones</th>';
+  html += '<th>Observación</th><th>Encargado</th><th>Estado</th>';
   html += '</tr></thead><tbody>';
   lista.forEach(function(p) { html += buildFila(p); });
   html += '</tbody></table></div>';
