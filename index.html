@@ -1044,7 +1044,18 @@ async function ejecutarCambioEstado(nuevoEstado, obsExtra) {
   var idx = modalIdx; // guardar índice antes de cerrar el modal
   var p = todosLosPedidos[idx];
   if (!p) return;
+  var estadoAnterior = p.estado; // guardar para revertir si falla
   cerrarModal();
+
+  // UI optimista — actualizar pantalla inmediatamente sin esperar servidor
+  todosLosPedidos[idx].estado = nuevoEstado;
+  if (obsExtra) todosLosPedidos[idx].obsExtra = obsExtra;
+  actualizarStats();
+  renderPanel();
+  var labels = { SinVer:'Sin ver', EnProceso:'En proceso', Revisar:'Revisar', Solucionado:'Solucionado' };
+  toast('✓ ' + (labels[nuevoEstado] || nuevoEstado), 'success');
+
+  // Guardar en servidor en segundo plano
   try {
     var url = API_URL + '?accion=actualizarEstado' +
       '&id='      + encodeURIComponent(p.id) +
@@ -1054,16 +1065,20 @@ async function ejecutarCambioEstado(nuevoEstado, obsExtra) {
       '&obsExtra='+ encodeURIComponent(obsExtra || '');
     var resp = await fetch(url);
     var data = await resp.json();
-    if (data.ok) {
-      todosLosPedidos[idx].estado = nuevoEstado;
-      if (obsExtra) todosLosPedidos[idx].obsExtra = obsExtra;
+    if (!data.ok) {
+      // Revertir si el servidor falló
+      todosLosPedidos[idx].estado = estadoAnterior;
       actualizarStats();
       renderPanel();
-      var labels = { SinVer:'Sin ver', EnProceso:'En proceso', Revisar:'Revisar', Solucionado:'Solucionado' };
-      toast('✓ ' + (labels[nuevoEstado] || nuevoEstado), 'success');
-      mostrarUltimaActualizacion();
-    } else { toast('Error: ' + (data.error || 'desconocido'), 'error'); }
-  } catch(e) { toast('Error de conexión', 'error'); }
+      toast('⚠ Error al guardar: ' + (data.error || 'desconocido'), 'error');
+    }
+  } catch(e) {
+    // Revertir si no hubo conexión
+    todosLosPedidos[idx].estado = estadoAnterior;
+    actualizarStats();
+    renderPanel();
+    toast('⚠ Sin conexión — cambio revertido', 'error');
+  }
 }
 
 function cerrarModal() {
