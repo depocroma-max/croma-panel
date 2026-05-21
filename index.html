@@ -548,6 +548,33 @@ td { padding: 10px 16px; vertical-align: middle; }
 .modal-btn.cancelar:hover { background: var(--gray-50); }
 tbody tr { cursor: pointer; }
 
+
+/* ── MODAL CAJA ── */
+.modal-caja-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem;
+}
+.caja-check-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+.caja-check-label { color: var(--gray-600); }
+.caja-check-val { font-weight: 600; font-size: 13px; }
+.caja-check-val.ok      { color: #16a34a; }
+.caja-check-val.bad     { color: #dc2626; }
+.caja-check-val.neutral { color: var(--gray-400); }
+.caja-check-val.warn    { color: #d97706; }
+.caja-section-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--gray-400); margin: 1rem 0 6px;
+}
+.caja-extra-item { display: flex; gap: 8px; font-size: 13px; padding: 3px 0; }
+.caja-extra-icon { flex-shrink: 0; }
+.caja-extra-text { color: var(--gray-600); }
+
+/* Tarjeta clickeable */
+.caja-card { cursor: pointer; transition: box-shadow .15s; }
+.caja-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+
+/* Fecha + encargado en tarjeta */
+.caja-meta { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+.caja-meta span { color: var(--gray-600); }
 </style>
 </head>
 <body>
@@ -752,6 +779,33 @@ tbody tr { cursor: pointer; }
   </div>
 </div>
 
+<!-- MODAL CAJA -->
+<div class="modal-overlay" id="modalCajaOverlay" onclick="cerrarModalCajaOverlay(event)">
+  <div class="modal-box" id="modalCajaBox" style="max-width:600px">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <span class="modal-cod" id="mcSucursal"></span>
+        <span style="font-size:12px;color:var(--gray-400)" id="mcFecha"></span>
+      </div>
+      <button class="modal-close" onclick="cerrarModalCaja()">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+      <div class="modal-caja-grid">
+        <div class="modal-field"><label>Encargado</label><span id="mcEncargado"></span></div>
+        <div class="modal-field"><label>Hora de cierre</label><span id="mcHora"></span></div>
+      </div>
+
+      <div class="caja-section-title">Operativo</div>
+      <div class="caja-checks" id="mcChecks"></div>
+
+      <div id="mcExtrasWrap" style="display:none">
+        <div class="caja-section-title">Novedades</div>
+        <div id="mcExtras"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="dash-toast" id="dashToast"></div>
 
@@ -835,6 +889,7 @@ function setVista(v) {
   document.getElementById('panelSolucionados').style.display = esCajas ? 'none' : '';
   document.getElementById('cajasBody').style.display         = esCajas ? '' : 'none';
   document.querySelector('.filters-bar').style.display       = esCajas ? 'none' : '';
+  document.querySelector('.dash-stats').style.display        = esCajas ? 'none' : '';
   var filtroTipoEl = document.getElementById('filtroTipo');
   if (filtroTipoEl) filtroTipoEl.style.display = (v === 'pedidos' || v === 'reposiciones') ? 'none' : '';
   if (esCajas) { irHoyCajas(); } else { renderPanel(); }
@@ -1187,7 +1242,11 @@ async function cargarCajas() {
   }
 }
 
+// Guardar cajas globalmente para el modal
+var cajasData = [];
+
 function renderCajas(cajas) {
+  cajasData = cajas;
   var cerro     = cajas.filter(function(c){ return !c.sinCierre; }).length;
   var sinCierre = cajas.filter(function(c){ return  c.sinCierre; }).length;
   var alertas   = cajas.filter(function(c){ return  c.alerta; }).length;
@@ -1199,30 +1258,32 @@ function renderCajas(cajas) {
   if (alertas > 0) badgeAlertas.textContent = alertas;
 
   var html = '';
-  cajas.forEach(function(c) {
+  cajas.forEach(function(c, idx) {
     if (c.sinCierre) {
-      html += '<div class="caja-card sin-cierre">';
+      html += '<div class="caja-card sin-cierre" onclick="abrirModalCaja(' + idx + ')">';
       html += '<div class="caja-card-header"><div><div class="caja-suc">' + c.sucursal + '</div></div>';
       html += '<div class="caja-status-dot sin-cierre"></div></div>';
       html += '<div class="caja-sin-cierre-msg">Sin cierre registrado</div></div>';
       return;
     }
     var clase = c.alerta ? 'alerta' : 'ok';
-    html += '<div class="caja-card ' + clase + '">';
+    // Formatear fecha dd/mm
+    var fechaDisplay = c.fecha ? c.fecha.substring(8,10)+'/'+c.fecha.substring(5,7) : '';
+    html += '<div class="caja-card ' + clase + '" onclick="abrirModalCaja(' + idx + ')">';
     html += '<div class="caja-card-header"><div>';
     html += '<div class="caja-suc">' + c.sucursal + '</div>';
-    html += '<div class="caja-hora">Cierre: ' + (c.hora || '—') + '</div>';
-    html += '<div class="caja-encargado">' + (c.encargado || '') + '</div>';
+    html += '<div class="caja-meta">Cierre: <span>' + (c.hora||'—') + '</span>' + (fechaDisplay ? ' · ' + fechaDisplay : '') + '</div>';
+    html += '<div class="caja-meta">Encargado: <span>' + (c.encargado||'—') + '</span></div>';
     html += '</div><div class="caja-status-dot ' + clase + '"></div></div>';
     html += '<div class="caja-checks">';
-    html += checkRow('Remitos cargados', c.remitos, false);
-    html += checkRow('Salidas registradas', c.salidas, false);
-    html += checkRow('Diferencia cupón', c.diferencia, true);
+    html += checkRow('Remitos cargados',    c.remitos,    false);
+    html += checkRow('Salidas registradas', c.salidas,    false);
+    html += checkRow('Diferencia cupón',    c.diferencia, true);
     html += '</div>';
     if (c.ausente || c.franquero || c.mantenimiento) {
       html += '<div class="caja-extras">';
       if (c.ausente)       html += extraRow('👤', 'Ausente: ' + c.ausente);
-      if (c.franquero)     html += extraRow('⭐', 'Franquero: ' + c.franquero + (c.gustoFranquero ? ' · ' + c.gustoFranquero : ''));
+      if (c.franquero)     html += extraRow('⭐', 'Franquero: ' + c.franquero + franqueroApto(c.gustoFranquero));
       if (c.mantenimiento) html += extraRow('🔧', c.mantenimiento);
       html += '</div>';
     }
@@ -1231,13 +1292,73 @@ function renderCajas(cajas) {
   document.getElementById('cajasGrid').innerHTML = html;
 }
 
-function checkRow(label, val, invertido) {
+function franqueroApto(val) {
+  if (!val) return '';
+  if (val === 'Si') return ' · <span style="color:#16a34a;font-weight:600">Apto ✓</span>';
+  if (val === 'No') return ' · <span style="color:#dc2626;font-weight:600">No apto ✗</span>';
+  return ' · <span style="color:#d97706;font-weight:600">Regular ~</span>';
+}
+
+function abrirModalCaja(idx) {
+  var c = cajasData[idx];
+  if (!c) return;
+
+  var fechaDisplay = c.fecha ? c.fecha.substring(8,10)+'/'+c.fecha.substring(5,7)+'/'+c.fecha.substring(0,4) : '—';
+  document.getElementById('mcSucursal').textContent = c.sucursal;
+  document.getElementById('mcFecha').textContent    = fechaDisplay;
+  document.getElementById('mcEncargado').textContent= c.encargado || '—';
+  document.getElementById('mcHora').textContent     = c.hora || '—';
+
+  // Checks con colores correctos
+  var checks = '';
+  checks += checkRowModal('Remitos cargados',    c.remitos,    false);
+  checks += checkRowModal('Salidas registradas', c.salidas,    false);
+  checks += checkRowModal('Diferencia cupón',    c.diferencia, true);
+  document.getElementById('mcChecks').innerHTML = checks;
+
+  // Extras
+  var extras = '';
+  if (c.ausente)       extras += '<div class="caja-extra-item"><span class="caja-extra-icon">👤</span><span class="caja-extra-text">Ausente: <strong>' + c.ausente + '</strong></span></div>';
+  if (c.mantenimiento) extras += '<div class="caja-extra-item"><span class="caja-extra-icon">🔧</span><span class="caja-extra-text">' + c.mantenimiento + '</span></div>';
+  if (c.franquero) {
+    extras += '<div class="caja-extra-item"><span class="caja-extra-icon">⭐</span><span class="caja-extra-text">Franquero: <strong>' + c.franquero + '</strong></span></div>';
+    var aptoTxt = c.gustoFranquero === 'Si' ? '<span style="color:#16a34a;font-weight:600">✓ Apto</span>'
+                : c.gustoFranquero === 'No' ? '<span style="color:#dc2626;font-weight:600">✗ No apto</span>'
+                : '<span style="color:#d97706;font-weight:600">~ Regular</span>';
+    extras += '<div class="caja-extra-item"><span class="caja-extra-icon">📋</span><span class="caja-extra-text">Evaluación: ' + aptoTxt + '</span></div>';
+  }
+
+  var extrasWrap = document.getElementById('mcExtrasWrap');
+  document.getElementById('mcExtras').innerHTML = extras;
+  extrasWrap.style.display = extras ? '' : 'none';
+
+  document.getElementById('modalCajaOverlay').classList.add('open');
+}
+
+function cerrarModalCaja() {
+  document.getElementById('modalCajaOverlay').classList.remove('open');
+}
+function cerrarModalCajaOverlay(e) {
+  if (e.target === document.getElementById('modalCajaOverlay')) cerrarModalCaja();
+}
+
+function checkRowModal(label, val, invertido) {
   var esOk  = invertido ? (val === 'No' || val === '') : (val === 'Si');
   var esBad = invertido ? (val === 'Si') : (val === 'No');
   var clase = esOk ? 'ok' : (esBad ? 'bad' : 'neutral');
   var texto = val === 'Si' ? '✓ Sí' : val === 'No' ? '✗ No' : '—';
   return '<div class="caja-check-row">' +
     '<span class="caja-check-label">' + label + '</span>' +
+    '<span class="caja-check-val ' + clase + '">' + texto + '</span></div>';
+}
+
+function checkRow(label, val, invertido) {
+  var esOk  = invertido ? (val === 'No' || val === '') : (val === 'Si');
+  var esBad = invertido ? (val === 'Si') : (val === 'No');
+  var clase = esOk ? 'ok' : (esBad ? 'bad' : 'neutral');
+  var texto = val === 'Si' ? '✓ Sí' : val === 'No' ? '✗ No' : '—';
+  return '<div class="caja-check-row" style="padding:3px 0;font-size:12px">' +
+    '<span class="caja-check-label" style="color:var(--gray-600)">' + label + '</span>' +
     '<span class="caja-check-val ' + clase + '">' + texto + '</span></div>';
 }
 
