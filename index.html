@@ -748,12 +748,12 @@ function setVista(v) {
 
 // ── API ──
 async function cargarDatos() {
-  if (!API_URL) return;
   document.getElementById('panelPendientes').innerHTML =
     '<div class="loading-state"><div class="spinner"></div><p>Cargando pedidos...</p></div>';
   document.getElementById('panelSolucionados').innerHTML = '';
   try {
-    var resp = await fetch(API_URL + '?accion=obtenerPedidosHoy');
+    var dias = document.getElementById('filtroDias') ? document.getElementById('filtroDias').value : '30';
+    var resp = await fetch(API_URL + '?accion=obtenerPedidos&dias=' + dias);
     var data = await resp.json();
     if (data.ok) {
       todosLosPedidos = (data.pedidos || []).map(function(p){
