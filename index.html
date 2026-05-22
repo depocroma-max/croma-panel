@@ -522,8 +522,15 @@ function hacerLogin() {
 function setVista(v) {
   vistaActual = v;
   var titulos = { hoy:'Pedidos', pedidos:'Solo Pedidos', reposiciones:'Solo Reposiciones', cajas:'Cajas de locales' };
-  document.querySelectorAll('.sidebar-nav-btn').forEach(function(b, i){
-    b.classList.toggle('active', ['hoy','pedidos','reposiciones','cajas'][i] === v);
+  // Actualizar botones del topbar
+  ['navPedidos','navSoloPedidos','navSoloRepos','navCajas'].forEach(function(id, i){
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('active', ['hoy','pedidos','reposiciones','cajas'][i] === v);
+  });
+  // Actualizar botones del drawer mobile
+  ['drawerNavPedidos','drawerNavSoloPedidos','drawerNavSoloRepos','drawerNavCajas'].forEach(function(id, i){
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('active', ['hoy','pedidos','reposiciones','cajas'][i] === v);
   });
   var esCajas = v === 'cajas';
   document.getElementById('panelPendientes').style.display   = esCajas ? 'none' : '';
