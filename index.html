@@ -515,7 +515,6 @@ function hacerLogin() {
 function setVista(v) {
   vistaActual = v;
   var titulos = { hoy:'Pedidos', pedidos:'Solo Pedidos', reposiciones:'Solo Reposiciones', cajas:'Cajas de locales' };
-  document.getElementById('headerTitle').textContent = titulos[v] || 'Rotación';
   document.querySelectorAll('.sidebar-nav-btn').forEach(function(b, i){
     b.classList.toggle('active', ['hoy','pedidos','reposiciones','cajas'][i] === v);
   });
