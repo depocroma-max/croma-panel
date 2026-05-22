@@ -1107,9 +1107,8 @@ function abrirModalCaja(idx) {
     extras += '<div class="caja-extra-item"><span class="caja-extra-icon">📋</span><span class="caja-extra-text">Evaluación: ' + aptoTxt + '</span></div>';
   }
 
-  var extrasWrap = document.getElementById('mcExtrasWrap');
-  document.getElementById('mcExtras').innerHTML = extras;
-  extrasWrap.style.display = extras ? '' : 'none';
+  document.getElementById('mcExtras').innerHTML = extras ||
+    '<div class="informe-sin-novedades">Sin novedades registradas</div>';
 
   document.getElementById('modalCajaOverlay').classList.add('open');
 }
