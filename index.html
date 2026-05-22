@@ -293,9 +293,7 @@ td { padding: 10px 14px; vertical-align: middle; }
       <span class="brand-section">Panel</span>
     </div>
     <nav class="top-nav" id="topNav">
-      <button class="nav-btn active" id="navPedidos">Pedidos <span class="nav-badge-dot" id="badge-pend" style="display:none"></span></button>
-      <button class="nav-btn" id="navSoloPedidos">Solo Pedidos</button>
-      <button class="nav-btn" id="navSoloRepos">Solo Reposiciones</button>
+      <button class="nav-btn active" id="navPedidos">Pedidos</button>
       <button class="nav-btn" id="navCajas">Cajas de locales</button>
     </nav>
     <div class="top-actions">
@@ -385,6 +383,10 @@ td { padding: 10px 14px; vertical-align: middle; }
       </div>
       <span class="modal-obs-label">Observación del local</span>
       <div class="modal-obs-box" id="modalObs"></div>
+      <div id="modalObsSolWrap" style="display:none;margin-bottom:1rem">
+        <span class="modal-obs-label" style="color:#15803d">✓ Resolución</span>
+        <div class="modal-obs-box" id="modalObsSol" style="border-color:#86efac;background:#f0fdf4;color:#15803d;font-style:normal;font-weight:500"></div>
+      </div>
       <div class="modal-sol-box" id="modalSolBox">
         <label>Observación al solucionar</label>
         <textarea id="modalSolObs" placeholder="Ej: Roté COD 76229 desde 01 PASEO..."></textarea>
@@ -428,8 +430,6 @@ td { padding: 10px 14px; vertical-align: middle; }
   </div>
   <nav class="drawer-nav">
     <button class="drawer-nav-btn active" id="drawerNavPedidos">Pedidos</button>
-    <button class="drawer-nav-btn" id="drawerNavSoloPedidos">Solo Pedidos</button>
-    <button class="drawer-nav-btn" id="drawerNavSoloRepos">Solo Reposiciones</button>
     <button class="drawer-nav-btn" id="drawerNavCajas">Cajas de locales</button>
   </nav>
 </div>
@@ -454,8 +454,8 @@ function cerrarDrawer() {
 
 function initNav() {
   var navMap = {
-    navPedidos:'hoy', navSoloPedidos:'pedidos', navSoloRepos:'reposiciones', navCajas:'cajas',
-    drawerNavPedidos:'hoy', drawerNavSoloPedidos:'pedidos', drawerNavSoloRepos:'reposiciones', drawerNavCajas:'cajas'
+    navPedidos:'hoy', navCajas:'cajas',
+    drawerNavPedidos:'hoy', drawerNavCajas:'cajas'
   };
   Object.keys(navMap).forEach(function(id) {
     var el = document.getElementById(id);
@@ -523,14 +523,13 @@ function setVista(v) {
   vistaActual = v;
   var titulos = { hoy:'Pedidos', pedidos:'Solo Pedidos', reposiciones:'Solo Reposiciones', cajas:'Cajas de locales' };
   // Actualizar botones del topbar
-  ['navPedidos','navSoloPedidos','navSoloRepos','navCajas'].forEach(function(id, i){
+  ['navPedidos','navCajas'].forEach(function(id, i){
     var el = document.getElementById(id);
-    if (el) el.classList.toggle('active', ['hoy','pedidos','reposiciones','cajas'][i] === v);
+    if (el) el.classList.toggle('active', ['hoy','cajas'][i] === v);
   });
-  // Actualizar botones del drawer mobile
-  ['drawerNavPedidos','drawerNavSoloPedidos','drawerNavSoloRepos','drawerNavCajas'].forEach(function(id, i){
+  ['drawerNavPedidos','drawerNavCajas'].forEach(function(id, i){
     var el = document.getElementById(id);
-    if (el) el.classList.toggle('active', ['hoy','pedidos','reposiciones','cajas'][i] === v);
+    if (el) el.classList.toggle('active', ['hoy','cajas'][i] === v);
   });
   var esCajas = v === 'cajas';
   document.getElementById('panelPendientes').style.display   = esCajas ? 'none' : '';
@@ -609,8 +608,7 @@ function actualizarStats() {
   document.getElementById('statPend').textContent  = sinVer;
   document.getElementById('statProc').textContent  = proc;
   document.getElementById('statEnv').textContent   = sol;
-  var bp = document.getElementById('badge-pend');
-  if (bp) bp.style.display = (sinVer + proc) > 0 ? 'inline-block' : 'none';
+
 }
 
 // ── FILTRADO ──
@@ -702,6 +700,15 @@ function abrirModal(idx) {
   document.getElementById('modalObs').textContent      = p.obs || 'Sin observación';
   document.getElementById('modalSolObs').value         = '';
   document.getElementById('modalSolBox').classList.remove('show');
+  // Mostrar observación de resolución si existe
+  var obsSolWrap = document.getElementById('modalObsSolWrap');
+  var obsSolEl   = document.getElementById('modalObsSol');
+  if (p.obsExtra && p.obsExtra.trim()) {
+    obsSolEl.textContent = p.obsExtra;
+    obsSolWrap.style.display = '';
+  } else {
+    obsSolWrap.style.display = 'none';
+  }
 
   // Armar botones según estado
   var esSol = p.estado === 'Solucionado';
@@ -850,7 +857,25 @@ function renderPanel() {
     htmlSol += '<button class="section-toggle" id="solToggleBtn">▼ mostrar</button>';
     htmlSol += '</div>';
     htmlSol += '<div id="solContent" class="sol-collapsed">';
-    htmlSol += buildTablaHTML(solucionados);
+    // Agrupar solucionados por sucursal
+    var gruposSol = {};
+    SUCURSALES.forEach(function(s){ gruposSol[s] = []; });
+    solucionados.forEach(function(p){
+      if (!gruposSol[p.sucursal]) gruposSol[p.sucursal] = [];
+      gruposSol[p.sucursal].push(p);
+    });
+    SUCURSALES.forEach(function(suc){
+      var lista = gruposSol[suc];
+      if (!lista || lista.length === 0) return;
+      htmlSol += '<div class="sucursal-block">';
+      htmlSol += '<div class="sucursal-header">';
+      htmlSol += '<div class="suc-stripe" data-suc="' + suc + '"></div>';
+      htmlSol += '<span class="suc-nombre">' + suc + '</span>';
+      htmlSol += '<span class="suc-count">' + lista.length + ' solucionado' + (lista.length !== 1 ? 's' : '') + '</span>';
+      htmlSol += '</div>';
+      htmlSol += '<div class="table-card">' + buildTablaHTML(lista) + '</div>';
+      htmlSol += '</div>';
+    });
     htmlSol += '</div>';
   }
   document.getElementById('panelSolucionados').innerHTML = htmlSol;
