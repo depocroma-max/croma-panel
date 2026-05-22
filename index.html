@@ -1076,35 +1076,63 @@ function franqueroApto(val) {
   return ' · <span style="color:#d97706;font-weight:600">Regular ~</span>';
 }
 
+
+
 function abrirModalCaja(idx) {
   var c = cajasData[idx];
   if (!c) return;
 
-  var fechaDisplay = c.fecha ? c.fecha.substring(8,10)+'/'+c.fecha.substring(5,7)+'/'+c.fecha.substring(0,4) : '—';
-  var mcSuc = document.getElementById('mcSucursal');
-  mcSuc.textContent = c.sucursal;
-  mcSuc.setAttribute('data-suc', c.sucursal);
-  document.getElementById('mcFecha').textContent    = fechaDisplay;
+  var fechaDisplay = c.fecha
+    ? c.fecha.substring(8,10)+'/'+c.fecha.substring(5,7)+'/'+c.fecha.substring(0,4)
+    : '—';
+
+  document.getElementById('mcSucursal').textContent = c.sucursal;
+  document.getElementById('mcFecha').textContent    = 'Cierre del ' + fechaDisplay;
   document.getElementById('mcEncargado').textContent= c.encargado || '—';
   document.getElementById('mcHora').textContent     = c.hora || '—';
 
-  // Checks con colores correctos
+  // Operativo
   var checks = '';
-  checks += checkRowModal('Remitos cargados',    c.remitos,    false);
-  checks += checkRowModal('Salidas registradas', c.salidas,    false);
-  checks += checkRowModal('Diferencia cupón',    c.diferencia, true);
+  checks += informeCheckRow('Remitos cargados',    c.remitos,    false);
+  checks += informeCheckRow('Salidas registradas', c.salidas,    false);
+  checks += informeCheckRow('Diferencia de cupón', c.diferencia, true);
   document.getElementById('mcChecks').innerHTML = checks;
 
-  // Extras
+  // Novedades
   var extras = '';
-  if (c.ausente)       extras += '<div class="caja-extra-item"><span class="caja-extra-icon">👤</span><span class="caja-extra-text">Ausente: <strong>' + c.ausente + '</strong></span></div>';
-  if (c.mantenimiento) extras += '<div class="caja-extra-item"><span class="caja-extra-icon">🔧</span><span class="caja-extra-text">' + c.mantenimiento + '</span></div>';
+  if (c.ausente) {
+    extras += '<div class="informe-novedad-item">';
+    extras += '<span class="informe-novedad-icon">👤</span>';
+    extras += '<div class="informe-novedad-content">';
+    extras += '<div class="informe-novedad-label">Ausente</div>';
+    extras += '<div class="informe-novedad-val">' + c.ausente + '</div>';
+    extras += '</div></div>';
+  }
   if (c.franquero) {
-    extras += '<div class="caja-extra-item"><span class="caja-extra-icon">⭐</span><span class="caja-extra-text">Franquero: <strong>' + c.franquero + '</strong></span></div>';
-    var aptoTxt = c.gustoFranquero === 'Si' ? '<span style="color:#16a34a;font-weight:600">✓ Apto</span>'
-                : c.gustoFranquero === 'No' ? '<span style="color:#dc2626;font-weight:600">✗ No apto</span>'
-                : '<span style="color:#d97706;font-weight:600">~ Regular</span>';
-    extras += '<div class="caja-extra-item"><span class="caja-extra-icon">📋</span><span class="caja-extra-text">Evaluación: ' + aptoTxt + '</span></div>';
+    var franks = c.franquero.split(' | ');
+    franks.forEach(function(f) {
+      if (!f.trim()) return;
+      var match = f.match(/^(.+?)\s*\((.+?)\)$/);
+      var nombre = match ? match[1].trim() : f.trim();
+      var evalVal = match ? match[2].trim() : '';
+      var evalClass = evalVal === 'Si' ? 'apto' : evalVal === 'No' ? 'no-apto' : 'regular';
+      var evalLabel = evalVal === 'Si' ? '👍 Apto' : evalVal === 'No' ? '👎 No apto' : '😐 Regular';
+      extras += '<div class="informe-novedad-item">';
+      extras += '<span class="informe-novedad-icon">⭐</span>';
+      extras += '<div class="informe-novedad-content">';
+      extras += '<div class="informe-novedad-label">Franquero/a</div>';
+      extras += '<div class="informe-novedad-val">' + nombre + '</div>';
+      if (evalVal) extras += '<span class="informe-novedad-eval ' + evalClass + '">' + evalLabel + '</span>';
+      extras += '</div></div>';
+    });
+  }
+  if (c.mantenimiento) {
+    extras += '<div class="informe-novedad-item">';
+    extras += '<span class="informe-novedad-icon">🔧</span>';
+    extras += '<div class="informe-novedad-content">';
+    extras += '<div class="informe-novedad-label">Mantenimiento</div>';
+    extras += '<div class="informe-novedad-val">' + c.mantenimiento + '</div>';
+    extras += '</div></div>';
   }
 
   document.getElementById('mcExtras').innerHTML = extras ||
@@ -1112,6 +1140,19 @@ function abrirModalCaja(idx) {
 
   document.getElementById('modalCajaOverlay').classList.add('open');
 }
+
+function informeCheckRow(label, val, invertido) {
+  var esOk  = invertido ? (val === 'No' || val === '') : (val === 'Si');
+  var esBad = invertido ? (val === 'Si') : (val === 'No');
+  var color = esOk ? '#16a34a' : (esBad ? '#dc2626' : '#a0a09a');
+  var texto = val === 'Si' ? '✓ Sí' : val === 'No' ? '✗ No' : '—';
+  return '<div class="informe-check-row">' +
+    '<span class="informe-check-label">' + label + '</span>' +
+    '<span style="color:' + color + ';font-weight:600">' + texto + '</span>' +
+    '</div>';
+}
+
+function imprimirInforme() { window.print(); }
 
 function cerrarModalCaja() {
   document.getElementById('modalCajaOverlay').classList.remove('open');
