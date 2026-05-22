@@ -445,6 +445,13 @@ var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04
 var CREDENCIALES = { admin: 'cromacajas' };
 
 // ── LOGIN ──
+function cerrarDrawer() {
+  var drawer = document.getElementById('drawer');
+  var drawerOverlay = document.getElementById('drawerOverlay');
+  if (drawer) drawer.classList.remove('open');
+  if (drawerOverlay) drawerOverlay.classList.remove('open');
+}
+
 function initNav() {
   var navMap = {
     navPedidos:'hoy', navSoloPedidos:'pedidos', navSoloRepos:'reposiciones', navCajas:'cajas',
@@ -522,8 +529,10 @@ function setVista(v) {
   document.getElementById('panelPendientes').style.display   = esCajas ? 'none' : '';
   document.getElementById('panelSolucionados').style.display = esCajas ? 'none' : '';
   document.getElementById('cajasBody').style.display         = esCajas ? '' : 'none';
-  document.querySelector('.filters-bar').style.display       = esCajas ? 'none' : '';
-  document.querySelector('.dash-stats').style.display        = esCajas ? 'none' : '';
+  var controlsEl = document.getElementById('controlsBar');
+  var statsEl    = document.getElementById('statsRow');
+  if (controlsEl) controlsEl.style.display = esCajas ? 'none' : '';
+  if (statsEl)    statsEl.style.display    = esCajas ? 'none' : '';
   var filtroTipoEl = document.getElementById('filtroTipo');
   if (filtroTipoEl) filtroTipoEl.style.display = (v === 'pedidos' || v === 'reposiciones') ? 'none' : '';
   if (esCajas) { irHoyCajas(); } else { renderPanel(); }
