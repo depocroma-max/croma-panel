@@ -427,10 +427,10 @@ td { padding: 10px 14px; vertical-align: middle; }
     <button class="drawer-close" id="drawerClose">✕</button>
   </div>
   <nav class="drawer-nav">
-    <button class="drawer-nav-btn active" onclick="setVista('hoy');cerrarDrawer()">Pedidos</button>
-    <button class="drawer-nav-btn" onclick="setVista('pedidos');cerrarDrawer()">Solo Pedidos</button>
-    <button class="drawer-nav-btn" onclick="setVista('reposiciones');cerrarDrawer()">Solo Reposiciones</button>
-    <button class="drawer-nav-btn" onclick="setVista('cajas');cerrarDrawer()">Cajas de locales</button>
+    <button class="drawer-nav-btn active" id="drawerNavPedidos">Pedidos</button>
+    <button class="drawer-nav-btn" id="drawerNavSoloPedidos">Solo Pedidos</button>
+    <button class="drawer-nav-btn" id="drawerNavSoloRepos">Solo Reposiciones</button>
+    <button class="drawer-nav-btn" id="drawerNavCajas">Cajas de locales</button>
   </nav>
 </div>
 
@@ -486,7 +486,10 @@ function hacerLogin() {
   });
 
   // Nav buttons
-  var navMap = { navPedidos:'hoy', navSoloPedidos:'pedidos', navSoloRepos:'reposiciones', navCajas:'cajas' };
+  var navMap = {
+    navPedidos:'hoy', navSoloPedidos:'pedidos', navSoloRepos:'reposiciones', navCajas:'cajas',
+    drawerNavPedidos:'hoy', drawerNavSoloPedidos:'pedidos', drawerNavSoloRepos:'reposiciones', drawerNavCajas:'cajas'
+  };
   Object.keys(navMap).forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('click', function(){ setVista(navMap[id]); });
@@ -791,7 +794,6 @@ function renderPanel() {
   var pendientes   = filtrar(false);
   var solucionados = filtrar(true);
 
-  // Pendientes agrupados por sucursal
   var htmlPend = '';
   if (pendientes.length === 0) {
     htmlPend = '<div class="empty-state">📭 Sin artículos pendientes.</div>';
@@ -808,19 +810,19 @@ function renderPanel() {
       var sinRes = lista.filter(function(p) {
         return p.estado === 'SinVer' || p.estado === 'Revisar';
       }).length;
-      htmlPend += '<div class="suc-section">';
-      htmlPend += '<div class="suc-header">';
-      htmlPend += '<span class="suc-badge" data-suc="' + suc + '">' + suc + '</span>';
-      htmlPend += '<span class="suc-counts">' + lista.length + ' artículo' + (lista.length !== 1 ? 's' : '') + '</span>';
-      if (sinRes > 0) htmlPend += '<span class="suc-pend-badge">' + sinRes + ' sin resolver</span>';
+      htmlPend += '<div class="sucursal-block">';
+      htmlPend += '<div class="sucursal-header">';
+      htmlPend += '<div class="suc-stripe" data-suc="' + suc + '"></div>';
+      htmlPend += '<span class="suc-nombre">' + suc + '</span>';
+      htmlPend += '<span class="suc-count">' + lista.length + ' artículo' + (lista.length !== 1 ? 's' : '') + '</span>';
+      if (sinRes > 0) htmlPend += '<span class="suc-alerta">' + sinRes + ' sin resolver</span>';
       htmlPend += '</div>';
-      htmlPend += buildTablaHTML(lista);
+      htmlPend += '<div class="table-card">' + buildTablaHTML(lista) + '</div>';
       htmlPend += '</div>';
     });
   }
   document.getElementById('panelPendientes').innerHTML = htmlPend;
 
-  // Solucionados colapsables
   var htmlSol = '';
   if (solucionados.length > 0) {
     htmlSol += '<div class="section-label" onclick="toggleSolucionados()">';
