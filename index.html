@@ -445,6 +445,17 @@ var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04
 var CREDENCIALES = { admin: 'cromacajas' };
 
 // ── LOGIN ──
+function initNav() {
+  var navMap = {
+    navPedidos:'hoy', navSoloPedidos:'pedidos', navSoloRepos:'reposiciones', navCajas:'cajas',
+    drawerNavPedidos:'hoy', drawerNavSoloPedidos:'pedidos', drawerNavSoloRepos:'reposiciones', drawerNavCajas:'cajas'
+  };
+  Object.keys(navMap).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', function(){ setVista(navMap[id]); });
+  });
+}
+
 function hacerLogin() {
   var user = document.getElementById('loginUser').value.trim();
   var pass = document.getElementById('loginPass').value;
