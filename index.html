@@ -893,12 +893,17 @@ function renderCajas(cajas) {
   var cerro     = cajas.filter(function(c){ return !c.sinCierre; }).length;
   var sinCierre = cajas.filter(function(c){ return  c.sinCierre; }).length;
   var alertas   = cajas.filter(function(c){ return  c.alerta; }).length;
-  document.getElementById('cajaStat-cerro').textContent     = cerro;
-  document.getElementById('cajaStat-sinCierre').textContent = sinCierre;
-  document.getElementById('cajaStat-alertas').textContent   = alertas;
+  var elCerro = document.getElementById('cajaStat-cerro');
+  var elSin   = document.getElementById('cajaStat-sinCierre');
+  var elAl    = document.getElementById('cajaStat-alertas');
+  if (elCerro) elCerro.textContent = cerro;
+  if (elSin)   elSin.textContent   = sinCierre;
+  if (elAl)    elAl.textContent    = alertas;
   var badgeAlertas = document.getElementById('badge-alertas');
-  badgeAlertas.style.display = alertas > 0 ? '' : 'none';
-  if (alertas > 0) badgeAlertas.textContent = alertas;
+  if (badgeAlertas) {
+    badgeAlertas.style.display = alertas > 0 ? '' : 'none';
+    if (alertas > 0) badgeAlertas.textContent = alertas;
+  }
 
   var html = '';
   cajas.forEach(function(c, idx) {
