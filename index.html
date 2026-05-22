@@ -454,6 +454,7 @@ function hacerLogin() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('dashApp').style.display = '';
     err.textContent = '';
+    initNav();
     cargarDatos();
   } else {
     err.textContent = 'Usuario o contraseña incorrectos';
@@ -473,6 +474,7 @@ function hacerLogin() {
   if (sessionStorage.getItem('croma_auth') === '1') {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('dashApp').style.display = '';
+    initNav();
     cargarDatos();
   }
 
@@ -486,15 +488,6 @@ function hacerLogin() {
   });
 
   // Nav buttons
-  var navMap = {
-    navPedidos:'hoy', navSoloPedidos:'pedidos', navSoloRepos:'reposiciones', navCajas:'cajas',
-    drawerNavPedidos:'hoy', drawerNavSoloPedidos:'pedidos', drawerNavSoloRepos:'reposiciones', drawerNavCajas:'cajas'
-  };
-  Object.keys(navMap).forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) el.addEventListener('click', function(){ setVista(navMap[id]); });
-  });
-
   // Hamburger mobile
   var hbBtn = document.getElementById('hamburgerBtn');
   var drawer = document.getElementById('drawer');
