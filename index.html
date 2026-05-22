@@ -64,10 +64,10 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--b
 .nav-btn:hover { color: var(--white); background: rgba(255,255,255,.08); }
 .nav-btn.active { color: var(--black); background: var(--white); font-weight: 600; border-radius: var(--radius-sm); }
 .nav-badge-dot { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-left: 5px; vertical-align: middle; }
-.top-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.top-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; position: relative; z-index: 10; }
 .btn-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #333; border-radius: var(--radius-sm); background: transparent; color: var(--gray-400); cursor: pointer; transition: all .15s; font-size: 14px; }
 .btn-icon:hover { color: var(--white); border-color: #555; }
-.connection-status { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(255,255,255,.06); border: 1px solid #333; }
+.connection-status { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(255,255,255,.06); border: 1px solid #333; pointer-events: none; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 6px #22c55e88; }
 .status-label { font-size: 12px; color: var(--gray-400); }
 .hamburger-btn { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 36px; height: 36px; padding: 6px; background: transparent; border: 1px solid #333; border-radius: var(--radius-sm); cursor: pointer; }
@@ -298,7 +298,7 @@ td { padding: 10px 14px; vertical-align: middle; }
     </nav>
     <div class="top-actions">
       <span class="status-label" id="ultimaActualizacion"></span>
-      <button class="btn-icon" onclick="cargarDatos()" title="Actualizar">↻</button>
+      <button class="btn-icon" id="btnActualizar" title="Actualizar">↻</button>
       <div class="connection-status connected">
         <div class="status-dot"></div>
         <span class="status-label" id="fechaHoy"></span>
@@ -453,6 +453,9 @@ function cerrarDrawer() {
 }
 
 function initNav() {
+  var btnAct = document.getElementById('btnActualizar');
+  if (btnAct) btnAct.addEventListener('click', cargarDatos);
+
   var navMap = {
     navPedidos:'hoy', navCajas:'cajas',
     drawerNavPedidos:'hoy', drawerNavCajas:'cajas'
