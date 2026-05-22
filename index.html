@@ -96,7 +96,7 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--b
 .sucursal-block { margin-bottom: 1.5rem; }
 .sucursal-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 0 2px; }
 .suc-stripe { width: 4px; height: 20px; border-radius: 2px; flex-shrink: 0; }
-.suc-nombre { font-family: var(--font-display); font-size: 17px; letter-spacing: 1px; color: var(--black); }
+.suc-nombre { font-family: var(--font-display); font-size: 17px; letter-spacing: 1px; color: var(--black); margin-right: 4px; }
 .suc-count { font-size: 12px; color: var(--gray-400); }
 .suc-alerta { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--accent); background: #fee2e2; padding: 2px 8px; border-radius: 20px; }
 
@@ -293,10 +293,10 @@ td { padding: 10px 14px; vertical-align: middle; }
       <span class="brand-section">Panel</span>
     </div>
     <nav class="top-nav" id="topNav">
-      <button class="nav-btn active" id="navPedidos" onclick="setVista('hoy')">Pedidos <span class="nav-badge-dot" id="badge-pend" style="display:none"></span></button>
-      <button class="nav-btn" id="navSoloPedidos" onclick="setVista('pedidos')">Solo Pedidos</button>
-      <button class="nav-btn" id="navSoloRepos" onclick="setVista('reposiciones')">Solo Reposiciones</button>
-      <button class="nav-btn" id="navCajas" onclick="setVista('cajas')">Cajas de locales</button>
+      <button class="nav-btn active" id="navPedidos">Pedidos <span class="nav-badge-dot" id="badge-pend" style="display:none"></span></button>
+      <button class="nav-btn" id="navSoloPedidos">Solo Pedidos</button>
+      <button class="nav-btn" id="navSoloRepos">Solo Reposiciones</button>
+      <button class="nav-btn" id="navCajas">Cajas de locales</button>
     </nav>
     <div class="top-actions">
       <span class="status-label" id="ultimaActualizacion"></span>
@@ -483,6 +483,13 @@ function hacerLogin() {
         !document.getElementById('loginScreen').classList.contains('hidden')) {
       hacerLogin();
     }
+  });
+
+  // Nav buttons
+  var navMap = { navPedidos:'hoy', navSoloPedidos:'pedidos', navSoloRepos:'reposiciones', navCajas:'cajas' };
+  Object.keys(navMap).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', function(){ setVista(navMap[id]); });
   });
 
   // Hamburger mobile
