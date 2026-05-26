@@ -346,7 +346,7 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-table tr:hover td { background: var(--gray-50); }
 .hor-turno       { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .hor-turno.corrido  { background: #dbeafe; color: #1e40af; }
-.hor-turno.partido  { background: #fef3c7; color: #92400e; }
+.hor-turno.cortado  { background: #fef3c7; color: #92400e; }
 .hor-turno.libre    { background: var(--gray-100); color: var(--gray-400); }
 .hor-turno.empty    { color: var(--gray-200); font-size: 10px; }
 
@@ -1006,7 +1006,7 @@ function formatHorarioCell(val) {
   // Si tiene dos bloques separados por " | " es partido
   if (val.indexOf('|') >= 0) {
     var partes = val.split('|').map(function(s){ return s.trim(); });
-    return '<span class="hor-turno partido" title="Turno partido">' + partes.join('<br>') + '</span>';
+    return '<span class="hor-turno cortado" title="Turno cortado">' + partes.join('<br>') + '</span>';
   }
   return '<span class="hor-turno corrido">' + val.trim() + '</span>';
 }
@@ -1064,7 +1064,7 @@ function parsearTurno(val) {
     var partes = val.split('|').map(function(s){ return s.trim(); });
     var p1 = partes[0].split('-');
     var p2 = partes[1] ? partes[1].split('-') : ['',''];
-    return { tipo: 'partido', h1: p1[0]||'', h2: p1[1]||'', h3: p2[0]||'', h4: p2[1]||'' };
+    return { tipo: 'cortado', h1: p1[0]||'', h2: p1[1]||'', h3: p2[0]||'', h4: p2[1]||'' };
   }
   var partes2 = val.split('-');
   return { tipo: 'corrido', h1: partes2[0]||'', h2: partes2[1]||'', h3: '', h4: '' };
@@ -1129,23 +1129,40 @@ function buildFilaEmpleado(emp, dias) {
     html += '<select class="tipo-turno-sel" id="' + idPref + '_tipo" onchange="onTipoChange(\'' + emp.id + '\',\'' + dk + '\')">';
     html += '<option value="libre"'   + (turno.tipo==='libre'   ? ' selected':'') + '>Libre</option>';
     html += '<option value="corrido"' + (turno.tipo==='corrido' ? ' selected':'') + '>Corrido</option>';
-    html += '<option value="partido"' + (turno.tipo==='partido' ? ' selected':'') + '>Partido</option>';
+    html += '<option value="cortado"' + (turno.tipo==='cortado' ? ' selected':'') + '>Cortado</option>';
     html += '</select>';
-    // Chips de turno rápido
-    var chipsClass = 'chips-' + idKey + '-' + dk;
-    html += '<div class="turnos-rapidos ' + chipsClass + '">';
-    TURNOS_RAPIDOS.forEach(function(tr, ti) {
-      html += '<button class="chip-turno ' + tr.clase + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',' + ti + ')" title="' + tr.label + '">' + tr.label + '</button>';
+    // Chips dinámicos según tipo seleccionado
+    var chipsBase = 'chips-' + idKey + '-' + dk;
+    // Chips corrido (siempre visibles cuando tipo=corrido)
+    var dChipC = turno.tipo === 'corrido' ? 'flex' : 'none';
+    html += '<div class="turnos-rapidos ' + chipsBase + '-b0" id="' + chipsBase + '-b0" style="display:' + dChipC + '">';
+    [['M 9-13','manana'],['M 9:30','manana'],['T 16:30','tarde'],['T 17-21','tarde'],['C 9-17','corrido'],['C 13-21','corrido']].forEach(function(c,i){
+      html += '<button class="chip-turno ' + c[1] + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',0,' + i + ')">' + c[0] + '</button>';
+    });
+    html += '</div>';
+    // Chips cortado bloque 1 (visibles cuando tipo=cortado)
+    var dChipP = turno.tipo === 'cortado' ? 'flex' : 'none';
+    html += '<div class="turnos-rapidos ' + chipsBase + '-b1" id="' + chipsBase + '-b1" style="display:' + dChipP + '">';
+    html += '<span style="font-size:9px;color:var(--gray-400);align-self:center">1°</span>';
+    [['9-13','manana'],['9:30-13:30','manana']].forEach(function(c,i){
+      html += '<button class="chip-turno ' + c[1] + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',1,' + i + ')">' + c[0] + '</button>';
+    });
+    html += '</div>';
+    // Chips cortado bloque 2
+    html += '<div class="turnos-rapidos ' + chipsBase + '-b2" id="' + chipsBase + '-b2" style="display:' + dChipP + '">';
+    html += '<span style="font-size:9px;color:var(--gray-400);align-self:center">2°</span>';
+    [['16:30-20:30','tarde'],['17-21','tarde']].forEach(function(c,i){
+      html += '<button class="chip-turno ' + c[1] + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',2,' + i + ')">' + c[0] + '</button>';
     });
     html += '</div>';
     var dC = turno.tipo === 'corrido' ? 'flex' : 'none';
-    var dP = turno.tipo === 'partido' ? 'flex' : 'none';
+    var dP = turno.tipo === 'cortado' ? 'flex' : 'none';
     html += '<div id="' + idPref + '_corrido" style="display:' + dC + ';flex-direction:column;gap:2px">';
     html += '<input class="hora-input" type="time" id="' + idPref + '_h1" value="' + (turno.h1||'') + '" onchange="onHoraChange(\'' + emp.id + '\',\'' + dk + '\')">';
     html += '<div class="hora-separador">↓</div>';
     html += '<input class="hora-input" type="time" id="' + idPref + '_h2" value="' + (turno.h2||'') + '" onchange="onHoraChange(\'' + emp.id + '\',\'' + dk + '\')">';
     html += '</div>';
-    html += '<div id="' + idPref + '_partido" style="display:' + dP + ';flex-direction:column;gap:2px">';
+    html += '<div id="' + idPref + '_cortado" style="display:' + dP + ';flex-direction:column;gap:2px">';
     html += '<input class="hora-input" type="time" id="' + idPref + '_h1p" value="' + (turno.h1||'') + '">';
     html += '<input class="hora-input" type="time" id="' + idPref + '_h2p" value="' + (turno.h2||'') + '">';
     html += '<div class="hora-separador" style="font-size:9px">2° bloque</div>';
@@ -1209,35 +1226,78 @@ function toggleExternoInput() {
   el.style.display = el.style.display === 'none' ? 'flex' : 'none';
 }
 
-function aplicarTurnoRapido(empId, dk, idx) {
-  var t = TURNOS_RAPIDOS[idx];
-  if (!t) return;
+function aplicarTurnoRapido(empId, dk, bloque, idx) {
+  // bloque: 0 = corrido (h1/h2), 1 = 1er bloque cortado (h1/h2), 2 = 2do bloque cortado (h3/h4)
   var idKey  = empId.replace(/\s+/g, '_');
   var idPref = 'ht_' + idKey + '_' + dk;
+  var sel    = document.getElementById(idPref + '_tipo');
+  var tipoActual = sel ? sel.value : 'libre';
 
-  // Setear selector tipo
-  var sel = document.getElementById(idPref + '_tipo');
-  if (sel) { sel.value = t.tipo; onTipoChange(empId, dk); }
+  var BLOQUES = {
+    corrido: [
+      { h1: '09:00', h2: '13:00' },
+      { h1: '09:30', h2: '13:30' },
+      { h1: '16:30', h2: '20:30' },
+      { h1: '17:00', h2: '21:00' },
+      { h1: '09:00', h2: '17:00' },
+      { h1: '13:00', h2: '21:00' }
+    ],
+    b1: [ // 1er bloque cortado
+      { h1: '09:00', h2: '13:00' },
+      { h1: '09:30', h2: '13:30' }
+    ],
+    b2: [ // 2do bloque cortado
+      { h1: '16:30', h2: '20:30' },
+      { h1: '17:00', h2: '21:00' }
+    ]
+  };
 
-  // Setear horas
-  var h1 = document.getElementById(idPref + '_h1');
-  var h2 = document.getElementById(idPref + '_h2');
-  if (h1) h1.value = t.h1;
-  if (h2) h2.value = t.h2;
-
-  // Actualizar estado interno
   if (!horariosEditando[empId]) horariosEditando[empId] = {};
   if (!horariosEditando[empId][dk]) horariosEditando[empId][dk] = { tipo:'libre', h1:'', h2:'', h3:'', h4:'' };
-  horariosEditando[empId][dk].tipo = t.tipo;
-  horariosEditando[empId][dk].h1   = t.h1;
-  horariosEditando[empId][dk].h2   = t.h2;
 
-  // Highlight chip seleccionado
-  var chips = document.querySelectorAll('.chips-' + idKey + '-' + dk + ' .chip-turno');
+  if (bloque === 0) {
+    // Corrido: fuerza tipo corrido y setea h1/h2
+    var t = BLOQUES.corrido[idx];
+    if (!t) return;
+    if (sel) { sel.value = 'corrido'; onTipoChange(empId, dk); }
+    var h1 = document.getElementById(idPref + '_h1');
+    var h2 = document.getElementById(idPref + '_h2');
+    if (h1) h1.value = t.h1;
+    if (h2) h2.value = t.h2;
+    horariosEditando[empId][dk].tipo = 'corrido';
+    horariosEditando[empId][dk].h1   = t.h1;
+    horariosEditando[empId][dk].h2   = t.h2;
+  } else if (bloque === 1) {
+    // 1er bloque cortado: fuerza cortado, setea h1p/h2p
+    var t = BLOQUES.b1[idx];
+    if (!t) return;
+    if (sel) { sel.value = 'cortado'; onTipoChange(empId, dk); }
+    var h1p = document.getElementById(idPref + '_h1p');
+    var h2p = document.getElementById(idPref + '_h2p');
+    if (h1p) h1p.value = t.h1;
+    if (h2p) h2p.value = t.h2;
+    horariosEditando[empId][dk].tipo = 'cortado';
+    horariosEditando[empId][dk].h1   = t.h1;
+    horariosEditando[empId][dk].h2   = t.h2;
+  } else if (bloque === 2) {
+    // 2do bloque cortado: fuerza cortado, setea h3p/h4p
+    var t = BLOQUES.b2[idx];
+    if (!t) return;
+    if (sel) { sel.value = 'cortado'; onTipoChange(empId, dk); }
+    var h3p = document.getElementById(idPref + '_h3p');
+    var h4p = document.getElementById(idPref + '_h4p');
+    if (h3p) h3p.value = t.h1;
+    if (h4p) h4p.value = t.h2;
+    horariosEditando[empId][dk].tipo = 'cortado';
+    horariosEditando[empId][dk].h3   = t.h1;
+    horariosEditando[empId][dk].h4   = t.h2;
+  }
+
+  // Highlight chip seleccionado en ese grupo
+  var chips = document.querySelectorAll('.chips-' + idKey + '-' + dk + '-b' + bloque + ' .chip-turno');
   chips.forEach(function(c, i) {
-    c.style.fontWeight = i === idx ? '900' : '700';
-    c.style.opacity    = i === idx ? '1'   : '.7';
     c.style.boxShadow  = i === idx ? '0 0 0 2px currentColor' : 'none';
+    c.style.opacity    = i === idx ? '1' : '.75';
   });
 }
 
@@ -1246,9 +1306,9 @@ function onTipoChange(nombre, dk) {
   var sel    = document.getElementById(idPref + '_tipo');
   var tipo   = sel ? sel.value : 'libre';
   var elC    = document.getElementById(idPref + '_corrido');
-  var elP    = document.getElementById(idPref + '_partido');
+  var elP    = document.getElementById(idPref + '_cortado');
   if (elC) elC.style.display = tipo === 'corrido' ? 'flex' : 'none';
-  if (elP) elP.style.display = tipo === 'partido' ? 'flex' : 'none';
+  if (elP) elP.style.display = tipo === 'cortado' ? 'flex' : 'none';
   horariosEditando[nombre][dk].tipo = tipo;
 }
 
@@ -1260,7 +1320,7 @@ function onHoraChange(nombre, dk) {
     var h2 = document.getElementById(idPref + '_h2');
     horariosEditando[nombre][dk].h1 = h1 ? h1.value : '';
     horariosEditando[nombre][dk].h2 = h2 ? h2.value : '';
-  } else if (tipo === 'partido') {
+  } else if (tipo === 'cortado') {
     var h1p = document.getElementById(idPref + '_h1p');
     var h2p = document.getElementById(idPref + '_h2p');
     var h3p = document.getElementById(idPref + '_h3p');
@@ -1278,7 +1338,7 @@ function turnoToString(t) {
     if (!t.h1 && !t.h2) return 'LIBRE';
     return (t.h1 || '?') + '-' + (t.h2 || '?');
   }
-  if (t.tipo === 'partido') {
+  if (t.tipo === 'cortado') {
     if (!t.h1 && !t.h2) return 'LIBRE';
     var bloque1 = (t.h1 || '?') + '-' + (t.h2 || '?');
     var bloque2 = (t.h3 && t.h4) ? (t.h3 + '-' + t.h4) : '';
@@ -1307,7 +1367,7 @@ async function guardarHorario() {
       if (tipo === 'corrido') {
         horariosEditando[nombre][dk].h1 = (document.getElementById(idPref+'_h1')||{}).value || '';
         horariosEditando[nombre][dk].h2 = (document.getElementById(idPref+'_h2')||{}).value || '';
-      } else if (tipo === 'partido') {
+      } else if (tipo === 'cortado') {
         horariosEditando[nombre][dk].h1 = (document.getElementById(idPref+'_h1p')||{}).value || '';
         horariosEditando[nombre][dk].h2 = (document.getElementById(idPref+'_h2p')||{}).value || '';
         horariosEditando[nombre][dk].h3 = (document.getElementById(idPref+'_h3p')||{}).value || '';
