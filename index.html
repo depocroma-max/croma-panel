@@ -444,6 +444,7 @@ td { padding: 10px 14px; vertical-align: middle; }
         <div class="status-dot"></div>
         <span class="status-label" id="fechaHoy"></span>
       </div>
+      <button class="btn-icon" id="btnLogout" title="Cerrar sesión" style="border-color:#444;color:#aaa" onclick="cerrarSesion()">⏻</button>
     </div>
   </header>
 
@@ -619,6 +620,9 @@ td { padding: 10px 14px; vertical-align: middle; }
     <div style="font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:white">CROMA</div>
     <button class="drawer-close" id="drawerClose">✕</button>
   </div>
+  <div style="padding:.75rem 1rem;border-bottom:1px solid #222">
+    <span id="drawerUsuario" style="font-size:12px;color:#666"></span>
+  </div>
   <nav class="drawer-nav">
     <button class="drawer-nav-btn active" id="drawerNavPedidos">Pedidos</button>
     <button class="drawer-nav-btn" id="drawerNavCajas">Cajas de locales</button>
@@ -720,6 +724,13 @@ function initNav() {
     semanaOffset++; actualizarSemanaLabel(); cargarHorarios();
   });
 
+  // Mostrar usuario actual en drawer
+  var drawerUsr = document.getElementById('drawerUsuario');
+  if (drawerUsr) {
+    var userLabel = sesionSucursal ? sesionSucursal : 'ADMIN';
+    drawerUsr.textContent = '👤 ' + userLabel;
+  }
+
   // Ocultar navegación de pedidos/cajas si es encargado
   if (sesionRol === 'encargado') {
     ['navPedidos','navCajas'].forEach(function(id){
@@ -801,6 +812,19 @@ function hacerLogin() {
 
   setInterval(function(){ if(vistaActual !== 'horarios') cargarDatos(); }, 2 * 60 * 1000);
 })();
+
+function cerrarSesion() {
+  sessionStorage.removeItem('croma_auth');
+  sessionStorage.removeItem('croma_rol');
+  sessionStorage.removeItem('croma_suc');
+  sesionRol = null;
+  sesionSucursal = null;
+  document.getElementById('dashApp').style.display = 'none';
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').textContent = '';
+}
 
 // ── VISTAS ──
 function setVista(v) {
