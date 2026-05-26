@@ -382,6 +382,22 @@ td { padding: 10px 14px; vertical-align: middle; }
 @media (max-width: 700px) {
   .carga-dias-grid { grid-template-columns: repeat(4, 1fr); }
 }
+/* ── SELECTOR EMPLEADOS ── */
+.emp-selector-wrap { padding: 1rem 1.25rem; border-bottom: 1px solid var(--gray-100); background: var(--gray-50); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.emp-selector-wrap select { flex: 1; min-width: 200px; height: 36px; padding: 0 10px; font-family: var(--font-body); font-size: 13px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); color: var(--black); cursor: pointer; }
+.emp-selector-wrap select:focus { outline: none; border-color: var(--black); }
+.emp-selector-wrap input { flex: 1; min-width: 160px; height: 36px; padding: 0 10px; font-family: var(--font-body); font-size: 13px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); color: var(--black); }
+.emp-selector-wrap input:focus { outline: none; border-color: var(--black); }
+.btn-agregar-emp { height: 36px; padding: 0 16px; background: var(--black); color: var(--white); border: none; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
+.btn-agregar-emp:hover { opacity: .8; }
+.emp-externo-toggle { font-size: 12px; color: var(--gray-400); cursor: pointer; text-decoration: underline; white-space: nowrap; }
+.carga-emp-header { display: flex; align-items: center; justify-content: space-between; padding: .6rem 1rem; background: var(--gray-50); border-bottom: 1px solid var(--gray-100); }
+.carga-emp-nombre { font-weight: 600; font-size: 13px; color: var(--black); }
+.carga-emp-num { font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent); background: #fee2e2; padding: 1px 6px; border-radius: 20px; margin-right: 6px; }
+.carga-emp-externo { font-size: 10px; font-weight: 700; color: #92400e; background: #fef3c7; padding: 1px 6px; border-radius: 20px; margin-left: 6px; }
+.btn-quitar-emp { background: none; border: none; color: var(--gray-400); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px; border-radius: var(--radius-sm); transition: all .15s; }
+.btn-quitar-emp:hover { color: var(--accent); background: #fee2e2; }
+.emp-lista-vacia { text-align: center; padding: 2rem; color: var(--gray-400); font-size: 13px; }
 </style>
 </head>
 <body>
@@ -956,13 +972,15 @@ function formatHorarioCell(val) {
 }
 
 // ── MODAL CARGA ENCARGADO ──
-var horariosEditando = {}; // { empleado: { lun: {tipo, h1, h2, h3, h4}, ... } }
-var sucursalEditando = null;
-var empleadosLista   = [];
+var horariosEditando  = {}; // { empleado: { lun: {tipo,h1,h2,h3,h4}, ... } }
+var sucursalEditando  = null;
+var empleadosLista    = []; // todos los del local (con número): ["34 MATI TERUEL", ...]
+var empleadosAgregados= []; // los que el encargado eligió para esta semana: [{id, nombre, externo}]
 
 async function abrirModalCarga(suc) {
-  sucursalEditando = suc;
-  horariosEditando = {};
+  sucursalEditando  = suc;
+  horariosEditando  = {};
+  empleadosAgregados= [];
 
   document.getElementById('mhSucursal').textContent = suc;
   document.getElementById('mhSemanaInfo').textContent = getSemanaStr(semanaOffset);
@@ -973,7 +991,7 @@ async function abrirModalCarga(suc) {
   body.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando empleados...</p></div>';
   document.getElementById('modalHorarioOverlay').classList.add('open');
 
-  // Obtener empleados de esta sucursal desde la API
+  // Obtener empleados del local desde la API
   try {
     var urlEmp = API_URL + '?accion=obtenerEmpleados&sucursal=' + encodeURIComponent(suc);
     var respEmp = await fetch(urlEmp);
@@ -983,28 +1001,18 @@ async function abrirModalCarga(suc) {
     empleadosLista = [];
   }
 
-  if (empleadosLista.length === 0) {
-    body.innerHTML = '<div class="empty-state">⚠ No se pudieron cargar los empleados.<br>Verificá la conexión con la planilla JORNADA LABORAL.</div>';
-    return;
-  }
-
-  // Cargar datos existentes si hay
-  var datosExistentes = {};
-  var semanaId = getSemanaId(semanaOffset);
+  // Si hay horario ya cargado para esta semana, pre-cargar los empleados
   if (horariosData[suc] && horariosData[suc].length > 0) {
     horariosData[suc].forEach(function(emp) {
-      datosExistentes[emp.empleado] = emp;
+      // Buscar si es del local (viene en empleadosLista) o externo
+      var enLista = empleadosLista.indexOf(emp.empleado) >= 0;
+      empleadosAgregados.push({ id: emp.empleado, nombre: emp.empleado, externo: !enLista });
+      horariosEditando[emp.empleado] = {};
+      DIAS_KEY.forEach(function(dk) {
+        horariosEditando[emp.empleado][dk] = parsearTurno(emp[dk] || '');
+      });
     });
   }
-
-  // Inicializar estructura de edición
-  empleadosLista.forEach(function(nombre) {
-    horariosEditando[nombre] = {};
-    DIAS_KEY.forEach(function(dk) {
-      var valExistente = (datosExistentes[nombre] && datosExistentes[nombre][dk]) ? datosExistentes[nombre][dk] : '';
-      horariosEditando[nombre][dk] = parsearTurno(valExistente);
-    });
-  });
 
   renderFormHorario();
 }
@@ -1022,73 +1030,136 @@ function parsearTurno(val) {
   return { tipo: 'corrido', h1: partes2[0]||'', h2: partes2[1]||'', h3: '', h4: '' };
 }
 
+function buildSelectorHTML() {
+  // Opciones del select: empleados del local que aún no fueron agregados
+  var yaAgregados = empleadosAgregados.map(function(e){ return e.id; });
+  var disponibles = empleadosLista.filter(function(e){ return yaAgregados.indexOf(e) < 0; });
+
+  var html = '<div class="emp-selector-wrap" id="empSelectorWrap">';
+
+  // Select normal (empleados del local)
+  html += '<select id="empSelect">';
+  html += '<option value="">— Elegir empleado del local —</option>';
+  disponibles.forEach(function(emp) {
+    // emp viene como "34 MATI TERUEL" — mostrar como "#34 MATI TERUEL"
+    var display = emp.replace(/^(\d+)\s+/, '#$1 ');
+    html += '<option value="' + emp + '">' + display + '</option>';
+  });
+  html += '</select>';
+
+  html += '<button class="btn-agregar-emp" onclick="agregarEmpleado()">+ Agregar</button>';
+  html += '<span class="emp-externo-toggle" onclick="toggleExternoInput()">+ Externo</span>';
+  html += '</div>';
+
+  // Input para externo (oculto por defecto)
+  html += '<div id="externoWrap" style="display:none;padding:.75rem 1.25rem;border-bottom:1px solid var(--gray-100);background:#fffbeb;display:none;align-items:center;gap:8px;flex-wrap:wrap">';
+  html += '<input type="text" id="externoInput" placeholder="Nombre del empleado externo..." style="flex:1;height:34px;padding:0 10px;font-family:var(--font-body);font-size:13px;border:1px solid var(--gray-200);border-radius:var(--radius-sm)">';
+  html += '<button class="btn-agregar-emp" onclick="agregarExterno()" style="background:#d97706">+ Agregar externo</button>';
+  html += '</div>';
+
+  return html;
+}
+
+function buildFilaEmpleado(emp, dias) {
+  var nombre   = emp.nombre;
+  var idKey    = emp.id.replace(/\s+/g,'_');
+  var turnoObj = horariosEditando[emp.id] || {};
+
+  // Separar número y nombre para el badge
+  var match   = emp.id.match(/^(\d+)\s+(.+)$/);
+  var numBadge = match ? '<span class="carga-emp-num">#' + match[1] + '</span>' : '';
+  var nomShow  = match ? match[2] : emp.id;
+
+  var html = '<div class="carga-empleado" id="emp_' + idKey + '">';
+  html += '<div class="carga-emp-header">';
+  html += '<div>' + numBadge + '<span class="carga-emp-nombre">' + nomShow + '</span>';
+  if (emp.externo) html += '<span class="carga-emp-externo">EXTERNO</span>';
+  html += '</div>';
+  html += '<button class="btn-quitar-emp" onclick="quitarEmpleado('' + emp.id + '')" title="Quitar">✕</button>';
+  html += '</div>';
+  html += '<div class="carga-dias-grid">';
+
+  DIAS_KEY.forEach(function(dk, i) {
+    var esWeekend = (i === 5 || i === 6);
+    var turno = turnoObj[dk] || { tipo:'libre', h1:'', h2:'', h3:'', h4:'' };
+    var idPref = 'ht_' + idKey + '_' + dk;
+
+    html += '<div class="carga-dia">';
+    html += '<div class="carga-dia-label' + (esWeekend ? ' weekend' : '') + '">' + DIAS_LABEL[i] + '<br><small style="font-weight:400;font-size:9px">' + dias[i].getDate() + '</small></div>';
+    html += '<select class="tipo-turno-sel" id="' + idPref + '_tipo" onchange="onTipoChange('' + emp.id + '','' + dk + '')">';
+    html += '<option value="libre"'   + (turno.tipo==='libre'   ? ' selected':'') + '>Libre</option>';
+    html += '<option value="corrido"' + (turno.tipo==='corrido' ? ' selected':'') + '>Corrido</option>';
+    html += '<option value="partido"' + (turno.tipo==='partido' ? ' selected':'') + '>Partido</option>';
+    html += '</select>';
+    var dC = turno.tipo === 'corrido' ? 'flex' : 'none';
+    var dP = turno.tipo === 'partido' ? 'flex' : 'none';
+    html += '<div id="' + idPref + '_corrido" style="display:' + dC + ';flex-direction:column;gap:2px">';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h1" value="' + (turno.h1||'') + '" onchange="onHoraChange('' + emp.id + '','' + dk + '')">';
+    html += '<div class="hora-separador">↓</div>';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h2" value="' + (turno.h2||'') + '" onchange="onHoraChange('' + emp.id + '','' + dk + '')">';
+    html += '</div>';
+    html += '<div id="' + idPref + '_partido" style="display:' + dP + ';flex-direction:column;gap:2px">';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h1p" value="' + (turno.h1||'') + '">';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h2p" value="' + (turno.h2||'') + '">';
+    html += '<div class="hora-separador" style="font-size:9px">2° bloque</div>';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h3p" value="' + (turno.h3||'') + '">';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h4p" value="' + (turno.h4||'') + '">';
+    html += '</div>';
+    html += '</div>';
+  });
+
+  html += '</div></div>';
+  return html;
+}
+
 function renderFormHorario() {
   var body = document.getElementById('mhBody');
-  var dias = getDiasLunes(semanaOffset);
-  var html = '';
+  var dias  = getDiasLunes(semanaOffset);
+  var html  = buildSelectorHTML();
 
-  empleadosLista.forEach(function(nombre) {
-    html += '<div class="carga-empleado">';
-    html += '<div class="carga-emp-header">';
-    html += '<span class="carga-emp-nombre">' + nombre + '</span>';
-    html += '</div>';
-    html += '<div class="carga-dias-grid">';
-
-    DIAS_KEY.forEach(function(dk, i) {
-      var esWeekend = (i === 5 || i === 6);
-      var turno = horariosEditando[nombre][dk];
-      var idPref = 'ht_' + nombre.replace(/\s+/g,'_') + '_' + dk;
-
-      html += '<div class="carga-dia">';
-      html += '<div class="carga-dia-label' + (esWeekend ? ' weekend' : '') + '">' + DIAS_LABEL[i] + '<br><small style="font-weight:400;font-size:9px">' + dias[i].getDate() + '</small></div>';
-
-      // Selector tipo turno
-      html += '<select class="tipo-turno-sel" id="' + idPref + '_tipo" onchange="onTipoChange(\'' + nombre + '\',\'' + dk + '\')">';
-      html += '<option value="libre"'   + (turno.tipo==='libre'   ? ' selected':'') + '>Libre</option>';
-      html += '<option value="corrido"' + (turno.tipo==='corrido' ? ' selected':'') + '>Corrido</option>';
-      html += '<option value="partido"' + (turno.tipo==='partido' ? ' selected':'') + '>Partido</option>';
-      html += '</select>';
-
-      // Inputs de hora según tipo
-      var displayCorrido = turno.tipo === 'corrido' ? '' : 'none';
-      var displayPartido = turno.tipo === 'partido' ? '' : 'none';
-
-      // Turno corrido
-      html += '<div id="' + idPref + '_corrido" style="display:' + displayCorrido + ';display:flex;flex-direction:column;gap:2px">';
-      html += '<input class="hora-input" type="time" id="' + idPref + '_h1" value="' + (turno.h1||'') + '" onchange="onHoraChange(\'' + nombre + '\',\'' + dk + '\')">';
-      html += '<div class="hora-separador">↓</div>';
-      html += '<input class="hora-input" type="time" id="' + idPref + '_h2" value="' + (turno.h2||'') + '" onchange="onHoraChange(\'' + nombre + '\',\'' + dk + '\')">';
-      html += '</div>';
-
-      // Turno partido
-      html += '<div id="' + idPref + '_partido" style="display:' + displayPartido + ';display:flex;flex-direction:column;gap:2px">';
-      html += '<input class="hora-input" type="time" id="' + idPref + '_h1p" value="' + (turno.h1||'') + '" onchange="onHoraChange(\'' + nombre + '\',\'' + dk + '\')">';
-      html += '<input class="hora-input" type="time" id="' + idPref + '_h2p" value="' + (turno.h2||'') + '" onchange="onHoraChange(\'' + nombre + '\',\'' + dk + '\')">';
-      html += '<div class="hora-separador" style="font-size:9px">2° bloque</div>';
-      html += '<input class="hora-input" type="time" id="' + idPref + '_h3p" value="' + (turno.h3||'') + '" onchange="onHoraChange(\'' + nombre + '\',\'' + dk + '\')">';
-      html += '<input class="hora-input" type="time" id="' + idPref + '_h4p" value="' + (turno.h4||'') + '" onchange="onHoraChange(\'' + nombre + '\',\'' + dk + '\')">';
-      html += '</div>';
-
-      html += '</div>'; // carga-dia
+  if (empleadosAgregados.length === 0) {
+    html += '<div class="emp-lista-vacia">👆 Elegí los empleados que trabajan esta semana</div>';
+  } else {
+    empleadosAgregados.forEach(function(emp) {
+      html += buildFilaEmpleado(emp, dias);
     });
-
-    html += '</div>'; // carga-dias-grid
-    html += '</div>'; // carga-empleado
-  });
+  }
 
   body.innerHTML = html;
+}
 
-  // Aplicar display correcto para tipo seleccionado (fix para display:none override)
-  empleadosLista.forEach(function(nombre) {
-    DIAS_KEY.forEach(function(dk) {
-      var tipo = horariosEditando[nombre][dk].tipo;
-      var idPref = 'ht_' + nombre.replace(/\s+/g,'_') + '_' + dk;
-      var elC = document.getElementById(idPref + '_corrido');
-      var elP = document.getElementById(idPref + '_partido');
-      if (elC) elC.style.display = tipo === 'corrido' ? 'flex' : 'none';
-      if (elP) elP.style.display = tipo === 'partido' ? 'flex' : 'none';
-    });
-  });
+function agregarEmpleado() {
+  var sel = document.getElementById('empSelect');
+  if (!sel || !sel.value) return;
+  var id = sel.value;
+  // Inicializar turnos vacíos
+  horariosEditando[id] = {};
+  DIAS_KEY.forEach(function(dk){ horariosEditando[id][dk] = { tipo:'libre', h1:'', h2:'', h3:'', h4:'' }; });
+  empleadosAgregados.push({ id: id, nombre: id, externo: false });
+  renderFormHorario();
+}
+
+function agregarExterno() {
+  var input = document.getElementById('externoInput');
+  if (!input || !input.value.trim()) return;
+  var nombre = input.value.trim().toUpperCase();
+  if (empleadosAgregados.find(function(e){ return e.id === nombre; })) return;
+  horariosEditando[nombre] = {};
+  DIAS_KEY.forEach(function(dk){ horariosEditando[nombre][dk] = { tipo:'libre', h1:'', h2:'', h3:'', h4:'' }; });
+  empleadosAgregados.push({ id: nombre, nombre: nombre, externo: true });
+  renderFormHorario();
+}
+
+function quitarEmpleado(id) {
+  empleadosAgregados = empleadosAgregados.filter(function(e){ return e.id !== id; });
+  delete horariosEditando[id];
+  renderFormHorario();
+}
+
+function toggleExternoInput() {
+  var el = document.getElementById('externoWrap');
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'flex' : 'none';
 }
 
 function onTipoChange(nombre, dk) {
@@ -1144,18 +1215,19 @@ async function guardarHorario() {
   status.textContent = 'Guardando...';
 
   // Leer valores actuales del DOM antes de guardar
-  empleadosLista.forEach(function(nombre) {
+  empleadosAgregados.forEach(function(emp) {
+    var nombre = emp.id;
+    if (!horariosEditando[nombre]) horariosEditando[nombre] = {};
     DIAS_KEY.forEach(function(dk) {
       var idPref = 'ht_' + nombre.replace(/\s+/g,'_') + '_' + dk;
       var sel = document.getElementById(idPref + '_tipo');
       if (!sel) return;
       var tipo = sel.value;
+      if (!horariosEditando[nombre][dk]) horariosEditando[nombre][dk] = { tipo:'libre', h1:'', h2:'', h3:'', h4:'' };
       horariosEditando[nombre][dk].tipo = tipo;
       if (tipo === 'corrido') {
-        var h1 = document.getElementById(idPref + '_h1');
-        var h2 = document.getElementById(idPref + '_h2');
-        horariosEditando[nombre][dk].h1 = h1 ? h1.value : '';
-        horariosEditando[nombre][dk].h2 = h2 ? h2.value : '';
+        horariosEditando[nombre][dk].h1 = (document.getElementById(idPref+'_h1')||{}).value || '';
+        horariosEditando[nombre][dk].h2 = (document.getElementById(idPref+'_h2')||{}).value || '';
       } else if (tipo === 'partido') {
         horariosEditando[nombre][dk].h1 = (document.getElementById(idPref+'_h1p')||{}).value || '';
         horariosEditando[nombre][dk].h2 = (document.getElementById(idPref+'_h2p')||{}).value || '';
@@ -1166,10 +1238,11 @@ async function guardarHorario() {
   });
 
   // Armar payload
-  var filas = empleadosLista.map(function(nombre) {
+  var filas = empleadosAgregados.map(function(emp) {
+    var nombre = emp.id;
     var row = { empleado: nombre };
     DIAS_KEY.forEach(function(dk) {
-      row[dk] = turnoToString(horariosEditando[nombre][dk]);
+      row[dk] = turnoToString(horariosEditando[nombre] ? horariosEditando[nombre][dk] : null);
     });
     return row;
   });
