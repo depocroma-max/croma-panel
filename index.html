@@ -1131,19 +1131,28 @@ function buildFilaEmpleado(emp, dias) {
     html += '<option value="corrido"' + (turno.tipo==='corrido' ? ' selected':'') + '>Corrido</option>';
     html += '<option value="cortado"' + (turno.tipo==='cortado' ? ' selected':'') + '>Cortado</option>';
     html += '</select>';
-    // Chips siempre visibles — fila corrido + fila cortado (1° y 2° bloque)
-    html += '<div style="display:flex;flex-direction:column;gap:2px;margin-top:3px">';
-    // Fila corrido
-    html += '<div class="turnos-rapidos">';
+    // Chips según tipo — contenedor con data-empid y data-dk para que onTipoChange los encuentre
+    var chipsId = 'chips_' + idKey + '_' + dk;
+    var tipoCurrent = turno.tipo || 'libre';
+    html += '<div class="chips-container" id="' + chipsId + '" data-empid="' + emp.id + '" data-dk="' + dk + '">';
+    // Chips corrido
+    html += '<div class="chips-corrido turnos-rapidos" style="display:' + (tipoCurrent === 'corrido' ? 'flex' : 'none') + '">';
     [['M 9-13','manana',0,0],['M 9:30','manana',0,1],['T 16:30','tarde',0,2],['T 17-21','tarde',0,3],['C 9-17','corrido',0,4],['C 13-21','corrido',0,5]].forEach(function(c){
-      html += '<button class="chip-turno ' + c[1] + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',' + c[2] + ',' + c[3] + ')" title="Corrido">' + c[0] + '</button>';
+      html += '<button class="chip-turno ' + c[1] + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',' + c[2] + ',' + c[3] + ')">' + c[0] + '</button>';
     });
     html += '</div>';
-    // Fila cortado
-    html += '<div class="turnos-rapidos">';
-    html += '<span style="font-size:9px;color:var(--gray-400);align-self:center;margin-right:2px">✂</span>';
-    [['9-13','manana',1,0],['9:30-13:30','manana',1,1],['16:30-20:30','tarde',2,0],['17-21','tarde',2,1]].forEach(function(c){
-      html += '<button class="chip-turno ' + c[1] + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',' + c[2] + ',' + c[3] + ')" title="Cortado">' + c[0] + '</button>';
+    // Chips cortado bloque 1
+    html += '<div class="chips-cortado-b1 turnos-rapidos" style="display:' + (tipoCurrent === 'cortado' ? 'flex' : 'none') + '">';
+    html += '<span style="font-size:9px;color:var(--gray-400);align-self:center;margin-right:2px">1°</span>';
+    [['9-13','manana',1,0],['9:30-13:30','manana',1,1]].forEach(function(c){
+      html += '<button class="chip-turno ' + c[1] + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',' + c[2] + ',' + c[3] + ')">' + c[0] + '</button>';
+    });
+    html += '</div>';
+    // Chips cortado bloque 2
+    html += '<div class="chips-cortado-b2 turnos-rapidos" style="display:' + (tipoCurrent === 'cortado' ? 'flex' : 'none') + '">';
+    html += '<span style="font-size:9px;color:var(--gray-400);align-self:center;margin-right:2px">2°</span>';
+    [['16:30-20:30','tarde',2,0],['17-21','tarde',2,1]].forEach(function(c){
+      html += '<button class="chip-turno ' + c[1] + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',' + c[2] + ',' + c[3] + ')">' + c[0] + '</button>';
     });
     html += '</div>';
     html += '</div>';
