@@ -1302,15 +1302,32 @@ function aplicarTurnoRapido(empId, dk, bloque, idx) {
   });
 }
 
-function onTipoChange(nombre, dk) {
-  var idPref = 'ht_' + nombre.replace(/\s+/g,'_') + '_' + dk;
+function onTipoChange(nombre, dk, idKey) {
+  idKey = idKey || nombre.replace(/\s+/g,'_');
+  var idPref = 'ht_' + idKey + '_' + dk;
   var sel    = document.getElementById(idPref + '_tipo');
   var tipo   = sel ? sel.value : 'libre';
-  var elC    = document.getElementById(idPref + '_corrido');
-  var elP    = document.getElementById(idPref + '_cortado');
+
+  // Mostrar/ocultar inputs de hora
+  var elC = document.getElementById(idPref + '_corrido');
+  var elP = document.getElementById(idPref + '_cortado');
   if (elC) elC.style.display = tipo === 'corrido' ? 'flex' : 'none';
   if (elP) elP.style.display = tipo === 'cortado' ? 'flex' : 'none';
-  horariosEditando[nombre][dk].tipo = tipo;
+
+  // Mostrar/ocultar chips
+  var chipsId = 'chips_' + idKey + '_' + dk;
+  var cont = document.getElementById(chipsId);
+  if (cont) {
+    var cc  = cont.querySelector('.chips-corrido');
+    var cb1 = cont.querySelector('.chips-cortado-b1');
+    var cb2 = cont.querySelector('.chips-cortado-b2');
+    if (cc)  cc.style.display  = tipo === 'corrido' ? 'flex' : 'none';
+    if (cb1) cb1.style.display = tipo === 'cortado' ? 'flex' : 'none';
+    if (cb2) cb2.style.display = tipo === 'cortado' ? 'flex' : 'none';
+  }
+
+  if (horariosEditando[nombre] && horariosEditando[nombre][dk])
+    horariosEditando[nombre][dk].tipo = tipo;
 }
 
 function onHoraChange(nombre, dk) {
