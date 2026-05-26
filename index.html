@@ -1126,7 +1126,7 @@ function buildFilaEmpleado(emp, dias) {
 
     html += '<div class="carga-dia">';
     html += '<div class="carga-dia-label' + (esWeekend ? ' weekend' : '') + '">' + DIAS_LABEL[i] + '<br><small style="font-weight:400;font-size:9px">' + dias[i].getDate() + '</small></div>';
-    html += '<select class="tipo-turno-sel" id="' + idPref + '_tipo" onchange="onTipoChange(\'' + emp.id + '\',\'' + dk + '\')">';
+    html += '<select class="tipo-turno-sel" id="' + idPref + '_tipo" onchange="onTipoChange(\'' + emp.id + '\',\'' + dk + '\',\'' + idKey + '\')">';
     html += '<option value="libre"'   + (turno.tipo==='libre'   ? ' selected':'') + '>Libre</option>';
     html += '<option value="corrido"' + (turno.tipo==='corrido' ? ' selected':'') + '>Corrido</option>';
     html += '<option value="cortado"' + (turno.tipo==='cortado' ? ' selected':'') + '>Cortado</option>';
