@@ -1257,11 +1257,9 @@ async function guardarHorario() {
   };
 
   try {
-    var resp = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    // Apps Script no soporta preflight CORS con POST+JSON → enviamos como GET con datos serializados
+    var url = API_URL + '?accion=guardarHorario&datos=' + encodeURIComponent(JSON.stringify(payload));
+    var resp = await fetch(url);
     var data = await resp.json();
     if (data.ok) {
       toast('✓ Horario guardado correctamente', 'success');
