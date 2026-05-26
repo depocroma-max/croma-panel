@@ -382,6 +382,14 @@ td { padding: 10px 14px; vertical-align: middle; }
 @media (max-width: 700px) {
   .carga-dias-grid { grid-template-columns: repeat(4, 1fr); }
 }
+/* ── TURNOS RÁPIDOS ── */
+.turnos-rapidos { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.chip-turno { padding: 2px 6px; border-radius: 20px; font-size: 9px; font-weight: 700; border: 1px solid; cursor: pointer; white-space: nowrap; transition: all .12s; line-height: 1.6; }
+.chip-turno:hover { opacity: .75; transform: scale(1.05); }
+.chip-turno.manana  { background: #fef9c3; color: #854d0e; border-color: #fde047; }
+.chip-turno.tarde   { background: #fce7f3; color: #9d174d; border-color: #f9a8d4; }
+.chip-turno.corrido { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+
 /* ── SELECTOR EMPLEADOS ── */
 .emp-selector-wrap { padding: 1rem 1.25rem; border-bottom: 1px solid var(--gray-100); background: var(--gray-50); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .emp-selector-wrap select { flex: 1; min-width: 200px; height: 36px; padding: 0 10px; font-family: var(--font-body); font-size: 13px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); color: var(--black); cursor: pointer; }
@@ -692,6 +700,14 @@ function getDiasLunes(offset) {
   return dias;
 }
 
+var TURNOS_RAPIDOS = [
+  { label: 'M 9-13',    tipo: 'corrido', h1: '09:00', h2: '13:00', clase: 'manana'  },
+  { label: 'M 9:30-13:30', tipo: 'corrido', h1: '09:30', h2: '13:30', clase: 'manana'  },
+  { label: 'T 16:30-20:30',tipo: 'corrido', h1: '16:30', h2: '20:30', clase: 'tarde'   },
+  { label: 'T 17-21',   tipo: 'corrido', h1: '17:00', h2: '21:00', clase: 'tarde'   },
+  { label: 'C 9-17',    tipo: 'corrido', h1: '09:00', h2: '17:00', clase: 'corrido' },
+  { label: 'C 13-21',   tipo: 'corrido', h1: '13:00', h2: '21:00', clase: 'corrido' }
+];
 var DIAS_LABEL = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 var DIAS_KEY   = ['lun','mar','mie','jue','vie','sab','dom'];
 
@@ -1115,6 +1131,13 @@ function buildFilaEmpleado(emp, dias) {
     html += '<option value="corrido"' + (turno.tipo==='corrido' ? ' selected':'') + '>Corrido</option>';
     html += '<option value="partido"' + (turno.tipo==='partido' ? ' selected':'') + '>Partido</option>';
     html += '</select>';
+    // Chips de turno rápido
+    var chipsClass = 'chips-' + idKey + '-' + dk;
+    html += '<div class="turnos-rapidos ' + chipsClass + '">';
+    TURNOS_RAPIDOS.forEach(function(tr, ti) {
+      html += '<button class="chip-turno ' + tr.clase + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',' + ti + ')" title="' + tr.label + '">' + tr.label + '</button>';
+    });
+    html += '</div>';
     var dC = turno.tipo === 'corrido' ? 'flex' : 'none';
     var dP = turno.tipo === 'partido' ? 'flex' : 'none';
     html += '<div id="' + idPref + '_corrido" style="display:' + dC + ';flex-direction:column;gap:2px">';
@@ -1184,6 +1207,38 @@ function toggleExternoInput() {
   var el = document.getElementById('externoWrap');
   if (!el) return;
   el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+}
+
+function aplicarTurnoRapido(empId, dk, idx) {
+  var t = TURNOS_RAPIDOS[idx];
+  if (!t) return;
+  var idKey  = empId.replace(/\s+/g, '_');
+  var idPref = 'ht_' + idKey + '_' + dk;
+
+  // Setear selector tipo
+  var sel = document.getElementById(idPref + '_tipo');
+  if (sel) { sel.value = t.tipo; onTipoChange(empId, dk); }
+
+  // Setear horas
+  var h1 = document.getElementById(idPref + '_h1');
+  var h2 = document.getElementById(idPref + '_h2');
+  if (h1) h1.value = t.h1;
+  if (h2) h2.value = t.h2;
+
+  // Actualizar estado interno
+  if (!horariosEditando[empId]) horariosEditando[empId] = {};
+  if (!horariosEditando[empId][dk]) horariosEditando[empId][dk] = { tipo:'libre', h1:'', h2:'', h3:'', h4:'' };
+  horariosEditando[empId][dk].tipo = t.tipo;
+  horariosEditando[empId][dk].h1   = t.h1;
+  horariosEditando[empId][dk].h2   = t.h2;
+
+  // Highlight chip seleccionado
+  var chips = document.querySelectorAll('.chips-' + idKey + '-' + dk + ' .chip-turno');
+  chips.forEach(function(c, i) {
+    c.style.fontWeight = i === idx ? '900' : '700';
+    c.style.opacity    = i === idx ? '1'   : '.7';
+    c.style.boxShadow  = i === idx ? '0 0 0 2px currentColor' : 'none';
+  });
 }
 
 function onTipoChange(nombre, dk) {
