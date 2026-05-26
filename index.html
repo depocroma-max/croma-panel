@@ -1075,7 +1075,7 @@ function buildFilaEmpleado(emp, dias) {
   html += '<div>' + numBadge + '<span class="carga-emp-nombre">' + nomShow + '</span>';
   if (emp.externo) html += '<span class="carga-emp-externo">EXTERNO</span>';
   html += '</div>';
-  html += '<button class="btn-quitar-emp" onclick="quitarEmpleado('' + emp.id + '')" title="Quitar">✕</button>';
+  html += '<button class="btn-quitar-emp" onclick="quitarEmpleado(\'' + emp.id + '\')" title="Quitar">✕</button>';
   html += '</div>';
   html += '<div class="carga-dias-grid">';
 
@@ -1086,7 +1086,7 @@ function buildFilaEmpleado(emp, dias) {
 
     html += '<div class="carga-dia">';
     html += '<div class="carga-dia-label' + (esWeekend ? ' weekend' : '') + '">' + DIAS_LABEL[i] + '<br><small style="font-weight:400;font-size:9px">' + dias[i].getDate() + '</small></div>';
-    html += '<select class="tipo-turno-sel" id="' + idPref + '_tipo" onchange="onTipoChange('' + emp.id + '','' + dk + '')">';
+    html += '<select class="tipo-turno-sel" id="' + idPref + '_tipo" onchange="onTipoChange(\'' + emp.id + '\',\'' + dk + '\')">';
     html += '<option value="libre"'   + (turno.tipo==='libre'   ? ' selected':'') + '>Libre</option>';
     html += '<option value="corrido"' + (turno.tipo==='corrido' ? ' selected':'') + '>Corrido</option>';
     html += '<option value="partido"' + (turno.tipo==='partido' ? ' selected':'') + '>Partido</option>';
@@ -1094,9 +1094,9 @@ function buildFilaEmpleado(emp, dias) {
     var dC = turno.tipo === 'corrido' ? 'flex' : 'none';
     var dP = turno.tipo === 'partido' ? 'flex' : 'none';
     html += '<div id="' + idPref + '_corrido" style="display:' + dC + ';flex-direction:column;gap:2px">';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h1" value="' + (turno.h1||'') + '" onchange="onHoraChange('' + emp.id + '','' + dk + '')">';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h1" value="' + (turno.h1||'') + '" onchange="onHoraChange(\'' + emp.id + '\',\'' + dk + '\')">';
     html += '<div class="hora-separador">↓</div>';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h2" value="' + (turno.h2||'') + '" onchange="onHoraChange('' + emp.id + '','' + dk + '')">';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h2" value="' + (turno.h2||'') + '" onchange="onHoraChange(\'' + emp.id + '\',\'' + dk + '\')">';
     html += '</div>';
     html += '<div id="' + idPref + '_partido" style="display:' + dP + ';flex-direction:column;gap:2px">';
     html += '<input class="hora-input" type="time" id="' + idPref + '_h1p" value="' + (turno.h1||'') + '">';
