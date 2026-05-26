@@ -321,6 +321,69 @@ td { padding: 10px 14px; vertical-align: middle; }
   .filter-input,.filter-select { width: 100%; }
 }
 </style>
+
+/* ── HORARIOS SEMANAL ── */
+.horarios-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 1.5rem; }
+.horarios-title  { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; color: var(--black); }
+.semana-nav      { display: flex; align-items: center; gap: 8px; }
+.semana-label    { font-size: 13px; font-weight: 600; color: var(--black); min-width: 160px; text-align: center; }
+.btn-semana      { width: 30px; height: 30px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; color: var(--gray-600); transition: all .15s; }
+.btn-semana:hover { background: var(--black); color: var(--white); border-color: var(--black); }
+.horarios-grid   { display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* Tabla horarios admin */
+.hor-suc-block   { background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+.hor-suc-head    { display: flex; align-items: center; gap: 10px; padding: .85rem 1.25rem; border-bottom: 1px solid var(--gray-100); background: var(--gray-50); }
+.hor-suc-stripe  { width: 4px; height: 20px; border-radius: 2px; flex-shrink: 0; }
+.hor-suc-nombre  { font-family: var(--font-display); font-size: 16px; letter-spacing: 1px; color: var(--black); }
+.hor-suc-sub     { font-size: 12px; color: var(--gray-400); margin-left: auto; }
+.hor-table-wrap  { overflow-x: auto; }
+.hor-table       { width: 100%; border-collapse: collapse; font-size: 12px; }
+.hor-table th    { padding: 8px 12px; text-align: center; font-size: 10px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--gray-100); white-space: nowrap; background: var(--gray-50); }
+.hor-table th:first-child { text-align: left; min-width: 130px; }
+.hor-table td    { padding: 8px 12px; border-bottom: 1px solid var(--gray-100); text-align: center; vertical-align: middle; }
+.hor-table td:first-child { text-align: left; font-weight: 500; color: var(--black); font-size: 12px; }
+.hor-table tr:last-child td { border-bottom: none; }
+.hor-table tr:hover td { background: var(--gray-50); }
+.hor-turno       { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.hor-turno.corrido  { background: #dbeafe; color: #1e40af; }
+.hor-turno.partido  { background: #fef3c7; color: #92400e; }
+.hor-turno.libre    { background: var(--gray-100); color: var(--gray-400); }
+.hor-turno.empty    { color: var(--gray-200); font-size: 10px; }
+
+/* Panel carga encargado */
+.carga-panel     { background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
+.carga-panel-head{ display: flex; align-items: center; gap: 10px; padding: 1rem 1.25rem; background: var(--black); }
+.carga-panel-suc { font-family: var(--font-display); font-size: 18px; letter-spacing: 2px; color: var(--white); }
+.carga-panel-sub { font-size: 12px; color: var(--gray-400); margin-left: auto; }
+.carga-body      { padding: 1.25rem; }
+.carga-empleado  { border: 1px solid var(--gray-100); border-radius: var(--radius-md); margin-bottom: 1rem; overflow: hidden; }
+.carga-emp-header{ display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; background: var(--gray-50); border-bottom: 1px solid var(--gray-100); }
+.carga-emp-nombre{ font-weight: 600; font-size: 13px; color: var(--black); }
+.carga-dias-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 1rem; }
+.carga-dia       { display: flex; flex-direction: column; gap: 4px; }
+.carga-dia-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gray-600); text-align: center; margin-bottom: 2px; }
+.carga-dia-label.weekend { color: var(--accent); }
+.tipo-turno-sel  { width: 100%; padding: 4px 6px; font-family: var(--font-body); font-size: 11px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); color: var(--black); cursor: pointer; }
+.tipo-turno-sel:focus { outline: none; border-color: var(--black); }
+.hora-input      { width: 100%; height: 28px; padding: 0 6px; font-family: var(--font-body); font-size: 11px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); color: var(--black); text-align: center; }
+.hora-input:focus{ outline: none; border-color: var(--black); }
+.hora-separador  { text-align: center; font-size: 10px; color: var(--gray-400); }
+.carga-actions   { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 1rem 1.25rem; border-top: 1px solid var(--gray-100); background: var(--gray-50); }
+.btn-guardar-hor { padding: 8px 20px; background: var(--black); color: var(--white); border: none; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
+.btn-guardar-hor:hover { opacity: .8; }
+.btn-guardar-hor:disabled { opacity: .45; cursor: not-allowed; }
+.hor-pendiente-tag { font-size: 11px; color: #d97706; background: #fef3c7; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+.hor-ok-tag        { font-size: 11px; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+
+/* Semana info bar */
+.semana-info-bar { display: flex; align-items: center; gap: 10px; padding: .7rem 1rem; background: var(--gray-50); border: 1px solid var(--gray-100); border-radius: var(--radius-md); margin-bottom: 1.25rem; font-size: 12px; color: var(--gray-600); flex-wrap: wrap; }
+.semana-info-bar strong { color: var(--black); }
+
+@media (max-width: 700px) {
+  .carga-dias-grid { grid-template-columns: repeat(4, 1fr); }
+}
+</style>
 </head>
 <body>
 
@@ -357,6 +420,7 @@ td { padding: 10px 14px; vertical-align: middle; }
     <nav class="top-nav" id="topNav">
       <button class="nav-btn active" id="navPedidos">Pedidos</button>
       <button class="nav-btn" id="navCajas">Cajas de locales</button>
+      <button class="nav-btn" id="navHorarios">Horario semanal</button>
     </nav>
     <div class="top-actions">
       <span class="status-label" id="ultimaActualizacion"></span>
@@ -421,9 +485,24 @@ td { padding: 10px 14px; vertical-align: middle; }
       <div class="cajas-grid" id="cajasGrid"></div>
     </div>
 
+    <!-- HORARIOS SEMANAL -->
+    <div id="horariosBody" style="display:none">
+      <div class="horarios-header">
+        <span class="horarios-title" id="horariosTitleTxt">Horario semanal</span>
+        <div class="semana-nav">
+          <button class="btn-semana" id="btnSemanaAnt" title="Semana anterior">‹</button>
+          <span class="semana-label" id="semanaLabel">—</span>
+          <button class="btn-semana" id="btnSemanaSig" title="Semana siguiente">›</button>
+        </div>
+      </div>
+      <div class="semana-info-bar" id="semanaInfoBar"></div>
+      <div class="horarios-grid" id="horariosGrid">
+        <div class="loading-state"><div class="spinner"></div><p>Cargando horarios...</p></div>
+      </div>
+    </div>
+
   </div>
 </div>
-
 <!-- MODAL PEDIDO -->
 <div class="modal-overlay" id="modalOverlay" onclick="cerrarModalOverlay(event)">
   <div class="modal-box">
@@ -495,6 +574,29 @@ td { padding: 10px 14px; vertical-align: middle; }
   </div>
 </div>
 
+<div class="modal-overlay" id="modalHorarioOverlay" onclick="cerrarModalHorarioOverlay(event)">
+  <div class="modal-box" style="max-width:980px;width:97vw">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <span class="modal-cod" id="mhSucursal" style="font-size:16px"></span>
+        <span style="font-size:11px;color:var(--gray-400);margin-left:8px" id="mhSemanaInfo"></span>
+      </div>
+      <button class="modal-close" onclick="cerrarModalHorario()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;max-height:80vh;overflow-y:auto">
+      <div class="carga-body" id="mhBody">
+        <!-- Empleados se renderizan acá -->
+      </div>
+    </div>
+    <div class="modal-actions" style="background:var(--gray-50)">
+      <span id="mhStatus" style="font-size:12px;color:var(--gray-400)"></span>
+      <button class="btn-guardar-hor" id="btnGuardarHorario" onclick="guardarHorario()">Guardar horario</button>
+      <button class="modal-btn cancelar" onclick="cerrarModalHorario()">Cancelar</button>
+    </div>
+  </div>
+</div>
+<div class="dash-toast" id="dashToast"></div>
+
 <!-- DRAWER MOBILE -->
 <div class="drawer-overlay" id="drawerOverlay"></div>
 <div class="drawer" id="drawer">
@@ -505,18 +607,74 @@ td { padding: 10px 14px; vertical-align: middle; }
   <nav class="drawer-nav">
     <button class="drawer-nav-btn active" id="drawerNavPedidos">Pedidos</button>
     <button class="drawer-nav-btn" id="drawerNavCajas">Cajas de locales</button>
+    <button class="drawer-nav-btn" id="drawerNavHorarios">Horario semanal</button>
   </nav>
 </div>
-
-<!-- TOAST -->
-<div class="dash-toast" id="dashToast"></div>
 
 <script>
 var SUCURSALES = ['01 PASEO','05 WAVE','09 CIPO SAN MARTIN','10 PERITO MORENO','12 CENTENARIO','14 ROCA'];
 var todosLosPedidos = [];
 var vistaActual = 'hoy';
 var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04N6VzJktRa3xvvI_7t0Zq3l6LcMY-rW2pgcKjuj9Xwp/exec';
-var CREDENCIALES = { admin: 'cromacajas' };
+
+// ── USUARIOS: admin + un usuario por local ──
+// Formato: { usuario: { pass, rol, sucursal } }
+// rol: 'admin' ve todo | 'encargado' solo carga su local
+var CREDENCIALES = {
+  'admin':    { pass: 'cromacajas',  rol: 'admin',      sucursal: null },
+  'paseo':    { pass: 'paseo2024',   rol: 'encargado',  sucursal: '01 PASEO' },
+  'wave':     { pass: 'wave2024',    rol: 'encargado',  sucursal: '05 WAVE' },
+  'cipolletti':{ pass: 'cipo2024',   rol: 'encargado',  sucursal: '09 CIPO SAN MARTIN' },
+  'perito':   { pass: 'perito2024',  rol: 'encargado',  sucursal: '10 PERITO MORENO' },
+  'centenario':{ pass: 'cente2024',  rol: 'encargado',  sucursal: '12 CENTENARIO' },
+  'roca':     { pass: 'roca2024',    rol: 'encargado',  sucursal: '14 ROCA' }
+};
+
+var sesionRol      = null;
+var sesionSucursal = null;
+
+// ── SEMANA ──
+var semanaOffset = 0; // 0 = semana actual, +1 = próxima, etc.
+
+function getLunes(offset) {
+  var hoy = new Date();
+  var dia = hoy.getDay(); // 0=dom, 1=lun...
+  var diffLunes = (dia === 0) ? -6 : 1 - dia;
+  var lunes = new Date(hoy);
+  lunes.setDate(hoy.getDate() + diffLunes + offset * 7);
+  lunes.setHours(0,0,0,0);
+  return lunes;
+}
+
+function getSemanaStr(offset) {
+  var lunes = getLunes(offset);
+  var domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
+  var meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  var f = function(d){ return d.getDate() + ' ' + meses[d.getMonth()]; };
+  return f(lunes) + ' — ' + f(domingo) + ' ' + domingo.getFullYear();
+}
+
+function getSemanaId(offset) {
+  // Formato YYYY-WNN (semana ISO)
+  var lunes = getLunes(offset);
+  var año = lunes.getFullYear();
+  var inicio = new Date(año, 0, 1);
+  var semana = Math.ceil((((lunes - inicio) / 86400000) + inicio.getDay() + 1) / 7);
+  return año + '-W' + String(semana).padStart(2,'0');
+}
+
+function getDiasLunes(offset) {
+  var lunes = getLunes(offset);
+  var dias = [];
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(lunes); d.setDate(lunes.getDate() + i);
+    dias.push(d);
+  }
+  return dias;
+}
+
+var DIAS_LABEL = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+var DIAS_KEY   = ['lun','mar','mie','jue','vie','sab','dom'];
 
 // ── LOGIN ──
 function cerrarDrawer() {
@@ -528,29 +686,58 @@ function cerrarDrawer() {
 
 function initNav() {
   var btnAct = document.getElementById('btnActualizar');
-  if (btnAct) btnAct.addEventListener('click', cargarDatos);
+  if (btnAct) btnAct.addEventListener('click', function(){ if(vistaActual==='horarios') cargarHorarios(); else cargarDatos(); });
 
   var navMap = {
-    navPedidos:'hoy', navCajas:'cajas',
-    drawerNavPedidos:'hoy', drawerNavCajas:'cajas'
+    navPedidos:'hoy', navCajas:'cajas', navHorarios:'horarios',
+    drawerNavPedidos:'hoy', drawerNavCajas:'cajas', drawerNavHorarios:'horarios'
   };
   Object.keys(navMap).forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) el.addEventListener('click', function(){ setVista(navMap[id]); });
+    if (el) el.addEventListener('click', function(){ setVista(navMap[id]); cerrarDrawer(); });
   });
+
+  // Semana nav
+  document.getElementById('btnSemanaAnt').addEventListener('click', function(){
+    semanaOffset--; actualizarSemanaLabel(); cargarHorarios();
+  });
+  document.getElementById('btnSemanaSig').addEventListener('click', function(){
+    semanaOffset++; actualizarSemanaLabel(); cargarHorarios();
+  });
+
+  // Ocultar navegación de pedidos/cajas si es encargado
+  if (sesionRol === 'encargado') {
+    ['navPedidos','navCajas'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    ['drawerNavPedidos','drawerNavCajas'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
 }
 
 function hacerLogin() {
-  var user = document.getElementById('loginUser').value.trim();
+  var user = document.getElementById('loginUser').value.trim().toLowerCase();
   var pass = document.getElementById('loginPass').value;
   var err  = document.getElementById('loginError');
-  if (CREDENCIALES[user] && CREDENCIALES[user] === pass) {
+  var cred = CREDENCIALES[user];
+  if (cred && cred.pass === pass) {
+    sesionRol      = cred.rol;
+    sesionSucursal = cred.sucursal;
     sessionStorage.setItem('croma_auth', '1');
+    sessionStorage.setItem('croma_rol', sesionRol);
+    sessionStorage.setItem('croma_suc', sesionSucursal || '');
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('dashApp').style.display = '';
     err.textContent = '';
     initNav();
-    cargarDatos();
+    if (sesionRol === 'encargado') {
+      setVista('horarios');
+    } else {
+      cargarDatos();
+    }
   } else {
     err.textContent = 'Usuario o contraseña incorrectos';
     document.getElementById('loginPass').value = '';
@@ -566,15 +753,22 @@ function hacerLogin() {
   document.getElementById('fechaHoy').textContent =
     dias[hoy.getDay()] + ' ' + hoy.getDate() + ' ' + meses[hoy.getMonth()] + ' ' + hoy.getFullYear();
 
-  if (sessionStorage.getItem('croma_auth') === '1') {
+  var authSaved = sessionStorage.getItem('croma_auth');
+  if (authSaved === '1') {
+    sesionRol      = sessionStorage.getItem('croma_rol') || 'admin';
+    sesionSucursal = sessionStorage.getItem('croma_suc') || null;
+    if (sesionSucursal === '') sesionSucursal = null;
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('dashApp').style.display = '';
     initNav();
-    cargarDatos();
+    if (sesionRol === 'encargado') {
+      setVista('horarios');
+    } else {
+      cargarDatos();
+    }
   }
 
   document.getElementById('btnLogin').addEventListener('click', hacerLogin);
-
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && document.getElementById('loginScreen') &&
         !document.getElementById('loginScreen').classList.contains('hidden')) {
@@ -582,8 +776,6 @@ function hacerLogin() {
     }
   });
 
-  // Nav buttons
-  // Hamburger mobile
   var hbBtn = document.getElementById('hamburgerBtn');
   var drawer = document.getElementById('drawer');
   var drawerOverlay = document.getElementById('drawerOverlay');
@@ -592,33 +784,433 @@ function hacerLogin() {
   if (drawerClose) drawerClose.addEventListener('click', cerrarDrawer);
   if (drawerOverlay) drawerOverlay.addEventListener('click', cerrarDrawer);
 
-  setInterval(function(){ cargarDatos(); }, 2 * 60 * 1000);
+  setInterval(function(){ if(vistaActual !== 'horarios') cargarDatos(); }, 2 * 60 * 1000);
 })();
 
 // ── VISTAS ──
 function setVista(v) {
   vistaActual = v;
-  var titulos = { hoy:'Pedidos', pedidos:'Solo Pedidos', reposiciones:'Solo Reposiciones', cajas:'Cajas de locales' };
-  // Actualizar botones del topbar
-  ['navPedidos','navCajas'].forEach(function(id, i){
+  ['navPedidos','navCajas','navHorarios'].forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) el.classList.toggle('active', ['hoy','cajas'][i] === v);
+    if (!el) return;
+    var target = id.replace('nav','').toLowerCase();
+    el.classList.toggle('active',
+      (target === 'pedidos' && (v === 'hoy' || v === 'pedidos' || v === 'reposiciones')) ||
+      (target === 'cajas' && v === 'cajas') ||
+      (target === 'horarios' && v === 'horarios')
+    );
   });
-  ['drawerNavPedidos','drawerNavCajas'].forEach(function(id, i){
+  ['drawerNavPedidos','drawerNavCajas','drawerNavHorarios'].forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) el.classList.toggle('active', ['hoy','cajas'][i] === v);
+    if (!el) return;
+    var target = id.replace('drawerNav','').toLowerCase();
+    el.classList.toggle('active',
+      (target === 'pedidos' && (v === 'hoy' || v === 'pedidos' || v === 'reposiciones')) ||
+      (target === 'cajas' && v === 'cajas') ||
+      (target === 'horarios' && v === 'horarios')
+    );
   });
-  var esCajas = v === 'cajas';
-  document.getElementById('panelPendientes').style.display   = esCajas ? 'none' : '';
-  document.getElementById('panelSolucionados').style.display = esCajas ? 'none' : '';
+
+  var esHorarios = v === 'horarios';
+  var esCajas    = v === 'cajas';
+  document.getElementById('panelPendientes').style.display   = (esCajas || esHorarios) ? 'none' : '';
+  document.getElementById('panelSolucionados').style.display = (esCajas || esHorarios) ? 'none' : '';
   document.getElementById('cajasBody').style.display         = esCajas ? '' : 'none';
+  document.getElementById('horariosBody').style.display      = esHorarios ? '' : 'none';
   var controlsEl = document.getElementById('controlsBar');
   var statsEl    = document.getElementById('statsRow');
-  if (controlsEl) controlsEl.style.display = esCajas ? 'none' : '';
-  if (statsEl)    statsEl.style.display    = esCajas ? 'none' : '';
-  var filtroTipoEl = document.getElementById('filtroTipo');
-  if (filtroTipoEl) filtroTipoEl.style.display = (v === 'pedidos' || v === 'reposiciones') ? 'none' : '';
-  if (esCajas) { irHoyCajas(); } else { renderPanel(); }
+  if (controlsEl) controlsEl.style.display = (esCajas || esHorarios) ? 'none' : '';
+  if (statsEl)    statsEl.style.display    = (esCajas || esHorarios) ? 'none' : '';
+
+  if (esHorarios) {
+    // Semana próxima por defecto para encargados, semana actual para admin
+    if (sesionRol === 'encargado' && semanaOffset === 0) semanaOffset = 1;
+    actualizarSemanaLabel();
+    cargarHorarios();
+  } else if (esCajas) {
+    irHoyCajas();
+  } else {
+    renderPanel();
+  }
+}
+
+
+// ── HORARIOS SEMANAL ──
+var horariosData = {}; // { sucursal: [ {empleado, lun, mar...} ] }
+
+function actualizarSemanaLabel() {
+  document.getElementById('semanaLabel').textContent = getSemanaStr(semanaOffset);
+}
+
+async function cargarHorarios() {
+  var grid = document.getElementById('horariosGrid');
+  grid.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando horarios...</p></div>';
+
+  var semanaId = getSemanaId(semanaOffset);
+  var dias = getDiasLunes(semanaOffset);
+
+  // Info bar
+  var lunes  = dias[0];
+  var dom    = dias[6];
+  var meses  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  document.getElementById('semanaInfoBar').innerHTML =
+    '<strong>Semana ' + semanaId + '</strong> · ' +
+    lunes.getDate() + ' de ' + meses[lunes.getMonth()] + ' al ' +
+    dom.getDate() + ' de ' + meses[dom.getMonth()] + ' de ' + dom.getFullYear();
+
+  try {
+    var url = API_URL + '?accion=obtenerHorarios&semana=' + encodeURIComponent(semanaId);
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (data.ok) {
+      horariosData = data.horarios || {};
+      renderHorarios(semanaId, dias);
+    } else {
+      // Si no hay datos todavía, renderizar igual con vacíos
+      horariosData = {};
+      renderHorarios(semanaId, dias);
+    }
+  } catch(e) {
+    horariosData = {};
+    renderHorarios(semanaId, dias);
+  }
+}
+
+function renderHorarios(semanaId, dias) {
+  var grid = document.getElementById('horariosGrid');
+  var html = '';
+
+  // Título dinámico según rol
+  var tituloEl = document.getElementById('horariosTitleTxt');
+  if (sesionRol === 'encargado') {
+    tituloEl.textContent = 'Horario semanal — ' + sesionSucursal;
+  } else {
+    tituloEl.textContent = 'Horario semanal';
+  }
+
+  var sucursalesVer = sesionRol === 'encargado' ? [sesionSucursal] : SUCURSALES;
+
+  sucursalesVer.forEach(function(suc) {
+    var empleados = horariosData[suc] || [];
+    var cargado   = empleados.length > 0;
+    var sucKey    = suc.split(' ')[0]; // '01', '05', etc.
+    var varColor  = '--suc-' + sucKey;
+
+    html += '<div class="hor-suc-block">';
+    html += '<div class="hor-suc-head">';
+    html += '<div class="hor-suc-stripe" style="background:var(' + varColor + ')"></div>';
+    html += '<span class="hor-suc-nombre">' + suc + '</span>';
+    html += '<span class="hor-suc-sub">';
+    if (cargado) {
+      html += '<span class="hor-ok-tag">✓ Horario cargado</span>';
+    } else {
+      html += '<span class="hor-pendiente-tag">⏳ Pendiente</span>';
+    }
+    html += '</span>';
+
+    // Botón cargar solo para admin o encargado de esa sucursal
+    if (sesionRol === 'admin' || (sesionRol === 'encargado' && sesionSucursal === suc)) {
+      html += '<button onclick="abrirModalCarga(\'' + suc + '\')" style="margin-left:12px;padding:4px 12px;font-size:11px;font-weight:600;border:1px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--white);cursor:pointer;color:var(--black);transition:all .15s" onmouseover="this.style.background=\'var(--black)\';this.style.color=\'var(--white)\'" onmouseout="this.style.background=\'var(--white)\';this.style.color=\'var(--black)\'">' + (cargado ? '✎ Editar' : '+ Cargar') + '</button>';
+    }
+
+    html += '</div>';
+
+    if (cargado) {
+      // Tabla de horarios
+      html += '<div class="hor-table-wrap"><table class="hor-table">';
+      html += '<thead><tr><th>Empleado</th>';
+      dias.forEach(function(d, i) {
+        var esWeekend = (i === 5 || i === 6);
+        html += '<th style="' + (esWeekend ? 'color:var(--accent)' : '') + '">' + DIAS_LABEL[i] + '<br><span style="font-size:9px;font-weight:400">' + d.getDate() + '</span></th>';
+      });
+      html += '</tr></thead><tbody>';
+
+      empleados.forEach(function(emp) {
+        html += '<tr><td>' + emp.empleado + '</td>';
+        DIAS_KEY.forEach(function(dk) {
+          var val = emp[dk] || '';
+          html += '<td>' + formatHorarioCell(val) + '</td>';
+        });
+        html += '</tr>';
+      });
+
+      html += '</tbody></table></div>';
+    } else {
+      html += '<div class="caja-sin-cierre-msg" style="padding:1.5rem">Sin horario cargado para esta semana</div>';
+    }
+    html += '</div>';
+  });
+
+  grid.innerHTML = html || '<div class="empty-state">Sin sucursales</div>';
+}
+
+function formatHorarioCell(val) {
+  if (!val || val.trim() === '' || val === 'LIBRE') {
+    return '<span class="hor-turno libre">Libre</span>';
+  }
+  // Si tiene dos bloques separados por " | " es partido
+  if (val.indexOf('|') >= 0) {
+    var partes = val.split('|').map(function(s){ return s.trim(); });
+    return '<span class="hor-turno partido" title="Turno partido">' + partes.join('<br>') + '</span>';
+  }
+  return '<span class="hor-turno corrido">' + val.trim() + '</span>';
+}
+
+// ── MODAL CARGA ENCARGADO ──
+var horariosEditando = {}; // { empleado: { lun: {tipo, h1, h2, h3, h4}, ... } }
+var sucursalEditando = null;
+var empleadosLista   = [];
+
+async function abrirModalCarga(suc) {
+  sucursalEditando = suc;
+  horariosEditando = {};
+
+  document.getElementById('mhSucursal').textContent = suc;
+  document.getElementById('mhSemanaInfo').textContent = getSemanaStr(semanaOffset);
+  document.getElementById('mhStatus').textContent = '';
+  document.getElementById('btnGuardarHorario').disabled = false;
+
+  var body = document.getElementById('mhBody');
+  body.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando empleados...</p></div>';
+  document.getElementById('modalHorarioOverlay').classList.add('open');
+
+  // Obtener empleados de esta sucursal desde la API
+  try {
+    var urlEmp = API_URL + '?accion=obtenerEmpleados&sucursal=' + encodeURIComponent(suc);
+    var respEmp = await fetch(urlEmp);
+    var dataEmp = await respEmp.json();
+    empleadosLista = (dataEmp.ok && dataEmp.empleados) ? dataEmp.empleados : [];
+  } catch(e) {
+    empleadosLista = [];
+  }
+
+  if (empleadosLista.length === 0) {
+    body.innerHTML = '<div class="empty-state">⚠ No se pudieron cargar los empleados.<br>Verificá la conexión con la planilla JORNADA LABORAL.</div>';
+    return;
+  }
+
+  // Cargar datos existentes si hay
+  var datosExistentes = {};
+  var semanaId = getSemanaId(semanaOffset);
+  if (horariosData[suc] && horariosData[suc].length > 0) {
+    horariosData[suc].forEach(function(emp) {
+      datosExistentes[emp.empleado] = emp;
+    });
+  }
+
+  // Inicializar estructura de edición
+  empleadosLista.forEach(function(nombre) {
+    horariosEditando[nombre] = {};
+    DIAS_KEY.forEach(function(dk) {
+      var valExistente = (datosExistentes[nombre] && datosExistentes[nombre][dk]) ? datosExistentes[nombre][dk] : '';
+      horariosEditando[nombre][dk] = parsearTurno(valExistente);
+    });
+  });
+
+  renderFormHorario();
+}
+
+function parsearTurno(val) {
+  // Convierte "10:00-19:00" o "09:00-13:00 | 17:00-21:00" o "LIBRE" a objeto
+  if (!val || val === 'LIBRE') return { tipo: 'libre', h1: '', h2: '', h3: '', h4: '' };
+  if (val.indexOf('|') >= 0) {
+    var partes = val.split('|').map(function(s){ return s.trim(); });
+    var p1 = partes[0].split('-');
+    var p2 = partes[1] ? partes[1].split('-') : ['',''];
+    return { tipo: 'partido', h1: p1[0]||'', h2: p1[1]||'', h3: p2[0]||'', h4: p2[1]||'' };
+  }
+  var partes2 = val.split('-');
+  return { tipo: 'corrido', h1: partes2[0]||'', h2: partes2[1]||'', h3: '', h4: '' };
+}
+
+function renderFormHorario() {
+  var body = document.getElementById('mhBody');
+  var dias = getDiasLunes(semanaOffset);
+  var html = '';
+
+  empleadosLista.forEach(function(nombre) {
+    html += '<div class="carga-empleado">';
+    html += '<div class="carga-emp-header">';
+    html += '<span class="carga-emp-nombre">' + nombre + '</span>';
+    html += '</div>';
+    html += '<div class="carga-dias-grid">';
+
+    DIAS_KEY.forEach(function(dk, i) {
+      var esWeekend = (i === 5 || i === 6);
+      var turno = horariosEditando[nombre][dk];
+      var idPref = 'ht_' + nombre.replace(/\s+/g,'_') + '_' + dk;
+
+      html += '<div class="carga-dia">';
+      html += '<div class="carga-dia-label' + (esWeekend ? ' weekend' : '') + '">' + DIAS_LABEL[i] + '<br><small style="font-weight:400;font-size:9px">' + dias[i].getDate() + '</small></div>';
+
+      // Selector tipo turno
+      html += '<select class="tipo-turno-sel" id="' + idPref + '_tipo" onchange="onTipoChange(\'' + nombre + '\',\'' + dk + '\')">';
+      html += '<option value="libre"'   + (turno.tipo==='libre'   ? ' selected':'') + '>Libre</option>';
+      html += '<option value="corrido"' + (turno.tipo==='corrido' ? ' selected':'') + '>Corrido</option>';
+      html += '<option value="partido"' + (turno.tipo==='partido' ? ' selected':'') + '>Partido</option>';
+      html += '</select>';
+
+      // Inputs de hora según tipo
+      var displayCorrido = turno.tipo === 'corrido' ? '' : 'none';
+      var displayPartido = turno.tipo === 'partido' ? '' : 'none';
+
+      // Turno corrido
+      html += '<div id="' + idPref + '_corrido" style="display:' + displayCorrido + ';display:flex;flex-direction:column;gap:2px">';
+      html += '<input class="hora-input" type="time" id="' + idPref + '_h1" value="' + (turno.h1||'') + '" onchange="onHoraChange(\'' + nombre + '\',\'' + dk + '\')">';
+      html += '<div class="hora-separador">↓</div>';
+      html += '<input class="hora-input" type="time" id="' + idPref + '_h2" value="' + (turno.h2||'') + '" onchange="onHoraChange(\'' + nombre + '\',\'' + dk + '\')">';
+      html += '</div>';
+
+      // Turno partido
+      html += '<div id="' + idPref + '_partido" style="display:' + displayPartido + ';display:flex;flex-direction:column;gap:2px">';
+      html += '<input class="hora-input" type="time" id="' + idPref + '_h1p" value="' + (turno.h1||'') + '" onchange="onHoraChange(\'' + nombre + '\',\'' + dk + '\')">';
+      html += '<input class="hora-input" type="time" id="' + idPref + '_h2p" value="' + (turno.h2||'') + '" onchange="onHoraChange(\'' + nombre + '\',\'' + dk + '\')">';
+      html += '<div class="hora-separador" style="font-size:9px">2° bloque</div>';
+      html += '<input class="hora-input" type="time" id="' + idPref + '_h3p" value="' + (turno.h3||'') + '" onchange="onHoraChange(\'' + nombre + '\',\'' + dk + '\')">';
+      html += '<input class="hora-input" type="time" id="' + idPref + '_h4p" value="' + (turno.h4||'') + '" onchange="onHoraChange(\'' + nombre + '\',\'' + dk + '\')">';
+      html += '</div>';
+
+      html += '</div>'; // carga-dia
+    });
+
+    html += '</div>'; // carga-dias-grid
+    html += '</div>'; // carga-empleado
+  });
+
+  body.innerHTML = html;
+
+  // Aplicar display correcto para tipo seleccionado (fix para display:none override)
+  empleadosLista.forEach(function(nombre) {
+    DIAS_KEY.forEach(function(dk) {
+      var tipo = horariosEditando[nombre][dk].tipo;
+      var idPref = 'ht_' + nombre.replace(/\s+/g,'_') + '_' + dk;
+      var elC = document.getElementById(idPref + '_corrido');
+      var elP = document.getElementById(idPref + '_partido');
+      if (elC) elC.style.display = tipo === 'corrido' ? 'flex' : 'none';
+      if (elP) elP.style.display = tipo === 'partido' ? 'flex' : 'none';
+    });
+  });
+}
+
+function onTipoChange(nombre, dk) {
+  var idPref = 'ht_' + nombre.replace(/\s+/g,'_') + '_' + dk;
+  var sel    = document.getElementById(idPref + '_tipo');
+  var tipo   = sel ? sel.value : 'libre';
+  var elC    = document.getElementById(idPref + '_corrido');
+  var elP    = document.getElementById(idPref + '_partido');
+  if (elC) elC.style.display = tipo === 'corrido' ? 'flex' : 'none';
+  if (elP) elP.style.display = tipo === 'partido' ? 'flex' : 'none';
+  horariosEditando[nombre][dk].tipo = tipo;
+}
+
+function onHoraChange(nombre, dk) {
+  var idPref = 'ht_' + nombre.replace(/\s+/g,'_') + '_' + dk;
+  var tipo   = horariosEditando[nombre][dk].tipo;
+  if (tipo === 'corrido') {
+    var h1 = document.getElementById(idPref + '_h1');
+    var h2 = document.getElementById(idPref + '_h2');
+    horariosEditando[nombre][dk].h1 = h1 ? h1.value : '';
+    horariosEditando[nombre][dk].h2 = h2 ? h2.value : '';
+  } else if (tipo === 'partido') {
+    var h1p = document.getElementById(idPref + '_h1p');
+    var h2p = document.getElementById(idPref + '_h2p');
+    var h3p = document.getElementById(idPref + '_h3p');
+    var h4p = document.getElementById(idPref + '_h4p');
+    horariosEditando[nombre][dk].h1 = h1p ? h1p.value : '';
+    horariosEditando[nombre][dk].h2 = h2p ? h2p.value : '';
+    horariosEditando[nombre][dk].h3 = h3p ? h3p.value : '';
+    horariosEditando[nombre][dk].h4 = h4p ? h4p.value : '';
+  }
+}
+
+function turnoToString(t) {
+  if (t.tipo === 'libre' || !t.tipo) return 'LIBRE';
+  if (t.tipo === 'corrido') {
+    if (!t.h1 && !t.h2) return 'LIBRE';
+    return (t.h1 || '?') + '-' + (t.h2 || '?');
+  }
+  if (t.tipo === 'partido') {
+    if (!t.h1 && !t.h2) return 'LIBRE';
+    var bloque1 = (t.h1 || '?') + '-' + (t.h2 || '?');
+    var bloque2 = (t.h3 && t.h4) ? (t.h3 + '-' + t.h4) : '';
+    return bloque2 ? bloque1 + ' | ' + bloque2 : bloque1;
+  }
+  return 'LIBRE';
+}
+
+async function guardarHorario() {
+  var btn    = document.getElementById('btnGuardarHorario');
+  var status = document.getElementById('mhStatus');
+  btn.disabled = true;
+  status.textContent = 'Guardando...';
+
+  // Leer valores actuales del DOM antes de guardar
+  empleadosLista.forEach(function(nombre) {
+    DIAS_KEY.forEach(function(dk) {
+      var idPref = 'ht_' + nombre.replace(/\s+/g,'_') + '_' + dk;
+      var sel = document.getElementById(idPref + '_tipo');
+      if (!sel) return;
+      var tipo = sel.value;
+      horariosEditando[nombre][dk].tipo = tipo;
+      if (tipo === 'corrido') {
+        var h1 = document.getElementById(idPref + '_h1');
+        var h2 = document.getElementById(idPref + '_h2');
+        horariosEditando[nombre][dk].h1 = h1 ? h1.value : '';
+        horariosEditando[nombre][dk].h2 = h2 ? h2.value : '';
+      } else if (tipo === 'partido') {
+        horariosEditando[nombre][dk].h1 = (document.getElementById(idPref+'_h1p')||{}).value || '';
+        horariosEditando[nombre][dk].h2 = (document.getElementById(idPref+'_h2p')||{}).value || '';
+        horariosEditando[nombre][dk].h3 = (document.getElementById(idPref+'_h3p')||{}).value || '';
+        horariosEditando[nombre][dk].h4 = (document.getElementById(idPref+'_h4p')||{}).value || '';
+      }
+    });
+  });
+
+  // Armar payload
+  var filas = empleadosLista.map(function(nombre) {
+    var row = { empleado: nombre };
+    DIAS_KEY.forEach(function(dk) {
+      row[dk] = turnoToString(horariosEditando[nombre][dk]);
+    });
+    return row;
+  });
+
+  var semanaId = getSemanaId(semanaOffset);
+  var payload = {
+    accion:    'guardarHorario',
+    sucursal:  sucursalEditando,
+    semana:    semanaId,
+    encargado: sesionSucursal || 'ADMIN',
+    filas:     filas
+  };
+
+  try {
+    var resp = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    var data = await resp.json();
+    if (data.ok) {
+      toast('✓ Horario guardado correctamente', 'success');
+      cerrarModalHorario();
+      cargarHorarios();
+    } else {
+      status.textContent = '⚠ Error: ' + (data.error || 'desconocido');
+      btn.disabled = false;
+    }
+  } catch(e) {
+    status.textContent = '⚠ Error de conexión';
+    btn.disabled = false;
+  }
+}
+
+function cerrarModalHorario() {
+  document.getElementById('modalHorarioOverlay').classList.remove('open');
+  sucursalEditando = null;
+}
+function cerrarModalHorarioOverlay(e) {
+  if (e.target === document.getElementById('modalHorarioOverlay')) cerrarModalHorario();
 }
 
 // ── API PEDIDOS ──
