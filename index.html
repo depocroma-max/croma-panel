@@ -944,8 +944,12 @@ function renderHorarios(semanaId, dias) {
   var tituloEl = document.getElementById('horariosTitleTxt');
   tituloEl.textContent = 'Horario semanal';
 
-  // Encargado ve todas las sucursales (pero solo puede editar la suya)
-  var sucursalesVer = SUCURSALES;
+  // Encargado ve todas las sucursales — la suya primero
+  var sucursalesVer = SUCURSALES.slice();
+  if (sesionRol === 'encargado' && sesionSucursal) {
+    sucursalesVer = sucursalesVer.filter(function(s){ return s !== sesionSucursal; });
+    sucursalesVer.unshift(sesionSucursal);
+  }
 
   sucursalesVer.forEach(function(suc) {
     var empleados = horariosData[suc] || [];
