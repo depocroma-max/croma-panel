@@ -885,7 +885,6 @@ function setVista(v) {
 
   if (esHorarios) {
     // Semana próxima por defecto para encargados, semana actual para admin
-    if (sesionRol === 'encargado' && semanaOffset === 0) semanaOffset = 1;
     actualizarSemanaLabel();
     cargarHorarios();
   } else if (esCajas) {
