@@ -935,15 +935,12 @@ function renderHorarios(semanaId, dias) {
   var grid = document.getElementById('horariosGrid');
   var html = '';
 
-  // Título dinámico según rol
+  // Título
   var tituloEl = document.getElementById('horariosTitleTxt');
-  if (sesionRol === 'encargado') {
-    tituloEl.textContent = 'Horario semanal — ' + sesionSucursal;
-  } else {
-    tituloEl.textContent = 'Horario semanal';
-  }
+  tituloEl.textContent = 'Horario semanal';
 
-  var sucursalesVer = sesionRol === 'encargado' ? [sesionSucursal] : SUCURSALES;
+  // Encargado ve todas las sucursales (pero solo puede editar la suya)
+  var sucursalesVer = SUCURSALES;
 
   sucursalesVer.forEach(function(suc) {
     var empleados = horariosData[suc] || [];
