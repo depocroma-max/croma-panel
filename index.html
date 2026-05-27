@@ -1470,20 +1470,15 @@ async function compartirHorario(sucIdSafe) {
     var semanaStr = document.getElementById('semanaLabel').textContent;
     var filename  = 'horario_' + sucIdSafe + '_' + semanaStr.replace(/[^a-zA-Z0-9]/g,'_') + '.png';
 
-    // Intentar Web Share API (móvil) primero
-    canvas.toBlob(async function(blob) {
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: 'image/png' })] })) {
-        try {
-          await navigator.share({
-            files: [new File([blob], filename, { type: 'image/png' })],
-            title: 'Horario ' + nombreSuc,
-            text: 'Horario semanal ' + nombreSuc + ' — ' + semanaStr
-          });
-        } catch(e) { descargarImagen(canvas, filename); }
-      } else {
-        descargarImagen(canvas, filename);
-      }
-    }, 'image/png');
+    // Copiar al portapapeles
+    var copiado = await copiarAlPortapapeles(canvas);
+    if (copiado) {
+      toast('📋 Imagen copiada — pegala en WhatsApp Web con Ctrl+V', 'success');
+    } else {
+      // Fallback: descargar
+      descargarImagen(canvas, filename);
+      toast('📥 Imagen descargada — adjuntala en WhatsApp', 'success');
+    }
 
   } catch(e) {
     btns.forEach(function(b){ b.style.visibility = ''; });
@@ -1496,6 +1491,18 @@ function descargarImagen(canvas, filename) {
   link.download = filename;
   link.href = canvas.toDataURL('image/png');
   link.click();
+}
+
+async function copiarAlPortapapeles(canvas) {
+  try {
+    var blob = await new Promise(function(res){ canvas.toBlob(res, 'image/png'); });
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+    return true;
+  } catch(e) {
+    return false;
+  }
 }
 
 function cerrarModalHorario() {
