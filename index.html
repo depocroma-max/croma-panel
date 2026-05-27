@@ -1548,17 +1548,7 @@ async function compartirEmail(sucIdSafe) {
 
     // Abrir cliente de mail con asunto y cuerpo pre-armado
     var asunto  = encodeURIComponent('Horario semanal ' + nombreSuc + ' — ' + semanaStr);
-    var cuerpo  = encodeURIComponent(
-      'Hola,
-
-Te comparto el horario semanal de ' + nombreSuc + ' para la semana del ' + semanaStr + '.
-
-' +
-      'Adjunto la imagen con el detalle.
-
-Saludos,
-Croma'
-    );
+    var cuerpo  = encodeURIComponent('Hola,\n\nTe comparto el horario semanal de ' + nombreSuc + ' para la semana del ' + semanaStr + '.\n\nAdjunto la imagen con el detalle.\n\nSaludos,\nCroma');
     setTimeout(function() {
       window.location.href = 'mailto:?subject=' + asunto + '&body=' + cuerpo;
     }, 800);
