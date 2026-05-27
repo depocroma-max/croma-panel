@@ -382,6 +382,11 @@ td { padding: 10px 14px; vertical-align: middle; }
 @media (max-width: 700px) {
   .carga-dias-grid { grid-template-columns: repeat(4, 1fr); }
 }
+/* ── COMPARTIR HORARIO ── */
+.btn-compartir { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; font-size:11px; font-weight:600; border:1px solid #25D366; border-radius:var(--radius-sm); background:var(--white); cursor:pointer; color:#25D366; transition:all .15s; margin-left:6px; }
+.btn-compartir:hover { background:#25D366; color:var(--white); }
+.btn-compartir svg { width:13px; height:13px; fill:currentColor; }
+.captura-loading { opacity:.5; pointer-events:none; }
 /* ── TURNOS RÁPIDOS ── */
 .turnos-rapidos { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
 .chip-turno { padding: 2px 6px; border-radius: 20px; font-size: 9px; font-weight: 700; border: 1px solid; cursor: pointer; white-space: nowrap; transition: all .12s; line-height: 1.6; }
@@ -407,6 +412,7 @@ td { padding: 10px 14px; vertical-align: middle; }
 .btn-quitar-emp:hover { color: var(--accent); background: #fee2e2; }
 .emp-lista-vacia { text-align: center; padding: 2rem; color: var(--gray-400); font-size: 13px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -948,7 +954,7 @@ function renderHorarios(semanaId, dias) {
     var sucKey    = suc.split(' ')[0]; // '01', '05', etc.
     var varColor  = '--suc-' + sucKey;
 
-    html += '<div class="hor-suc-block">';
+    html += '<div class="hor-suc-block" id="suc_' + suc.replace(/\s+/g,'_') + '">';
     html += '<div class="hor-suc-head">';
     html += '<div class="hor-suc-stripe" style="background:var(' + varColor + ')"></div>';
     html += '<span class="hor-suc-nombre">' + suc + '</span>';
@@ -1427,6 +1433,58 @@ async function guardarHorario() {
     status.textContent = '⚠ Error de conexión';
     btn.disabled = false;
   }
+}
+
+async function compartirHorario(sucIdSafe) {
+  var el = document.getElementById('suc_' + sucIdSafe);
+  if (!el) return;
+
+  // Ocultar botones de la captura temporalmente
+  var btns = el.querySelectorAll('button');
+  btns.forEach(function(b){ b.style.visibility = 'hidden'; });
+
+  try {
+    var canvas = await html2canvas(el, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+
+    // Restaurar botones
+    btns.forEach(function(b){ b.style.visibility = ''; });
+
+    // Generar imagen y descargar / compartir
+    var nombreSuc = sucIdSafe.replace(/_/g,' ');
+    var semanaStr = document.getElementById('semanaLabel').textContent;
+    var filename  = 'horario_' + sucIdSafe + '_' + semanaStr.replace(/[^a-zA-Z0-9]/g,'_') + '.png';
+
+    // Intentar Web Share API (móvil) primero
+    canvas.toBlob(async function(blob) {
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: 'image/png' })] })) {
+        try {
+          await navigator.share({
+            files: [new File([blob], filename, { type: 'image/png' })],
+            title: 'Horario ' + nombreSuc,
+            text: 'Horario semanal ' + nombreSuc + ' — ' + semanaStr
+          });
+        } catch(e) { descargarImagen(canvas, filename); }
+      } else {
+        descargarImagen(canvas, filename);
+      }
+    }, 'image/png');
+
+  } catch(e) {
+    btns.forEach(function(b){ b.style.visibility = ''; });
+    alert('Error al generar la imagen: ' + e.message);
+  }
+}
+
+function descargarImagen(canvas, filename) {
+  var link = document.createElement('a');
+  link.download = filename;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 }
 
 function cerrarModalHorario() {
