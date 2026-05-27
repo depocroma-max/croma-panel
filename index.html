@@ -1029,7 +1029,8 @@ function formatHorarioCell(val) {
 var horariosEditando  = {}; // { empleado: { lun: {tipo,h1,h2,h3,h4}, ... } }
 var sucursalEditando  = null;
 var empleadosLista    = []; // todos los del local (con número): ["34 MATI TERUEL", ...]
-var empleadosAgregados= []; // los que el encargado eligió para esta semana: [{id, nombre, externo}]
+var empleadosAgregados= []; // los que el encargado eligió
+var todosEmpleados    = []; // todos los de todas las sucursales para esta semana: [{id, nombre, externo}]
 
 async function abrirModalCarga(suc) {
   sucursalEditando  = suc;
@@ -1045,14 +1046,17 @@ async function abrirModalCarga(suc) {
   body.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando empleados...</p></div>';
   document.getElementById('modalHorarioOverlay').classList.add('open');
 
-  // Obtener empleados del local desde la API
+  // Obtener empleados del local y todos los empleados en paralelo
   try {
-    var urlEmp = API_URL + '?accion=obtenerEmpleados&sucursal=' + encodeURIComponent(suc);
-    var respEmp = await fetch(urlEmp);
-    var dataEmp = await respEmp.json();
-    empleadosLista = (dataEmp.ok && dataEmp.empleados) ? dataEmp.empleados : [];
+    var urlEmp  = API_URL + '?accion=obtenerEmpleados&sucursal=' + encodeURIComponent(suc);
+    var urlTodos = API_URL + '?accion=obtenerTodosEmpleados';
+    var [respEmp, respTodos] = await Promise.all([fetch(urlEmp), fetch(urlTodos)]);
+    var [dataEmp, dataTodos] = await Promise.all([respEmp.json(), respTodos.json()]);
+    empleadosLista  = (dataEmp.ok  && dataEmp.empleados)  ? dataEmp.empleados  : [];
+    todosEmpleados  = (dataTodos.ok && dataTodos.empleados) ? dataTodos.empleados : [];
   } catch(e) {
     empleadosLista = [];
+    todosEmpleados = [];
   }
 
   // Si hay horario ya cargado para esta semana, pre-cargar los empleados
@@ -1105,10 +1109,25 @@ function buildSelectorHTML() {
   html += '<span class="emp-externo-toggle" onclick="toggleExternoInput()">+ Externo</span>';
   html += '</div>';
 
-  // Input para externo (oculto por defecto)
-  html += '<div id="externoWrap" style="display:none;padding:.75rem 1.25rem;border-bottom:1px solid var(--gray-100);background:#fffbeb;display:none;align-items:center;gap:8px;flex-wrap:wrap">';
-  html += '<input type="text" id="externoInput" placeholder="Nombre del empleado externo..." style="flex:1;height:34px;padding:0 10px;font-family:var(--font-body);font-size:13px;border:1px solid var(--gray-200);border-radius:var(--radius-sm)">';
-  html += '<button class="btn-agregar-emp" onclick="agregarExterno()" style="background:#d97706">+ Agregar externo</button>';
+  // Panel externo (oculto por defecto) — select con todos los empleados + input manual
+  html += '<div id="externoWrap" style="display:none;padding:.75rem 1.25rem;border-bottom:1px solid var(--gray-100);background:#fffbeb;gap:8px;flex-wrap:wrap">';
+  html += '<select id="externoSelect" style="flex:1;min-width:200px;height:34px;padding:0 10px;font-family:var(--font-body);font-size:13px;border:1px solid #fcd34d;border-radius:var(--radius-sm);background:var(--white)">';
+  html += '<option value="">— Elegir de otra sucursal —</option>';
+  var yaAgregadosIds = empleadosAgregados.map(function(e){ return e.id; });
+  todosEmpleados.forEach(function(emp) {
+    if (yaAgregadosIds.indexOf(emp.nombre) >= 0) return; // ya agregado
+    if (empleadosLista.indexOf(emp.nombre) >= 0) return; // es del local
+    var display = emp.nombre.replace(/^(\d+)\s+/, '#$1 ');
+    html += '<option value="' + emp.nombre + '">' + display + ' (' + emp.sucursal + ')</option>';
+  });
+  html += '<option value="__manual__">✏ Escribir nombre manualmente...</option>';
+  html += '</select>';
+  html += '<button class="btn-agregar-emp" onclick="agregarExterno()" style="background:#d97706">+ Agregar</button>';
+  html += '</div>';
+  // Input manual (se muestra solo si elige "manual")
+  html += '<div id="externoManualWrap" style="display:none;padding:.5rem 1.25rem .75rem;border-bottom:1px solid var(--gray-100);background:#fffbeb;gap:8px;flex-wrap:wrap">';
+  html += '<input type="text" id="externoInput" placeholder="Escribir nombre completo..." style="flex:1;height:34px;padding:0 10px;font-family:var(--font-body);font-size:13px;border:1px solid #fcd34d;border-radius:var(--radius-sm)">';
+  html += '<button class="btn-agregar-emp" onclick="agregarExternoManual()" style="background:#d97706">+ Agregar</button>';
   html += '</div>';
 
   return html;
@@ -1219,6 +1238,17 @@ function agregarEmpleado() {
 }
 
 function agregarExterno() {
+  var sel = document.getElementById('externoSelect');
+  if (!sel || !sel.value || sel.value === '__manual__') return;
+  var nombre = sel.value;
+  if (empleadosAgregados.find(function(e){ return e.id === nombre; })) return;
+  horariosEditando[nombre] = {};
+  DIAS_KEY.forEach(function(dk){ horariosEditando[nombre][dk] = { tipo:'libre', h1:'', h2:'', h3:'', h4:'' }; });
+  empleadosAgregados.push({ id: nombre, nombre: nombre, externo: true });
+  renderFormHorario();
+}
+
+function agregarExternoManual() {
   var input = document.getElementById('externoInput');
   if (!input || !input.value.trim()) return;
   var nombre = input.value.trim().toUpperCase();
@@ -1238,7 +1268,16 @@ function quitarEmpleado(id) {
 function toggleExternoInput() {
   var el = document.getElementById('externoWrap');
   if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+  var visible = el.style.display === 'flex';
+  el.style.display = visible ? 'none' : 'flex';
+  if (!visible) {
+    // Escuchar cambio en el select para mostrar input manual
+    var sel = document.getElementById('externoSelect');
+    if (sel) sel.onchange = function() {
+      var manual = document.getElementById('externoManualWrap');
+      if (manual) manual.style.display = sel.value === '__manual__' ? 'flex' : 'none';
+    };
+  }
 }
 
 function aplicarTurnoRapido(empId, dk, bloque, idx) {
