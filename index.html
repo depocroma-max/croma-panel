@@ -126,7 +126,7 @@ td { padding: 10px 14px; vertical-align: middle; }
 .cod[data-suc="14 ROCA"]           { color: var(--suc-14); background: var(--suc-14-light); }
 .badge-tipo { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
 .badge-tipo.PEDIDO    { background: #fef3c7; color: #92400e; }
-.badge-tipo.REPOSICION{ background: #dbeafe; color: #1e40af; }
+.badge-tipo.ROTACION{ background: #dbeafe; color: #1e40af; }
 .badge-estado { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .badge-estado.SinVer     { background: var(--gray-100); color: var(--gray-600); }
 .badge-estado.EnProceso  { background: #fef3c7; color: #92400e; }
@@ -196,7 +196,7 @@ td { padding: 10px 14px; vertical-align: middle; }
 .modal-cod { font-family: monospace; font-size: 18px; font-weight: 700; color: var(--accent); }
 .modal-tipo { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: .5px; }
 .modal-tipo.PEDIDO    { background: #fef3c7; color: #92400e; }
-.modal-tipo.REPOSICION{ background: #dbeafe; color: #1e40af; }
+.modal-tipo.ROTACION{ background: #dbeafe; color: #1e40af; }
 .modal-close { background: none; border: none; color: var(--gray-400); font-size: 20px; cursor: pointer; line-height: 1; padding: 4px; }
 .modal-close:hover { color: var(--white); }
 .modal-body { padding: 1.25rem; }
@@ -487,9 +487,9 @@ td { padding: 10px 14px; vertical-align: middle; }
         <option>12 CENTENARIO</option><option>14 ROCA</option>
       </select>
       <select class="filter-select" id="filtroTipo" onchange="renderPanel()">
-        <option value="">Pedidos y Reposiciones</option>
+        <option value="">Pedidos y Rotación</option>
         <option value="PEDIDO">Solo Pedidos</option>
-        <option value="REPOSICION">Solo Reposiciones</option>
+        <option value="ROTACION">Solo Rotación</option>
       </select>
       <input class="filter-input" type="text" id="filtroCod" placeholder="Buscar COD..." oninput="renderPanel()">
     </div>
@@ -1661,7 +1661,7 @@ function filtrar(soloSolucionados) {
   var cod  = document.getElementById('filtroCod').value.trim().toUpperCase();
   return todosLosPedidos.filter(function(p) {
     if (vistaActual === 'pedidos'      && p.tipo !== 'PEDIDO')     return false;
-    if (vistaActual === 'reposiciones' && p.tipo !== 'REPOSICION') return false;
+    if (vistaActual === 'reposiciones' && p.tipo !== 'ROTACION') return false;
     if (tipo && p.tipo !== tipo)         return false;
     if (suc  && p.sucursal !== suc)      return false;
     if (cod  && String(p.cod).toUpperCase().indexOf(cod) < 0) return false;
