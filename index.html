@@ -411,6 +411,253 @@ td { padding: 10px 14px; vertical-align: middle; }
 .btn-quitar-emp { background: none; border: none; color: var(--gray-400); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px; border-radius: var(--radius-sm); transition: all .15s; }
 .btn-quitar-emp:hover { color: var(--accent); background: #fee2e2; }
 .emp-lista-vacia { text-align: center; padding: 2rem; color: var(--gray-400); font-size: 13px; }
+
+
+/* ─────────────────────────────────────────────
+   CROMA UI REFRESH · versión visual mejorada
+   Mantiene la lógica original, solo mejora presentación.
+───────────────────────────────────────────── */
+:root {
+  --surface: #ffffff;
+  --surface-soft: #fbfbfa;
+  --line: #e8e8e4;
+  --text-soft: #73736d;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --success: #15803d;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(232,37,26,.08), transparent 28rem),
+    linear-gradient(180deg, #f7f7f5 0%, #efefec 100%);
+}
+
+.topbar {
+  height: 64px;
+  padding: 0 2.25rem;
+  background: rgba(13,13,13,.96);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+}
+
+.brand-logo { font-size: 25px; }
+.brand-section { color: rgba(255,255,255,.62); }
+
+.top-nav {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.08);
+  padding: 4px;
+  border-radius: 999px;
+  gap: 3px;
+}
+
+.nav-btn {
+  height: 34px;
+  padding: 0 17px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: .2px;
+}
+.nav-btn.active {
+  color: var(--black);
+  background: var(--white);
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(0,0,0,.22);
+}
+
+.top-actions .btn-icon,
+.connection-status {
+  height: 36px;
+  border-radius: 999px;
+}
+.connection-status { padding: 0 14px; }
+
+.app { padding: 1.75rem 2rem 3rem; }
+
+.dashboard-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1.35rem 1.5rem;
+  border-radius: 18px;
+  color: white;
+  background:
+    radial-gradient(circle at 92% 20%, rgba(232,37,26,.45), transparent 18rem),
+    linear-gradient(135deg, #111 0%, #1f1f1d 62%, #0d0d0d 100%);
+  box-shadow: 0 18px 40px rgba(0,0,0,.18);
+  overflow: hidden;
+  position: relative;
+}
+.dashboard-hero::after {
+  content: '';
+  position: absolute;
+  inset: auto -6rem -8rem auto;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 50%;
+  background: rgba(232,37,26,.18);
+}
+.hero-kicker {
+  font-size: 11px;
+  color: rgba(255,255,255,.58);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-weight: 700;
+  margin-bottom: .25rem;
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 4vw, 48px);
+  letter-spacing: 2px;
+  line-height: .95;
+}
+.hero-sub {
+  margin-top: .35rem;
+  color: rgba(255,255,255,.62);
+  font-size: 13px;
+}
+.hero-pill {
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.82);
+  border-radius: 999px;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.hero-pill::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34,197,94,.75);
+}
+
+.stats-row { gap: 14px; margin-bottom: 1.25rem; }
+.stat-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1.2rem 1.25rem;
+  box-shadow: 0 12px 28px rgba(0,0,0,.06);
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--black);
+  opacity: .9;
+}
+.stat-val { font-size: 42px; }
+.stat-label { color: var(--text-soft); font-weight: 700; }
+
+.controls-bar {
+  background: rgba(255,255,255,.72);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 10px 26px rgba(0,0,0,.05);
+  backdrop-filter: blur(8px);
+}
+.filter-select,
+.filter-input {
+  height: 38px;
+  border-radius: 10px;
+  border-color: var(--line);
+}
+.filter-input { min-width: 220px; }
+
+.sucursal-block { margin-bottom: 1.75rem; }
+.sucursal-header {
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+.suc-stripe { height: 24px; width: 5px; }
+.suc-nombre { font-size: 21px; }
+.suc-count { font-weight: 600; }
+.suc-alerta { padding: 4px 10px; font-weight: 800; }
+
+.table-card {
+  border-radius: 16px;
+  border-color: var(--line);
+  box-shadow: 0 12px 28px rgba(0,0,0,.06);
+}
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 12px 15px;
+  font-weight: 800;
+  color: var(--gray-600);
+  background: #f5f5f2;
+}
+td { padding: 13px 15px; }
+tbody tr { cursor: default; }
+tbody tr:hover { background: #fafaf8; }
+.cod { font-size: 12px; border-radius: 999px; padding: 4px 9px; }
+.badge-tipo, .badge-estado { font-weight: 800; }
+.badge-estado { padding: 5px 11px; }
+.obs-cell { max-width: 230px; }
+
+.cajas-title,
+.horarios-title { font-size: 26px; }
+.caja-card,
+.hor-suc-block,
+.carga-panel {
+  border-radius: 18px;
+  border-color: var(--line);
+  box-shadow: 0 12px 28px rgba(0,0,0,.06);
+}
+.caja-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(0,0,0,.1);
+}
+.caja-suc { font-size: 18px; }
+
+.modal-box { border-radius: 18px; }
+.modal-header,
+.informe-header { background: linear-gradient(135deg, #111, #242421); }
+.modal-btn,
+.btn-date,
+.btn-guardar-hor,
+.btn-agregar-emp { border-radius: 10px; }
+
+.login-card {
+  border-radius: 22px;
+  box-shadow: 0 22px 70px rgba(0,0,0,.38);
+}
+.login-btn { border-radius: 12px; }
+.login-field input { border-radius: 12px; }
+
+@media (max-width: 700px) {
+  .topbar { padding: 0 1rem; height: 60px; }
+  .brand-divider, .brand-section { display: none; }
+  .top-actions { gap: 5px; }
+  .top-actions > .status-label { display: none; }
+  .connection-status { display: none; }
+  .dashboard-hero { align-items: flex-start; flex-direction: column; padding: 1.2rem; }
+  .hero-pill { width: 100%; justify-content: center; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .stat-val { font-size: 34px; }
+  .table-card { border-radius: 14px; }
+  table { font-size: 12px; }
+  td, thead th { padding: 10px 12px; }
+}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -464,6 +711,17 @@ td { padding: 10px 14px; vertical-align: middle; }
 
   <!-- MAIN -->
   <div class="app" id="appContent">
+
+
+    <!-- HERO / RESUMEN VISUAL -->
+    <section class="dashboard-hero" id="dashboardHero">
+      <div>
+        <div class="hero-kicker">Panel interno Croma</div>
+        <div class="hero-title">Gestión operativa</div>
+        <div class="hero-sub">Pedidos, cierres de caja y horarios semanales en un solo lugar.</div>
+      </div>
+      <div class="hero-pill">Sistema activo</div>
+    </section>
 
     <!-- STATS -->
     <div class="stats-row" id="statsRow">
