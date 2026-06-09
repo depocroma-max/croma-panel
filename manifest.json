@@ -1,0 +1,22 @@
+{
+  "name": "Croma Panel",
+  "short_name": "Croma",
+  "description": "Panel de gestión interno Croma",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://depocroma-max.github.io/croma-dashboard/tridente_solo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://depocroma-max.github.io/croma-dashboard/tridente_solo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel · Croma</title>
 <link rel="icon" type="image/png" href="https://depocroma-max.github.io/croma-dashboard/tridente_solo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111111">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Croma Panel">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -49,6 +54,10 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--b
 .login-field input { height: 44px; padding: 0 14px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: var(--radius-md); font-family: var(--font-body); font-size: 14px; color: var(--white); transition: border .15s; }
 .login-field input:focus { outline: none; border-color: rgba(232,37,26,.6); }
 .login-field input::placeholder { color: rgba(255,255,255,.25); }
+.login-remember { display: flex; align-items: center; }
+.login-check-wrap { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.login-check-wrap input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+.login-check-label { font-size: 12px; color: rgba(255,255,255,.45); }
 .login-error { font-size: 12px; color: #f87171; min-height: 16px; text-align: center; }
 .login-btn { height: 46px; background: var(--accent); border: none; border-radius: var(--radius-md); font-family: var(--font-display); font-size: 20px; letter-spacing: 2px; color: var(--white); cursor: pointer; transition: opacity .15s; margin-top: 4px; }
 .login-btn:hover { opacity: .88; }
@@ -187,10 +196,14 @@ td { padding: 10px 14px; vertical-align: middle; }
 .caja-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-400); margin: 1rem 0 6px; }
 
 /* ── MODALS ── */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity .2s; }
+@keyframes modal-in {
+  0%   { transform: scale(.97) translateY(8px); opacity: 0; }
+  100% { transform: scale(1)   translateY(0);   opacity: 1; }
+}
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity .2s; }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
-.modal-box { background: var(--white); border-radius: var(--radius-lg); width: 100%; max-width: 560px; box-shadow: var(--shadow-md); transform: translateY(12px); transition: transform .2s; overflow: hidden; }
-.modal-overlay.open .modal-box { transform: translateY(0); }
+.modal-box { background: var(--white); border-radius: 20px; width: 100%; max-width: 560px; box-shadow: 0 20px 60px rgba(0,0,0,.18), 0 4px 16px rgba(0,0,0,.08); overflow: hidden; }
+.modal-overlay.open .modal-box { animation: modal-in .22s cubic-bezier(.22,1,.36,1) both; }
 .modal-header { background: var(--black); padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; }
 .modal-header-left { display: flex; align-items: center; gap: 10px; }
 .modal-cod { font-family: monospace; font-size: 18px; font-weight: 700; color: var(--accent); }
@@ -628,7 +641,7 @@ tbody tr:hover { background: #fafaf8; }
 }
 .caja-suc { font-size: 18px; }
 
-.modal-box { border-radius: 18px; }
+
 .modal-header,
 .informe-header { background: linear-gradient(135deg, #111, #242421); }
 .modal-btn,
@@ -658,6 +671,91 @@ tbody tr:hover { background: #fafaf8; }
   td, thead th { padding: 10px 12px; }
 }
 
+/* ── ENTRADAS v2 — estilo horarios ── */
+@keyframes scale-in-ent {
+  0%   { transform: scale(.96) translateY(6px); opacity: 0; }
+  100% { transform: scale(1)   translateY(0);   opacity: 1; }
+}
+.entradas-layout { display: flex; gap: 1.25rem; align-items: flex-start; }
+.entradas-main   { flex: 1; min-width: 0; }
+.entradas-sidebar { width: 272px; flex-shrink: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; position: sticky; top: 80px; }
+.ent-header-row  { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.ent-title       { font-family: var(--font-display); font-size: 28px; letter-spacing: 1.5px; color: var(--black); line-height: 1; }
+.ent-subtitle    { font-size: 13px; color: var(--gray-400); margin-top: 5px; }
+.ent-search-wrap { position: relative; }
+.ent-search-icon { display: none; }
+.ent-search      { height: 40px; padding: 0 14px 0 36px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: var(--font-body); font-size: 13px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 11px center; color: var(--black); min-width: 260px; transition: border-color .15s, box-shadow .15s; }
+.ent-search:focus { outline: none; border-color: #94a3b8; box-shadow: 0 0 0 3px rgba(100,116,139,.1); }
+.ent-kpis        { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+.ent-kpi         { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: .9rem 1.1rem; display: flex; align-items: center; gap: 12px; transition: box-shadow .15s; }
+.ent-kpi:hover   { box-shadow: 0 4px 16px rgba(0,0,0,.07); }
+.ent-kpi-icon    { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.ent-kpi-val     { font-family: var(--font-display); font-size: 30px; letter-spacing: 1px; line-height: 1; color: var(--black); }
+.ent-kpi-label   { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+.ent-kpi-sub     { font-size: 11px; color: var(--accent); font-weight: 600; margin-top: 2px; }
+.ent-tabs        { display: flex; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 10px; padding: 4px; margin-bottom: 1.25rem; gap: 4px; width: fit-content; }
+.ent-tab         { padding: 7px 16px; font-family: var(--font-body); font-size: 13px; font-weight: 600; border: none; background: transparent; color: #94a3b8; cursor: pointer; border-radius: 7px; transition: all .15s; display: flex; align-items: center; gap: 6px; }
+.ent-tab.active  { background: #fff; color: var(--black); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+.ent-tab:hover:not(.active) { color: var(--black); background: rgba(255,255,255,.5); }
+.ent-suc-grid    { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.ent-suc-card    { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow .15s; }
+.ent-suc-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+.ent-suc-head    { padding: .75rem 1rem; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; }
+.ent-suc-dot     { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ent-suc-nombre  { font-family: var(--font-display); font-size: 13px; letter-spacing: .8px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ent-suc-badge   { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+.ent-suc-badge.ok    { background: #dcfce7; color: #15803d; }
+.ent-suc-badge.empty { background: var(--gray-100); color: var(--gray-400); }
+.ent-suc-body    { flex: 1; padding: .25rem 0; min-height: 60px; }
+.ent-item        { display: flex; align-items: center; gap: 8px; padding: 5px 1rem; transition: background .12s; cursor: default; }
+.ent-item.editable { cursor: pointer; }
+.ent-item.editable:hover { background: var(--gray-50); }
+.ent-item-icon   { color: var(--gray-300); font-size: 12px; flex-shrink: 0; }
+.ent-item-nombre { flex: 1; font-size: 12px; color: var(--black); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ent-item-precio { font-size: 11px; font-weight: 700; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.ent-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.25rem .75rem; gap: 4px; }
+.ent-empty-icon  { font-size: 26px; opacity: .3; }
+.ent-empty-txt   { font-size: 12px; color: var(--gray-400); text-align: center; font-weight: 600; }
+.ent-empty-sub   { font-size: 11px; color: var(--gray-400); font-style: italic; text-align: center; }
+.ent-suc-foot    { border-top: 1px solid #e2e8f0; }
+.ent-add-btn     { width: 100%; padding: 9px; background: none; border: none; color: var(--accent); font-family: var(--font-body); font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: background .12s; }
+.ent-add-btn:hover { background: #fff5f5; }
+/* Sidebar por evento */
+.ent-sb-head     { display: flex; align-items: center; justify-content: space-between; padding: .875rem 1.1rem; border-bottom: 1px solid #e2e8f0; }
+.ent-sb-title    { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; display: flex; align-items: center; gap: 6px; }
+.ent-sb-body     { max-height: 480px; overflow-y: auto; }
+.ent-sb-item     { padding: .65rem 1.1rem; border-bottom: 1px solid #e2e8f0; transition: background .12s; }
+.ent-sb-item:last-child { border-bottom: none; }
+.ent-sb-nombre   { font-size: 13px; font-weight: 600; color: var(--black); display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.ent-sb-badge    { font-size: 10px; font-weight: 700; color: var(--accent); background: #fee2e2; padding: 1px 7px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+.ent-sb-suc      { font-size: 11px; color: var(--gray-400); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ent-sb-empty    { padding: 1.5rem; text-align: center; font-size: 12px; color: var(--gray-400); font-style: italic; }
+/* Vista Por Evento (tab principal) */
+.ent-evt-list    { display: flex; flex-direction: column; gap: 8px; }
+.ent-evt-card    { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: .875rem 1.25rem; display: flex; align-items: center; gap: 14px; transition: box-shadow .15s; }
+.ent-evt-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.07); }
+.ent-evt-card-nombre { flex: 1; font-size: 14px; font-weight: 700; color: var(--black); }
+.ent-evt-card-suc { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+.ent-evt-card-badge { font-size: 11px; font-weight: 700; color: var(--accent); background: #fee2e2; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+/* FAB */
+.ent-fab         { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: var(--white); border: none; font-size: 26px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(232,37,26,.4); transition: transform .15s, box-shadow .15s; z-index: 90; }
+.ent-fab:hover   { transform: scale(1.08); box-shadow: 0 12px 30px rgba(232,37,26,.55); }
+.ent-fab.hidden  { display: none; }
+/* Modal entrada */
+.entrada-form-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+.entrada-form-field { display: flex; flex-direction: column; gap: 5px; }
+.entrada-form-field label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-400); }
+.entrada-form-field input,
+.entrada-form-field select,
+.entrada-form-field textarea { padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-md); font-family: var(--font-body); font-size: 13px; color: var(--black); background: var(--white); width: 100%; }
+.entrada-form-field input:focus,
+.entrada-form-field select:focus,
+.entrada-form-field textarea:focus { outline: none; border-color: #94a3b8; box-shadow: 0 0 0 3px rgba(100,116,139,.1); }
+.entrada-form-full { grid-column: 1 / -1; }
+@media (max-width: 1100px) { .ent-suc-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px)  { .entradas-layout { flex-direction: column; } .entradas-sidebar { width: 100%; position: static; } }
+@media (max-width: 700px)  { .ent-suc-grid { grid-template-columns: 1fr; } .ent-kpis { grid-template-columns: 1fr 1fr; } .ent-search { min-width: unset; width: 100%; } }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -675,6 +773,12 @@ tbody tr:hover { background: #fafaf8; }
     <div class="login-form">
       <div class="login-field"><label>Usuario</label><input type="text" id="loginUser" placeholder="Tu usuario" autocomplete="username"></div>
       <div class="login-field"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="login-remember">
+        <label class="login-check-wrap">
+          <input type="checkbox" id="loginRecordar">
+          <span class="login-check-label">Recordar sesión en este dispositivo</span>
+        </label>
+      </div>
       <div class="login-error" id="loginError"></div>
       <button class="login-btn" id="btnLogin">Ingresar</button>
     </div>
@@ -697,6 +801,7 @@ tbody tr:hover { background: #fafaf8; }
       <button class="nav-btn active" id="navPedidos">Pedidos</button>
       <button class="nav-btn" id="navCajas">Cajas de locales</button>
       <button class="nav-btn" id="navHorarios">Horario semanal</button>
+      <button class="nav-btn" id="navEntradas">Entradas</button>
     </nav>
     <div class="top-actions">
       <span class="status-label" id="ultimaActualizacion"></span>
@@ -712,16 +817,6 @@ tbody tr:hover { background: #fafaf8; }
   <!-- MAIN -->
   <div class="app" id="appContent">
 
-
-    <!-- HERO / RESUMEN VISUAL -->
-    <section class="dashboard-hero" id="dashboardHero">
-      <div>
-        <div class="hero-kicker">Panel interno Croma</div>
-        <div class="hero-title">Gestión operativa</div>
-        <div class="hero-sub">Pedidos, cierres de caja y horarios semanales en un solo lugar.</div>
-      </div>
-      <div class="hero-pill">Sistema activo</div>
-    </section>
 
     <!-- STATS -->
     <div class="stats-row" id="statsRow">
@@ -771,6 +866,64 @@ tbody tr:hover { background: #fafaf8; }
         <div class="stat-card"><div class="stat-val" id="cajaStat-alertas" style="color:#dc2626">—</div><div class="stat-label">Con alertas</div></div>
       </div>
       <div class="cajas-grid" id="cajasGrid"></div>
+    </div>
+
+    <!-- ENTRADAS -->
+    <div id="entradasBody" style="display:none">
+      <!-- Header -->
+      <div class="ent-header-row">
+        <div>
+          <div class="ent-title">DISPONIBILIDAD DE ENTRADAS</div>
+          <div class="ent-subtitle">Entradas informadas por cada sucursal</div>
+        </div>
+        <div class="ent-search-wrap">
+          <span class="ent-search-icon">🔍</span>
+          <input class="ent-search" type="text" id="entSearch" placeholder="Buscar entrada o evento..." oninput="filtrarEntradas()">
+        </div>
+      </div>
+      <!-- KPIs -->
+      <div class="ent-kpis">
+        <div class="ent-kpi">
+          <div class="ent-kpi-icon" style="background:#fee2e2">🎟</div>
+          <div><div class="ent-kpi-val" id="entStatTotal">—</div><div class="ent-kpi-label">Entradas</div><div class="ent-kpi-sub">Total</div></div>
+        </div>
+        <div class="ent-kpi">
+          <div class="ent-kpi-icon" style="background:#dcfce7">🏪</div>
+          <div><div class="ent-kpi-val" id="entStatSuc">—</div><div class="ent-kpi-label">Sucursales activas</div><div class="ent-kpi-sub">Con entradas</div></div>
+        </div>
+        <div class="ent-kpi">
+          <div class="ent-kpi-icon" style="background:#dbeafe">🕐</div>
+          <div><div class="ent-kpi-val" id="entStatHora">—</div><div class="ent-kpi-label">Última actualización</div><div class="ent-kpi-sub">Hoy</div></div>
+        </div>
+      </div>
+      <!-- Layout principal -->
+      <div class="entradas-layout">
+        <div class="entradas-main">
+          <!-- Tabs -->
+          <div class="ent-tabs">
+            <button class="ent-tab active" id="tabSucursal" onclick="setEntTab('sucursal')">🏪 Por sucursal</button>
+            <button class="ent-tab" id="tabEvento" onclick="setEntTab('evento')">📅 Por evento</button>
+          </div>
+          <!-- Contenido tabs -->
+          <div id="entTabSucursal">
+            <div class="ent-suc-grid" id="entradasGrid">
+              <div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div><p>Cargando entradas...</p></div>
+            </div>
+          </div>
+          <div id="entTabEvento" style="display:none">
+            <div class="ent-evt-list" id="entradasEvtList"></div>
+          </div>
+        </div>
+        <!-- Sidebar por evento -->
+        <div class="entradas-sidebar">
+          <div class="ent-sb-head">
+            <span class="ent-sb-title">📅 Por evento</span>
+          </div>
+          <div class="ent-sb-body" id="entSidebarEvt">
+            <div class="ent-sb-empty">Sin eventos cargados</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- HORARIOS SEMANAL -->
@@ -883,6 +1036,55 @@ tbody tr:hover { background: #fafaf8; }
     </div>
   </div>
 </div>
+<!-- MODAL ENTRADA -->
+<div class="modal-overlay" id="modalEntradaOverlay" onclick="cerrarModalEntradaOverlay(event)">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <span class="modal-cod" id="meTitle" style="font-size:15px">Nueva entrada</span>
+      </div>
+      <button class="modal-close" onclick="cerrarModalEntrada()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="meId">
+      <div class="entrada-form-grid">
+        <div class="entrada-form-field entrada-form-full" id="meSucursalWrap">
+          <label>Sucursal *</label>
+          <select id="meSucursal">
+            <option value="">— Elegir sucursal —</option>
+            <option>01 PASEO</option><option>05 WAVE</option>
+            <option>09 CIPO SAN MARTIN</option><option>10 PERITO MORENO</option>
+            <option>12 CENTENARIO</option><option>14 ROCA</option>
+          </select>
+        </div>
+        <div class="entrada-form-field entrada-form-full">
+          <label>Nombre del evento / entrada *</label>
+          <input type="text" id="meNombre" placeholder="Ej: La Renga — Sábado 15 jun">
+        </div>
+        <div class="entrada-form-field">
+          <label>Precio *</label>
+          <input type="number" id="mePrecio" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="entrada-form-field">
+          <label>Fecha del evento</label>
+          <input type="date" id="meFecha">
+        </div>
+        <div class="entrada-form-field entrada-form-full">
+          <label>Observaciones</label>
+          <textarea id="meObs" rows="2" placeholder="Info adicional, condiciones, etc."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn sol" onclick="guardarEntrada()">💾 Guardar</button>
+      <button class="modal-btn rev" id="meBtnEliminar" onclick="eliminarEntrada()" style="display:none">🗑 Eliminar</button>
+      <button class="modal-btn cancelar" onclick="cerrarModalEntrada()" style="margin-left:auto">Cancelar</button>
+    </div>
+  </div>
+</div>
+<!-- FAB Nueva entrada -->
+<button class="ent-fab hidden" id="entFab" onclick="abrirModalEntrada(null, sesionRol==='encargado' ? sesionSucursal : '')" title="Nueva entrada">+</button>
+
 <div class="dash-toast" id="dashToast"></div>
 
 <!-- DRAWER MOBILE -->
@@ -892,13 +1094,15 @@ tbody tr:hover { background: #fafaf8; }
     <div style="font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:white">CROMA</div>
     <button class="drawer-close" id="drawerClose">✕</button>
   </div>
-  <div style="padding:.75rem 1rem;border-bottom:1px solid #222">
+  <div style="padding:.75rem 1rem;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between">
     <span id="drawerUsuario" style="font-size:12px;color:#666"></span>
+    <button onclick="cerrarSesion()" style="font-size:11px;color:#666;background:none;border:1px solid #333;border-radius:6px;padding:3px 10px;cursor:pointer">Salir</button>
   </div>
   <nav class="drawer-nav">
     <button class="drawer-nav-btn active" id="drawerNavPedidos">Pedidos</button>
     <button class="drawer-nav-btn" id="drawerNavCajas">Cajas de locales</button>
     <button class="drawer-nav-btn" id="drawerNavHorarios">Horario semanal</button>
+    <button class="drawer-nav-btn" id="drawerNavEntradas">Entradas</button>
   </nav>
 </div>
 
@@ -906,6 +1110,7 @@ tbody tr:hover { background: #fafaf8; }
 var SUCURSALES = ['01 PASEO','05 WAVE','09 CIPO SAN MARTIN','10 PERITO MORENO','12 CENTENARIO','14 ROCA','DEPO'];
 var todosLosPedidos = [];
 var vistaActual = 'hoy';
+var entradasData = {}; // { sucursal: [ {id, nombre, precio, fecha, obs} ] }
 var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04N6VzJktRa3xvvI_7t0Zq3l6LcMY-rW2pgcKjuj9Xwp/exec';
 
 // ── USUARIOS: admin + un usuario por local ──
@@ -990,8 +1195,8 @@ function initNav() {
   if (btnAct) btnAct.addEventListener('click', function(){ if(vistaActual==='horarios') cargarHorarios(); else cargarDatos(); });
 
   var navMap = {
-    navPedidos:'hoy', navCajas:'cajas', navHorarios:'horarios',
-    drawerNavPedidos:'hoy', drawerNavCajas:'cajas', drawerNavHorarios:'horarios'
+    navPedidos:'hoy', navCajas:'cajas', navHorarios:'horarios', navEntradas:'entradas',
+    drawerNavPedidos:'hoy', drawerNavCajas:'cajas', drawerNavHorarios:'horarios', drawerNavEntradas:'entradas'
   };
   Object.keys(navMap).forEach(function(id) {
     var el = document.getElementById(id);
@@ -1024,33 +1229,68 @@ function initNav() {
       if (el) el.style.display = 'none';
     });
   }
+  // Rol horarios no necesita ver entradas
+  if (sesionRol === 'horarios') {
+    var elNE = document.getElementById('navEntradas');
+    if (elNE) elNE.style.display = 'none';
+    var elDNE = document.getElementById('drawerNavEntradas');
+    if (elDNE) elDNE.style.display = 'none';
+  }
+}
+
+function iniciarSesion(rol, suc) {
+  sesionRol      = rol;
+  sesionSucursal = suc || null;
+  sessionStorage.setItem('croma_auth', '1');
+  sessionStorage.setItem('croma_rol',  sesionRol);
+  sessionStorage.setItem('croma_suc',  sesionSucursal || '');
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('dashApp').style.display = '';
+  initNav();
+  if (sesionRol === 'encargado' || sesionRol === 'horarios') {
+    setVista('horarios');
+  } else {
+    cargarDatos();
+  }
 }
 
 function hacerLogin() {
   var user = document.getElementById('loginUser').value.trim().toLowerCase();
   var pass = document.getElementById('loginPass').value;
+  var recordar = document.getElementById('loginRecordar').checked;
   var err  = document.getElementById('loginError');
   var cred = CREDENCIALES[user];
   if (cred && cred.pass === pass) {
-    sesionRol      = cred.rol;
-    sesionSucursal = cred.sucursal;
-    sessionStorage.setItem('croma_auth', '1');
-    sessionStorage.setItem('croma_rol', sesionRol);
-    sessionStorage.setItem('croma_suc', sesionSucursal || '');
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('dashApp').style.display = '';
-    err.textContent = '';
-    initNav();
-    if (sesionRol === 'encargado' || sesionRol === 'horarios') {
-      setVista('horarios');
+    if (recordar) {
+      localStorage.setItem('croma_remember', '1');
+      localStorage.setItem('croma_auth', '1');
+      localStorage.setItem('croma_rol',  cred.rol);
+      localStorage.setItem('croma_suc',  cred.sucursal || '');
+      localStorage.setItem('croma_user', user);
     } else {
-      cargarDatos();
+      localStorage.removeItem('croma_remember');
+      localStorage.removeItem('croma_auth');
+      localStorage.removeItem('croma_rol');
+      localStorage.removeItem('croma_suc');
+      localStorage.removeItem('croma_user');
     }
+    err.textContent = '';
+    iniciarSesion(cred.rol, cred.sucursal);
   } else {
     err.textContent = 'Usuario o contraseña incorrectos';
     document.getElementById('loginPass').value = '';
     document.getElementById('loginPass').focus();
   }
+}
+
+function cerrarSesion() {
+  sessionStorage.clear();
+  localStorage.removeItem('croma_auth');
+  localStorage.removeItem('croma_rol');
+  localStorage.removeItem('croma_suc');
+  localStorage.removeItem('croma_remember');
+  // Mantener croma_user para pre-fill
+  location.reload();
 }
 
 // ── INIT ──
@@ -1061,18 +1301,32 @@ function hacerLogin() {
   document.getElementById('fechaHoy').textContent =
     dias[hoy.getDay()] + ' ' + hoy.getDate() + ' ' + meses[hoy.getMonth()] + ' ' + hoy.getFullYear();
 
-  var authSaved = sessionStorage.getItem('croma_auth');
-  if (authSaved === '1') {
-    sesionRol      = sessionStorage.getItem('croma_rol') || 'admin';
-    sesionSucursal = sessionStorage.getItem('croma_suc') || null;
-    if (sesionSucursal === '') sesionSucursal = null;
+  // Sesión activa en esta pestaña
+  var authSession = sessionStorage.getItem('croma_auth');
+  // Sesión persistida ("recordar")
+  var authLocal = localStorage.getItem('croma_auth') === '1' && localStorage.getItem('croma_remember') === '1';
+
+  if (authSession === '1') {
+    var rol = sessionStorage.getItem('croma_rol') || 'admin';
+    var suc = sessionStorage.getItem('croma_suc') || null;
+    if (suc === '') suc = null;
+    sesionRol = rol; sesionSucursal = suc;
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('dashApp').style.display = '';
     initNav();
-    if (sesionRol === 'encargado' || sesionRol === 'horarios') {
-      setVista('horarios');
-    } else {
-      cargarDatos();
+    if (sesionRol === 'encargado' || sesionRol === 'horarios') { setVista('horarios'); } else { cargarDatos(); }
+  } else if (authLocal) {
+    var rol = localStorage.getItem('croma_rol') || 'admin';
+    var suc = localStorage.getItem('croma_suc') || null;
+    if (suc === '') suc = null;
+    iniciarSesion(rol, suc);
+  } else {
+    // Pre-fill usuario si fue recordado antes
+    var savedUser = localStorage.getItem('croma_user');
+    if (savedUser) {
+      document.getElementById('loginUser').value = savedUser;
+      document.getElementById('loginRecordar').checked = true;
+      document.getElementById('loginPass').focus();
     }
   }
 
@@ -1093,62 +1347,64 @@ function hacerLogin() {
   if (drawerOverlay) drawerOverlay.addEventListener('click', cerrarDrawer);
 
   setInterval(function(){ if(vistaActual !== 'horarios') cargarDatos(); }, 2 * 60 * 1000);
-})();
 
-function cerrarSesion() {
-  sessionStorage.removeItem('croma_auth');
-  sessionStorage.removeItem('croma_rol');
-  sessionStorage.removeItem('croma_suc');
-  sesionRol = null;
-  sesionSucursal = null;
-  document.getElementById('dashApp').style.display = 'none';
-  document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('loginUser').value = '';
-  document.getElementById('loginPass').value = '';
-  document.getElementById('loginError').textContent = '';
-}
+  // Registrar Service Worker para instalación PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  }
+})();
 
 // ── VISTAS ──
 function setVista(v) {
   vistaActual = v;
-  ['navPedidos','navCajas','navHorarios'].forEach(function(id) {
+  ['navPedidos','navCajas','navHorarios','navEntradas'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     var target = id.replace('nav','').toLowerCase();
     el.classList.toggle('active',
-      (target === 'pedidos' && (v === 'hoy' || v === 'pedidos' || v === 'reposiciones')) ||
-      (target === 'cajas' && v === 'cajas') ||
-      (target === 'horarios' && v === 'horarios')
+      (target === 'pedidos'  && (v === 'hoy' || v === 'pedidos' || v === 'reposiciones')) ||
+      (target === 'cajas'    && v === 'cajas') ||
+      (target === 'horarios' && v === 'horarios') ||
+      (target === 'entradas' && v === 'entradas')
     );
   });
-  ['drawerNavPedidos','drawerNavCajas','drawerNavHorarios'].forEach(function(id) {
+  ['drawerNavPedidos','drawerNavCajas','drawerNavHorarios','drawerNavEntradas'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     var target = id.replace('drawerNav','').toLowerCase();
     el.classList.toggle('active',
-      (target === 'pedidos' && (v === 'hoy' || v === 'pedidos' || v === 'reposiciones')) ||
-      (target === 'cajas' && v === 'cajas') ||
-      (target === 'horarios' && v === 'horarios')
+      (target === 'pedidos'  && (v === 'hoy' || v === 'pedidos' || v === 'reposiciones')) ||
+      (target === 'cajas'    && v === 'cajas') ||
+      (target === 'horarios' && v === 'horarios') ||
+      (target === 'entradas' && v === 'entradas')
     );
   });
 
   var esHorarios = v === 'horarios';
   var esCajas    = v === 'cajas';
-  document.getElementById('panelPendientes').style.display   = (esCajas || esHorarios) ? 'none' : '';
-  document.getElementById('panelSolucionados').style.display = (esCajas || esHorarios) ? 'none' : '';
-  document.getElementById('cajasBody').style.display         = esCajas ? '' : 'none';
+  var esEntradas = v === 'entradas';
+  var esPedidos  = !esHorarios && !esCajas && !esEntradas;
+  document.getElementById('panelPendientes').style.display   = esPedidos ? '' : 'none';
+  document.getElementById('panelSolucionados').style.display = esPedidos ? '' : 'none';
+  document.getElementById('cajasBody').style.display         = esCajas    ? '' : 'none';
   document.getElementById('horariosBody').style.display      = esHorarios ? '' : 'none';
+  document.getElementById('entradasBody').style.display      = esEntradas ? '' : 'none';
   var controlsEl = document.getElementById('controlsBar');
   var statsEl    = document.getElementById('statsRow');
-  if (controlsEl) controlsEl.style.display = (esCajas || esHorarios) ? 'none' : '';
-  if (statsEl)    statsEl.style.display    = (esCajas || esHorarios) ? 'none' : '';
+  if (controlsEl) controlsEl.style.display = esPedidos ? '' : 'none';
+  if (statsEl)    statsEl.style.display    = esPedidos ? '' : 'none';
+
+  // FAB solo visible en entradas
+  var fab = document.getElementById('entFab');
+  if (fab) fab.classList.toggle('hidden', !esEntradas || (sesionRol !== 'admin' && sesionRol !== 'encargado'));
 
   if (esHorarios) {
-    // Semana próxima por defecto para encargados, semana actual para admin
     actualizarSemanaLabel();
     cargarHorarios();
   } else if (esCajas) {
     irHoyCajas();
+  } else if (esEntradas) {
+    cargarEntradas();
   } else {
     renderPanel();
   }
@@ -2410,6 +2666,292 @@ function extraRow(icon, text) {
   return '<div class="caja-extra-row">' +
     '<span class="caja-extra-icon">' + icon + '</span>' +
     '<span class="caja-extra-text">' + text + '</span></div>';
+}
+
+// ── ENTRADAS ──
+var entTabActual = 'sucursal';
+var entFiltro    = '';
+
+async function cargarEntradas() {
+  var grid = document.getElementById('entradasGrid');
+  if (grid) grid.innerHTML = '<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div><p>Cargando entradas...</p></div>';
+
+  // FAB
+  var fab = document.getElementById('entFab');
+  if (fab) fab.classList.toggle('hidden', sesionRol !== 'admin' && sesionRol !== 'encargado');
+
+  try {
+    var resp = await fetch(API_URL + '?accion=obtenerEntradas');
+    var data = await resp.json();
+    entradasData = data.ok ? (data.entradas || {}) : {};
+  } catch(e) {
+    entradasData = {};
+  }
+  renderEntradas();
+}
+
+function renderEntradas() {
+  actualizarEntKpis();
+  renderEntradasSucursal();
+  renderEntradasEvento();
+  renderEntradasSidebar();
+}
+
+function actualizarEntKpis() {
+  var total = 0, sucActivas = 0;
+  SUCURSALES_ENT.forEach(function(s) {
+    var n = (entradasData[s] || []).length;
+    total += n;
+    if (n > 0) sucActivas++;
+  });
+  var ahora = new Date();
+  var hora = String(ahora.getHours()).padStart(2,'0') + ':' + String(ahora.getMinutes()).padStart(2,'0');
+  document.getElementById('entStatTotal').textContent = total;
+  document.getElementById('entStatSuc').textContent   = sucActivas;
+  document.getElementById('entStatHora').textContent  = hora;
+}
+
+function getEntFiltradas(suc) {
+  var lista = entradasData[suc] || [];
+  if (!entFiltro) return lista;
+  var q = entFiltro.toLowerCase();
+  return lista.filter(function(e) {
+    return (e.nombre || '').toLowerCase().indexOf(q) >= 0 ||
+           (e.obs    || '').toLowerCase().indexOf(q) >= 0;
+  });
+}
+
+function filtrarEntradas() {
+  entFiltro = (document.getElementById('entSearch').value || '').trim();
+  renderEntradasSucursal();
+  renderEntradasEvento();
+  renderEntradasSidebar();
+}
+
+function setEntTab(tab) {
+  entTabActual = tab;
+  document.getElementById('tabSucursal').classList.toggle('active', tab === 'sucursal');
+  document.getElementById('tabEvento').classList.toggle('active', tab === 'evento');
+  document.getElementById('entTabSucursal').style.display = tab === 'sucursal' ? '' : 'none';
+  document.getElementById('entTabEvento').style.display   = tab === 'evento'   ? '' : 'none';
+}
+
+var SUC_COLORS = {
+  '01 PASEO': 'var(--suc-01)', '05 WAVE': 'var(--suc-05)',
+  '09 CIPO SAN MARTIN': 'var(--suc-09)', '10 PERITO MORENO': 'var(--suc-10)',
+  '12 CENTENARIO': 'var(--suc-12)', '14 ROCA': 'var(--suc-14)'
+};
+var SUCURSALES_ENT = SUCURSALES.filter(function(s){ return s !== 'DEPO'; });
+
+function renderEntradasSucursal() {
+  var grid = document.getElementById('entradasGrid');
+  if (!grid) return;
+  var html = '';
+
+  SUCURSALES_ENT.forEach(function(suc) {
+    var lista       = getEntFiltradas(suc);
+    var listaTotal  = entradasData[suc] || [];
+    var puedeEditar = sesionRol === 'admin' || (sesionRol === 'encargado' && sesionSucursal === suc);
+    var color       = SUC_COLORS[suc] || '#888';
+    var tieneEntradas = listaTotal.length > 0;
+
+    html += '<div class="ent-suc-card">';
+    // Head
+    html += '<div class="ent-suc-head">';
+    html += '<div class="ent-suc-dot" style="background:' + color + '"></div>';
+    html += '<span class="ent-suc-nombre">' + suc + '</span>';
+    html += '<span class="ent-suc-badge ' + (tieneEntradas ? 'ok' : 'empty') + '">' + listaTotal.length + ' entrada' + (listaTotal.length !== 1 ? 's' : '') + '</span>';
+    html += '</div>';
+    // Body
+    html += '<div class="ent-suc-body">';
+    if (lista.length === 0 && !tieneEntradas) {
+      html += '<div class="ent-empty-state">';
+      html += '<div class="ent-empty-icon">🎟</div>';
+      html += '<div class="ent-empty-txt">Aún no se cargaron entradas</div>';
+      if (puedeEditar) html += '<div class="ent-empty-sub">Sé el primero en informar</div>';
+      html += '</div>';
+    } else if (lista.length === 0 && entFiltro) {
+      html += '<div class="ent-empty-state"><div class="ent-empty-txt">Sin resultados para "' + entFiltro + '"</div></div>';
+    } else {
+      lista.forEach(function(e) {
+        var eData = JSON.stringify(e).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        html += '<div class="ent-item' + (puedeEditar ? ' editable' : '') + '"' + (puedeEditar ? ' onclick="abrirModalEntrada(' + eData + ', \'' + suc + '\')"' : '') + '>';
+        html += '<span class="ent-item-icon">🎟</span>';
+        html += '<span class="ent-item-nombre" title="' + e.nombre + '">' + e.nombre + '</span>';
+        html += '<span class="ent-item-precio">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
+        html += '</div>';
+      });
+    }
+    html += '</div>';
+    // Footer
+    if (puedeEditar) {
+      html += '<div class="ent-suc-foot">';
+      html += '<button class="ent-add-btn" onclick="abrirModalEntrada(null, \'' + suc + '\')">+ Agregar entrada</button>';
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+
+  grid.innerHTML = html;
+}
+
+function renderEntradasEvento() {
+  // Agrupa todas las entradas por nombre de evento
+  var mapa = {};
+  SUCURSALES_ENT.forEach(function(suc) {
+    getEntFiltradas(suc).forEach(function(e) {
+      var key = (e.nombre || '').trim().toLowerCase();
+      if (!mapa[key]) mapa[key] = { nombre: e.nombre, sucursales: [], precio: e.precio };
+      mapa[key].sucursales.push(suc);
+    });
+  });
+
+  var eventos = Object.keys(mapa).sort().map(function(k) { return mapa[k]; });
+  var listEl = document.getElementById('entradasEvtList');
+  if (!listEl) return;
+
+  if (eventos.length === 0) {
+    listEl.innerHTML = '<div class="empty-state">Sin eventos cargados.</div>';
+    return;
+  }
+  var html = '';
+  eventos.forEach(function(ev) {
+    var sucStr = ev.sucursales.map(function(s){ return s.replace(/^\d+\s+/,''); }).join(', ');
+    html += '<div class="ent-evt-card">';
+    html += '<div><div class="ent-evt-card-nombre">' + ev.nombre + '</div>';
+    html += '<div class="ent-evt-card-suc">' + sucStr + '</div></div>';
+    html += '<span class="ent-evt-card-badge">' + ev.sucursales.length + ' sucursal' + (ev.sucursales.length !== 1 ? 'es' : '') + '</span>';
+    html += '</div>';
+  });
+  listEl.innerHTML = html;
+}
+
+function renderEntradasSidebar() {
+  var mapa = {};
+  SUCURSALES_ENT.forEach(function(suc) {
+    (entradasData[suc] || []).forEach(function(e) {
+      var key = (e.nombre || '').trim().toLowerCase();
+      if (!mapa[key]) mapa[key] = { nombre: e.nombre, sucursales: [] };
+      mapa[key].sucursales.push(suc.replace(/^\d+\s+/,''));
+    });
+  });
+
+  var eventos = Object.keys(mapa).sort().map(function(k) { return mapa[k]; });
+  var el = document.getElementById('entSidebarEvt');
+  if (!el) return;
+
+  if (eventos.length === 0) {
+    el.innerHTML = '<div class="ent-sb-empty">Sin eventos cargados</div>';
+    return;
+  }
+  var html = '';
+  eventos.forEach(function(ev) {
+    html += '<div class="ent-sb-item">';
+    html += '<div class="ent-sb-nombre">' + ev.nombre + '<span class="ent-sb-badge">' + ev.sucursales.length + '</span></div>';
+    html += '<div class="ent-sb-suc">' + ev.sucursales.join(', ') + '</div>';
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function abrirModalEntrada(entrada, suc) {
+  var esNueva = !entrada || !entrada.id;
+  document.getElementById('meTitle').textContent = esNueva ? 'Nueva entrada' : 'Editar entrada';
+  document.getElementById('meId').value     = entrada ? (entrada.id     || '') : '';
+  document.getElementById('meNombre').value = entrada ? (entrada.nombre || '') : '';
+  document.getElementById('mePrecio').value = entrada ? (entrada.precio || '') : '';
+  document.getElementById('meFecha').value  = entrada ? (entrada.fecha  || '') : '';
+  document.getElementById('meObs').value    = entrada ? (entrada.obs    || '') : '';
+
+  var sucSel = document.getElementById('meSucursal');
+  var sucWrap = document.getElementById('meSucursalWrap');
+  if (sesionRol === 'encargado') {
+    // Encargado: ocultar selector, usar su sucursal
+    sucSel.value = sesionSucursal || suc || '';
+    if (sucWrap) sucWrap.style.display = 'none';
+  } else {
+    // Admin: mostrar selector
+    sucSel.value = suc || '';
+    if (sucWrap) sucWrap.style.display = '';
+  }
+
+  var btnEliminar = document.getElementById('meBtnEliminar');
+  if (btnEliminar) btnEliminar.style.display = esNueva ? 'none' : '';
+
+  document.getElementById('modalEntradaOverlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('meNombre').focus(); }, 100);
+}
+
+async function guardarEntrada() {
+  var id     = document.getElementById('meId').value.trim();
+  var suc    = document.getElementById('meSucursal').value.trim();
+  var nombre = document.getElementById('meNombre').value.trim();
+  var precio = document.getElementById('mePrecio').value.trim();
+  var fecha  = document.getElementById('meFecha').value.trim();
+  var obs    = document.getElementById('meObs').value.trim();
+
+  if (!suc)    { toast('⚠ Elegí una sucursal', 'error'); return; }
+  if (!nombre) { toast('⚠ El nombre es obligatorio', 'error'); document.getElementById('meNombre').focus(); return; }
+  if (!precio) { toast('⚠ El precio es obligatorio', 'error'); document.getElementById('mePrecio').focus(); return; }
+
+  var payload = { accion: 'guardarEntrada', id: id, sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs };
+  cerrarModalEntrada();
+
+  try {
+    var url = API_URL + '?accion=guardarEntrada&datos=' + encodeURIComponent(JSON.stringify(payload));
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (data.ok) {
+      toast('✓ Entrada guardada', 'success');
+      cargarEntradas();
+    } else {
+      actualizarEntradaLocal(suc, id, { id: id || Date.now().toString(), sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs });
+      renderEntradas();
+      toast('✓ Guardada localmente', 'success');
+    }
+  } catch(e) {
+    actualizarEntradaLocal(suc, id, { id: id || Date.now().toString(), sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs });
+    renderEntradas();
+    toast('✓ Guardada localmente', 'success');
+  }
+}
+
+function actualizarEntradaLocal(suc, id, entradaNueva) {
+  if (!entradasData[suc]) entradasData[suc] = [];
+  if (id) {
+    var idx = entradasData[suc].findIndex(function(e){ return e.id === id; });
+    if (idx >= 0) { entradasData[suc][idx] = entradaNueva; return; }
+  }
+  entradasData[suc].push(entradaNueva);
+}
+
+async function eliminarEntrada() {
+  var id  = document.getElementById('meId').value.trim();
+  var suc = document.getElementById('meSucursal').value.trim();
+  if (!id) { cerrarModalEntrada(); return; }
+  if (!confirm('¿Eliminar esta entrada?')) return;
+  cerrarModalEntrada();
+  try {
+    var url = API_URL + '?accion=eliminarEntrada&id=' + encodeURIComponent(id) + '&sucursal=' + encodeURIComponent(suc);
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (data.ok) { toast('✓ Entrada eliminada', 'success'); cargarEntradas(); }
+    else { eliminarEntradaLocal(suc, id); renderEntradas(); toast('✓ Eliminada', 'success'); }
+  } catch(e) {
+    eliminarEntradaLocal(suc, id); renderEntradas(); toast('✓ Eliminada', 'success');
+  }
+}
+
+function eliminarEntradaLocal(suc, id) {
+  if (!entradasData[suc]) return;
+  entradasData[suc] = entradasData[suc].filter(function(e){ return e.id !== id; });
+}
+
+function cerrarModalEntrada() {
+  document.getElementById('modalEntradaOverlay').classList.remove('open');
+}
+function cerrarModalEntradaOverlay(e) {
+  if (e.target === document.getElementById('modalEntradaOverlay')) cerrarModalEntrada();
 }
 
 // ── UTILS ──
