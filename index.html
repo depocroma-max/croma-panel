@@ -761,29 +761,8 @@ tbody tr:hover { background: #fafaf8; }
 </head>
 <body>
 
-<!-- LOGIN -->
-<div class="login-screen" id="loginScreen">
-  <div class="login-bg"></div>
-  <div class="login-card">
-    <div class="login-logo">
-      <img src="https://depocroma-max.github.io/croma-dashboard/tridente_solo.png" class="login-tridente" alt="Croma">
-      <span class="login-brand">CROMA</span>
-    </div>
-    <p class="login-sub">Panel de gestión interno</p>
-    <div class="login-form">
-      <div class="login-field"><label>Usuario</label><input type="text" id="loginUser" placeholder="Tu usuario" autocomplete="username"></div>
-      <div class="login-field"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
-      <div class="login-remember">
-        <label class="login-check-wrap">
-          <input type="checkbox" id="loginRecordar">
-          <span class="login-check-label">Recordar sesión en este dispositivo</span>
-        </label>
-      </div>
-      <div class="login-error" id="loginError"></div>
-      <button class="login-btn" id="btnLogin">Ingresar</button>
-    </div>
-  </div>
-</div>
+<!-- Login manejado por Croma App — este div queda vacío como fallback -->
+<div id="loginScreen" style="display:none"></div>
 
 <!-- APP -->
 <div id="dashApp" style="display:none">
@@ -1285,12 +1264,8 @@ function hacerLogin() {
 
 function cerrarSesion() {
   sessionStorage.clear();
-  localStorage.removeItem('croma_auth');
-  localStorage.removeItem('croma_rol');
-  localStorage.removeItem('croma_suc');
-  localStorage.removeItem('croma_remember');
-  // Mantener croma_user para pre-fill
-  location.reload();
+  ['croma_auth','croma_rol','croma_suc','croma_remember'].forEach(function(k){ localStorage.removeItem(k); });
+  location.href = 'https://depocroma-max.github.io/Croma-app/';
 }
 
 // ── INIT ──
@@ -1301,42 +1276,21 @@ function cerrarSesion() {
   document.getElementById('fechaHoy').textContent =
     dias[hoy.getDay()] + ' ' + hoy.getDate() + ' ' + meses[hoy.getMonth()] + ' ' + hoy.getFullYear();
 
-  // Sesión activa en esta pestaña
-  var authSession = sessionStorage.getItem('croma_auth');
-  // Sesión persistida ("recordar")
-  var authLocal = localStorage.getItem('croma_auth') === '1' && localStorage.getItem('croma_remember') === '1';
+  // Verificar token de Croma App
+  var authSession = sessionStorage.getItem('croma_auth') === '1';
+  var authLocal   = localStorage.getItem('croma_auth') === '1' && localStorage.getItem('croma_remember') === '1';
 
-  if (authSession === '1') {
-    var rol = sessionStorage.getItem('croma_rol') || 'admin';
-    var suc = sessionStorage.getItem('croma_suc') || null;
-    if (suc === '') suc = null;
-    sesionRol = rol; sesionSucursal = suc;
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('dashApp').style.display = '';
-    initNav();
-    if (sesionRol === 'encargado' || sesionRol === 'horarios') { setVista('horarios'); } else { cargarDatos(); }
-  } else if (authLocal) {
-    var rol = localStorage.getItem('croma_rol') || 'admin';
-    var suc = localStorage.getItem('croma_suc') || null;
+  if (authSession || authLocal) {
+    var store = authSession ? sessionStorage : localStorage;
+    var rol = store.getItem('croma_rol') || 'admin';
+    var suc = store.getItem('croma_suc') || null;
     if (suc === '') suc = null;
     iniciarSesion(rol, suc);
   } else {
-    // Pre-fill usuario si fue recordado antes
-    var savedUser = localStorage.getItem('croma_user');
-    if (savedUser) {
-      document.getElementById('loginUser').value = savedUser;
-      document.getElementById('loginRecordar').checked = true;
-      document.getElementById('loginPass').focus();
-    }
+    // Sin token → redirigir al login central
+    location.href = 'https://depocroma-max.github.io/Croma-app/';
+    return;
   }
-
-  document.getElementById('btnLogin').addEventListener('click', hacerLogin);
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && document.getElementById('loginScreen') &&
-        !document.getElementById('loginScreen').classList.contains('hidden')) {
-      hacerLogin();
-    }
-  });
 
   var hbBtn = document.getElementById('hamburgerBtn');
   var drawer = document.getElementById('drawer');
