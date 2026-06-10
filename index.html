@@ -1103,7 +1103,7 @@ var CREDENCIALES = {
   'perito':   { pass: 'perito2024',  rol: 'encargado',  sucursal: '10 PERITO MORENO' },
   'centenario':{ pass: 'cente2024',  rol: 'encargado',  sucursal: '12 CENTENARIO' },
   'roca':     { pass: 'roca2024',    rol: 'encargado',  sucursal: '14 ROCA' },
-  'agus':     { pass: 'agus2024',    rol: 'horarios',   sucursal: null },
+  'agus':     { pass: 'agus2024',    rol: 'operador',   sucursal: null },
   'depo':     { pass: 'depo2024',    rol: 'encargado',  sucursal: 'DEPO' }
 };
 
@@ -1197,8 +1197,8 @@ function initNav() {
     drawerUsr.textContent = '👤 ' + userLabel;
   }
 
-  // Ocultar navegación de pedidos/cajas si es encargado o rol horarios
-  if (sesionRol === 'encargado' || sesionRol === 'horarios') {
+  // Ocultar navegación de pedidos/cajas si es encargado, horarios u operador
+  if (sesionRol === 'encargado' || sesionRol === 'horarios' || sesionRol === 'operador') {
     ['navPedidos','navCajas'].forEach(function(id){
       var el = document.getElementById(id);
       if (el) el.style.display = 'none';
@@ -1208,7 +1208,7 @@ function initNav() {
       if (el) el.style.display = 'none';
     });
   }
-  // Rol horarios no necesita ver entradas
+  // Rol horarios no necesita ver entradas (operador sí las ve)
   if (sesionRol === 'horarios') {
     var elNE = document.getElementById('navEntradas');
     if (elNE) elNE.style.display = 'none';
@@ -1226,7 +1226,9 @@ function iniciarSesion(rol, suc) {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('dashApp').style.display = '';
   initNav();
-  if (sesionRol === 'encargado' || sesionRol === 'horarios') {
+  if (sesionRol === 'operador') {
+    setVista('entradas');
+  } else if (sesionRol === 'encargado' || sesionRol === 'horarios') {
     setVista('horarios');
   } else {
     cargarDatos();
@@ -1350,7 +1352,7 @@ function setVista(v) {
 
   // FAB solo visible en entradas
   var fab = document.getElementById('entFab');
-  if (fab) fab.classList.toggle('hidden', !esEntradas || (sesionRol !== 'admin' && sesionRol !== 'encargado'));
+  if (fab) fab.classList.toggle('hidden', !esEntradas || (sesionRol !== 'admin' && sesionRol !== 'encargado' && sesionRol !== 'operador'));
 
   if (esHorarios) {
     actualizarSemanaLabel();
@@ -1440,7 +1442,7 @@ function renderHorarios(semanaId, dias) {
     html += '</span>';
 
     // Botón cargar solo para admin o encargado de esa sucursal
-    if (sesionRol === 'admin' || sesionRol === 'horarios' || (sesionRol === 'encargado' && sesionSucursal === suc)) {
+    if (sesionRol === 'admin' || sesionRol === 'horarios' || sesionRol === 'operador' || (sesionRol === 'encargado' && sesionSucursal === suc)) {
       html += '<button onclick="abrirModalCarga(\'' + suc + '\')" style="margin-left:12px;padding:4px 12px;font-size:11px;font-weight:600;border:1px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--white);cursor:pointer;color:var(--black);transition:all .15s" onmouseover="this.style.background=\'var(--black)\';this.style.color=\'var(--white)\'" onmouseout="this.style.background=\'var(--white)\';this.style.color=\'var(--black)\'">' + (cargado ? '✎ Editar' : '+ Cargar') + '</button>';
     }
 
@@ -2705,7 +2707,7 @@ function renderEntradasSucursal() {
   SUCURSALES_ENT.forEach(function(suc) {
     var lista       = getEntFiltradas(suc);
     var listaTotal  = entradasData[suc] || [];
-    var puedeEditar = sesionRol === 'admin' || (sesionRol === 'encargado' && sesionSucursal === suc);
+    var puedeEditar = sesionRol === 'admin' || sesionRol === 'operador' || (sesionRol === 'encargado' && sesionSucursal === suc);
     var color       = SUC_COLORS[suc] || '#888';
     var tieneEntradas = listaTotal.length > 0;
 
