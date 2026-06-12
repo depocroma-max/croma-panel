@@ -2024,6 +2024,7 @@ async function cargarDatos() {
         if (p.estado === 'Pendiente') p.estado = 'SinVer';
         if (p.estado === 'Procesado') p.estado = 'EnProceso';
         if (p.estado === 'Enviado')   p.estado = 'Solucionado';
+        if (p.tipo === 'REPOSICION')  p.tipo   = 'ROTACION';
         return p;
       });
       actualizarStats();
