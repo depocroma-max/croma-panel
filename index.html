@@ -197,21 +197,21 @@ td { padding: 10px 14px; vertical-align: middle; }
 
 /* ── MODALS ── */
 @keyframes modal-in {
-  0%   { transform: scale(.97) translateY(8px); opacity: 0; }
+  0%   { transform: scale(.96) translateY(6px); opacity: 0; }
   100% { transform: scale(1)   translateY(0);   opacity: 1; }
 }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity .2s; }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
-.modal-box { background: var(--white); border-radius: 20px; width: 100%; max-width: 560px; box-shadow: 0 20px 60px rgba(0,0,0,.18), 0 4px 16px rgba(0,0,0,.08); overflow: hidden; }
-.modal-overlay.open .modal-box { animation: modal-in .22s cubic-bezier(.22,1,.36,1) both; }
-.modal-header { background: var(--black); padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+.modal-box { background: var(--white); border-radius: 20px; width: 100%; max-width: 560px; box-shadow: 0 24px 64px rgba(0,0,0,.22); overflow: hidden; border-top: 4px solid var(--black); }
+.modal-overlay.open .modal-box { animation: modal-in .28s cubic-bezier(.22,1,.36,1) both; }
+.modal-header { background: var(--white); padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--gray-100); }
 .modal-header-left { display: flex; align-items: center; gap: 10px; }
-.modal-cod { font-family: monospace; font-size: 18px; font-weight: 700; color: var(--accent); }
+.modal-cod { font-family: var(--font-display); font-size: 20px; letter-spacing: 1.5px; color: var(--black); }
 .modal-tipo { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: .5px; }
 .modal-tipo.PEDIDO    { background: #fef3c7; color: #92400e; }
-.modal-tipo.ROTACION{ background: #dbeafe; color: #1e40af; }
-.modal-close { background: none; border: none; color: var(--gray-400); font-size: 20px; cursor: pointer; line-height: 1; padding: 4px; }
-.modal-close:hover { color: var(--white); }
+.modal-tipo.ROTACION  { background: #dbeafe; color: #1e40af; }
+.modal-close { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--gray-50); color: var(--gray-600); font-size: 13px; cursor: pointer; transition: all .15s; line-height: 1; padding: 0; }
+.modal-close:hover { background: var(--black); color: var(--white); border-color: var(--black); }
 .modal-body { padding: 1.25rem; }
 .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.25rem; }
 .modal-field { display: flex; flex-direction: column; gap: 4px; }
@@ -240,12 +240,13 @@ td { padding: 10px 14px; vertical-align: middle; }
 /* ── MODAL INFORME CAJA ── */
 .modal-informe { max-width: 680px; }
 .informe-header {
-  background: var(--black); padding: 1.25rem 1.5rem;
+  background: var(--white); padding: 1.25rem 1.5rem;
   display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--gray-100);
 }
 .informe-suc {
   font-family: var(--font-display); font-size: 22px;
-  letter-spacing: 2px; color: var(--white);
+  letter-spacing: 2px; color: var(--black);
 }
 .informe-fecha { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
 .informe-header-actions { display: flex; align-items: center; gap: 8px; }
@@ -593,7 +594,7 @@ tbody tr:hover { background: var(--gray-50); }
 .caja-suc { font-size: 18px; }
 
 
-.modal-header, .informe-header { background: var(--black); }
+.modal-header, .informe-header { background: var(--white); }
 .modal-btn, .btn-date, .btn-guardar-hor, .btn-agregar-emp { border-radius: var(--radius-sm); }
 .login-card { border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
 .login-btn, .login-field input { border-radius: var(--radius-md); }
@@ -645,12 +646,17 @@ tbody tr:hover { background: var(--gray-50); }
 .ent-suc-badge.ok    { background: #dcfce7; color: #15803d; }
 .ent-suc-badge.empty { background: var(--gray-100); color: var(--gray-400); }
 .ent-suc-body    { flex: 1; padding: .25rem 0; min-height: 60px; }
-.ent-item        { display: flex; align-items: center; gap: 8px; padding: 5px 1rem; transition: background .12s; cursor: default; }
+.ent-item        { display: flex; flex-direction: column; gap: 3px; padding: 8px 1rem; transition: background .12s; cursor: default; border-bottom: 1px solid var(--gray-100); }
+.ent-item:last-child { border-bottom: none; }
 .ent-item.editable { cursor: pointer; }
 .ent-item.editable:hover { background: var(--gray-50); }
+.ent-item-row1   { display: flex; align-items: center; gap: 8px; }
 .ent-item-icon   { color: var(--gray-300); font-size: 12px; flex-shrink: 0; }
-.ent-item-nombre { flex: 1; font-size: 12px; color: var(--black); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ent-item-precio { font-size: 11px; font-weight: 700; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.ent-item-nombre { flex: 1; font-size: 13px; font-weight: 500; color: var(--black); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ent-item-precio { font-size: 11px; font-weight: 700; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+.ent-item-meta   { display: flex; align-items: center; gap: 10px; padding-left: 20px; flex-wrap: wrap; }
+.ent-item-fecha  { font-size: 11px; color: var(--gray-400); display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.ent-item-obs    { font-size: 11px; color: var(--gray-600); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
 .ent-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.25rem .75rem; gap: 4px; }
 .ent-empty-icon  { font-size: 26px; opacity: .3; }
 .ent-empty-txt   { font-size: 12px; color: var(--gray-400); text-align: center; font-weight: 600; }
@@ -2157,6 +2163,9 @@ function abrirModal(idx) {
   document.getElementById('modalCod').textContent      = p.cod;
   document.getElementById('modalTipo').textContent     = p.tipo;
   document.getElementById('modalTipo').className       = 'modal-tipo ' + p.tipo;
+  // Stripe de color según tipo
+  var box = document.querySelector('#modalOverlay .modal-box');
+  if (box) box.style.borderTopColor = p.tipo === 'ROTACION' ? '#1e40af' : '#92400e';
   document.getElementById('modalSucursal').textContent = p.sucursal;
   document.getElementById('modalFecha').textContent    = p.fecha ? p.fecha.substring(8,10)+'/'+p.fecha.substring(5,7)+'/'+p.fecha.substring(0,4) : '—';
   document.getElementById('modalTalle').textContent    = p.talle || '—';
@@ -2477,6 +2486,11 @@ function abrirModalCaja(idx) {
 
   document.getElementById('mcSucursal').textContent = c.sucursal;
   document.getElementById('mcFecha').textContent    = 'Cierre del ' + fechaDisplay;
+  // Stripe color según sucursal
+  var sucKey = c.sucursal ? c.sucursal.split(' ')[0] : '';
+  var sucColors = { '01':'#185FA5','05':'#0F6E56','09':'#B45309','10':'#9B2563','12':'#534AB7','14':'#3B6D11' };
+  var cajaBox = document.querySelector('#modalCajaOverlay .modal-box');
+  if (cajaBox) cajaBox.style.borderTopColor = sucColors[sucKey] || 'var(--black)';
   document.getElementById('mcEncargado').textContent= c.encargado || '—';
   document.getElementById('mcHora').textContent     = c.hora || '—';
 
@@ -2683,10 +2697,26 @@ function renderEntradasSucursal() {
     } else {
       lista.forEach(function(e) {
         var eData = JSON.stringify(e).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        var fechaStr = '';
+        if (e.fecha) {
+          var parts = e.fecha.split('-');
+          if (parts.length === 3) {
+            var meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+            fechaStr = parseInt(parts[2]) + ' ' + meses[parseInt(parts[1]) - 1];
+          }
+        }
         html += '<div class="ent-item' + (puedeEditar ? ' editable' : '') + '"' + (puedeEditar ? ' onclick="abrirModalEntrada(' + eData + ', \'' + suc + '\')"' : '') + '>';
+        html += '<div class="ent-item-row1">';
         html += '<span class="ent-item-icon">🎟</span>';
         html += '<span class="ent-item-nombre" title="' + e.nombre + '">' + e.nombre + '</span>';
         html += '<span class="ent-item-precio">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
+        html += '</div>';
+        if (fechaStr || e.obs) {
+          html += '<div class="ent-item-meta">';
+          if (fechaStr) html += '<span class="ent-item-fecha">📅 ' + fechaStr + '</span>';
+          if (e.obs) html += '<span class="ent-item-obs" title="' + e.obs + '">' + e.obs + '</span>';
+          html += '</div>';
+        }
         html += '</div>';
       });
     }
@@ -2785,6 +2815,13 @@ function abrirModalEntrada(entrada, suc) {
 
   var btnEliminar = document.getElementById('meBtnEliminar');
   if (btnEliminar) btnEliminar.style.display = esNueva ? 'none' : '';
+
+  // Stripe color según sucursal
+  var sucActual = document.getElementById('meSucursal').value || suc || '';
+  var sucKey2 = sucActual ? sucActual.split(' ')[0] : '';
+  var sucColors2 = { '01':'#185FA5','05':'#0F6E56','09':'#B45309','10':'#9B2563','12':'#534AB7','14':'#3B6D11' };
+  var entBox = document.querySelector('#modalEntradaOverlay .modal-box');
+  if (entBox) entBox.style.borderTopColor = sucColors2[sucKey2] || 'var(--black)';
 
   document.getElementById('modalEntradaOverlay').classList.add('open');
   setTimeout(function(){ document.getElementById('meNombre').focus(); }, 100);
