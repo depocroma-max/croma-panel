@@ -427,8 +427,7 @@ td { padding: 10px 14px; vertical-align: middle; }
 
 
 /* ─────────────────────────────────────────────
-   CROMA UI REFRESH · versión visual mejorada
-   Mantiene la lógica original, solo mejora presentación.
+   CROMA PANEL — design language from Horarios
 ───────────────────────────────────────────── */
 :root {
   --surface: #ffffff;
@@ -440,53 +439,56 @@ td { padding: 10px 14px; vertical-align: middle; }
   --success: #15803d;
 }
 
-body {
-  background:
-    radial-gradient(circle at top left, rgba(232,37,26,.08), transparent 28rem),
-    linear-gradient(180deg, #f7f7f5 0%, #efefec 100%);
+/* Splash */
+#splashScreen {
+  position: fixed; inset: 0; background: #0d0d0d;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 20px; z-index: 99999;
+  transition: opacity .6s ease;
+}
+#splashScreen.splash-hide { opacity: 0; pointer-events: none; }
+#splashLogo {
+  width: 80px; height: 80px; object-fit: contain;
+  animation: splashLogoIn .7s cubic-bezier(0.390,0.575,0.565,1.000) both;
+}
+#splashText {
+  font-family: var(--font-display); font-size: 36px;
+  letter-spacing: 6px; color: #fff;
+  animation: splashLogoIn .7s .15s cubic-bezier(0.390,0.575,0.565,1.000) both;
+}
+@keyframes splashLogoIn {
+  0%   { opacity: 0; transform: scale(.85); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
-.topbar {
-  height: 64px;
-  padding: 0 2.25rem;
-  background: rgba(13,13,13,.96);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+/* Entrance animations */
+@keyframes fadeSlideUp {
+  0%   { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
+.anim-in { animation: fadeSlideUp .35s cubic-bezier(.22,1,.36,1) both; }
+.anim-in-d1 { animation-delay: .05s; }
+.anim-in-d2 { animation-delay: .10s; }
+.anim-in-d3 { animation-delay: .15s; }
+.anim-in-d4 { animation-delay: .20s; }
 
-.brand-logo { font-size: 25px; }
-.brand-section { color: rgba(255,255,255,.62); }
+/* Body — flat */
+body { background: var(--gray-50); }
 
-.top-nav {
-  background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.08);
-  padding: 4px;
-  border-radius: 999px;
-  gap: 3px;
-}
+/* Topbar — flat, no blur */
+.topbar { height: 56px; padding: 0 2rem; background: var(--black); border-bottom: 1px solid #222; box-shadow: none; }
 
-.nav-btn {
-  height: 34px;
-  padding: 0 17px;
-  border-radius: 999px;
-  font-size: 12px;
-  letter-spacing: .2px;
-}
-.nav-btn.active {
-  color: var(--black);
-  background: var(--white);
-  border-radius: 999px;
-  box-shadow: 0 8px 18px rgba(0,0,0,.22);
-}
+/* Nav — no pill wrapper */
+.top-nav { background: transparent; border: none; padding: 0; border-radius: 0; gap: 2px; }
+.nav-btn { height: auto; padding: 6px 14px; border-radius: var(--radius-sm); font-size: 13px; letter-spacing: .3px; }
+.nav-btn.active { color: var(--white); background: rgba(255,255,255,.12); font-weight: 500; border-radius: var(--radius-sm); box-shadow: none; }
 
-.top-actions .btn-icon,
-.connection-status {
-  height: 36px;
-  border-radius: 999px;
-}
-.connection-status { padding: 0 14px; }
+/* Top actions — square */
+.top-actions .btn-icon, .connection-status { height: 32px; border-radius: var(--radius-sm); }
+.connection-status { padding: 5px 12px; }
 
-.app { padding: 1.75rem 2rem 3rem; }
+.app { padding: 1.5rem 2rem; }
 
 .dashboard-hero {
   display: flex;
@@ -556,119 +558,55 @@ body {
   box-shadow: 0 0 10px rgba(34,197,94,.75);
 }
 
-.stats-row { gap: 14px; margin-bottom: 1.25rem; }
-.stat-card {
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 1.2rem 1.25rem;
-  box-shadow: 0 12px 28px rgba(0,0,0,.06);
-  position: relative;
-  overflow: hidden;
-}
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--black);
-  opacity: .9;
-}
-.stat-val { font-size: 42px; }
-.stat-label { color: var(--text-soft); font-weight: 700; }
+/* Stat cards — horarios style */
+.stat-card { border-radius: var(--radius-md); border: 1px solid var(--gray-100); box-shadow: var(--shadow-sm); padding: 1.2rem 1.4rem; }
+.stat-card::before { display: none; }
+.stat-val { font-size: 36px; }
+.stat-label { color: var(--gray-400); font-weight: 400; }
 
-.controls-bar {
-  background: rgba(255,255,255,.72);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 12px;
-  box-shadow: 0 10px 26px rgba(0,0,0,.05);
-  backdrop-filter: blur(8px);
-}
-.filter-select,
-.filter-input {
-  height: 38px;
-  border-radius: 10px;
-  border-color: var(--line);
-}
-.filter-input { min-width: 220px; }
+/* Controls bar — flat */
+.controls-bar { background: transparent; border: none; border-radius: 0; padding: 0; box-shadow: none; backdrop-filter: none; }
+.filter-select, .filter-input { height: 34px; border-radius: var(--radius-sm); }
+.filter-input { min-width: 180px; }
 
-.sucursal-block { margin-bottom: 1.75rem; }
-.sucursal-header {
-  margin-bottom: 10px;
-  padding: 0 4px;
-}
-.suc-stripe { height: 24px; width: 5px; }
-.suc-nombre { font-size: 21px; }
-.suc-count { font-weight: 600; }
-.suc-alerta { padding: 4px 10px; font-weight: 800; }
-
-.table-card {
-  border-radius: 16px;
-  border-color: var(--line);
-  box-shadow: 0 12px 28px rgba(0,0,0,.06);
-}
-thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  padding: 12px 15px;
-  font-weight: 800;
-  color: var(--gray-600);
-  background: #f5f5f2;
-}
-td { padding: 13px 15px; }
+/* Table / cards */
+.table-card { border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+thead th { font-weight: 500; background: var(--gray-50); padding: 9px 14px; }
+td { padding: 10px 14px; }
 tbody tr { cursor: default; }
-tbody tr:hover { background: #fafaf8; }
-.cod { font-size: 12px; border-radius: 999px; padding: 4px 9px; }
-.badge-tipo, .badge-estado { font-weight: 800; }
-.badge-estado { padding: 5px 11px; }
-.obs-cell { max-width: 230px; }
+tbody tr:hover { background: var(--gray-50); }
+.cod { border-radius: var(--radius-sm); padding: 2px 7px; font-size: 12px; }
+.badge-tipo, .badge-estado { font-weight: 600; }
+.badge-estado { padding: 3px 10px; }
+.obs-cell { max-width: 160px; }
 
-.cajas-title,
-.horarios-title { font-size: 26px; }
-.caja-card,
-.hor-suc-block,
-.carga-panel {
-  border-radius: 18px;
-  border-color: var(--line);
-  box-shadow: 0 12px 28px rgba(0,0,0,.06);
+.cajas-title, .horarios-title { font-size: 20px; }
+.caja-card, .hor-suc-block, .carga-panel {
+  border-radius: var(--radius-lg);
+  border-color: var(--gray-100);
+  box-shadow: var(--shadow-sm);
 }
 .caja-card:hover {
-  transform: translateY(-2px);
+  transform: none;
   box-shadow: 0 18px 36px rgba(0,0,0,.1);
 }
 .caja-suc { font-size: 18px; }
 
 
-.modal-header,
-.informe-header { background: linear-gradient(135deg, #111, #242421); }
-.modal-btn,
-.btn-date,
-.btn-guardar-hor,
-.btn-agregar-emp { border-radius: 10px; }
-
-.login-card {
-  border-radius: 22px;
-  box-shadow: 0 22px 70px rgba(0,0,0,.38);
-}
-.login-btn { border-radius: 12px; }
-.login-field input { border-radius: 12px; }
+.modal-header, .informe-header { background: var(--black); }
+.modal-btn, .btn-date, .btn-guardar-hor, .btn-agregar-emp { border-radius: var(--radius-sm); }
+.login-card { border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+.login-btn, .login-field input { border-radius: var(--radius-md); }
 
 @media (max-width: 700px) {
-  .topbar { padding: 0 1rem; height: 60px; }
+  .topbar { padding: 0 .75rem; height: 48px; }
   .brand-divider, .brand-section { display: none; }
   .top-actions { gap: 5px; }
-  .top-actions > .status-label { display: none; }
   .connection-status { display: none; }
   .dashboard-hero { align-items: flex-start; flex-direction: column; padding: 1.2rem; }
   .hero-pill { width: 100%; justify-content: center; }
   .stats-row { grid-template-columns: 1fr 1fr; }
-  .stat-val { font-size: 34px; }
-  .table-card { border-radius: 14px; }
-  table { font-size: 12px; }
-  td, thead th { padding: 10px 12px; }
+  .stat-val { font-size: 28px; }
 }
 
 /* ── ENTRADAS v2 — estilo horarios ── */
@@ -764,6 +702,12 @@ tbody tr:hover { background: #fafaf8; }
 <!-- Login manejado por Croma App — este div queda vacío como fallback -->
 <div id="loginScreen" style="display:none"></div>
 
+<!-- SPLASH -->
+<div id="splashScreen">
+  <img id="splashLogo" src="https://depocroma-max.github.io/croma-dashboard/tridente_solo.png" alt="">
+  <div id="splashText">CROMA</div>
+</div>
+
 <!-- APP -->
 <div id="dashApp" style="display:none">
 
@@ -798,15 +742,15 @@ tbody tr:hover { background: #fafaf8; }
 
 
     <!-- STATS -->
-    <div class="stats-row" id="statsRow">
-      <div class="stat-card"><div class="stat-val" id="statTotal">—</div><div class="stat-label">Artículos</div></div>
-      <div class="stat-card"><div class="stat-val rev" id="statPend">—</div><div class="stat-label">Sin ver</div></div>
-      <div class="stat-card"><div class="stat-val proc" id="statProc">—</div><div class="stat-label">En proceso</div></div>
-      <div class="stat-card"><div class="stat-val sol" id="statEnv">—</div><div class="stat-label">Solucionados</div></div>
+    <div class="stats-row anim-in" id="statsRow">
+      <div class="stat-card anim-in anim-in-d1"><div class="stat-val" id="statTotal">—</div><div class="stat-label">Artículos</div></div>
+      <div class="stat-card anim-in anim-in-d2"><div class="stat-val rev" id="statPend">—</div><div class="stat-label">Sin ver</div></div>
+      <div class="stat-card anim-in anim-in-d3"><div class="stat-val proc" id="statProc">—</div><div class="stat-label">En proceso</div></div>
+      <div class="stat-card anim-in anim-in-d4"><div class="stat-val sol" id="statEnv">—</div><div class="stat-label">Solucionados</div></div>
     </div>
 
     <!-- FILTROS -->
-    <div class="controls-bar" id="controlsBar">
+    <div class="controls-bar anim-in anim-in-d2" id="controlsBar">
       <select class="filter-select" id="filtroDias" onchange="cargarDatos()">
         <option value="30">Últimos 30 días</option>
         <option value="14">Últimos 14 días</option>
@@ -1278,6 +1222,13 @@ function cerrarSesion() {
   document.getElementById('fechaHoy').textContent =
     dias[hoy.getDay()] + ' ' + hoy.getDate() + ' ' + meses[hoy.getMonth()] + ' ' + hoy.getFullYear();
 
+  // Splash → verificar token → init
+  var splash = document.getElementById('splashScreen');
+  function hideSplash() {
+    splash.classList.add('splash-hide');
+    setTimeout(function(){ splash.style.display = 'none'; }, 650);
+  }
+
   // Verificar token de Croma App
   var authSession = sessionStorage.getItem('croma_auth') === '1';
   var authLocal   = localStorage.getItem('croma_auth') === '1' && localStorage.getItem('croma_remember') === '1';
@@ -1287,10 +1238,10 @@ function cerrarSesion() {
     var rol = store.getItem('croma_rol') || 'admin';
     var suc = store.getItem('croma_suc') || null;
     if (suc === '') suc = null;
-    iniciarSesion(rol, suc);
+    setTimeout(function(){ hideSplash(); iniciarSesion(rol, suc); }, 900);
   } else {
     // Sin token → redirigir al login central
-    location.href = 'https://depocroma-max.github.io/Croma-app/';
+    setTimeout(function(){ location.href = 'https://depocroma-max.github.io/Croma-app/'; }, 900);
     return;
   }
 
