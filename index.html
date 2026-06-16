@@ -664,6 +664,14 @@ tbody tr:hover { background: var(--gray-50); }
 .ent-item-meta   { display: flex; align-items: center; gap: 10px; padding-left: 20px; flex-wrap: wrap; }
 .ent-item-fecha  { font-size: 11px; color: var(--gray-400); display: flex; align-items: center; gap: 3px; white-space: nowrap; }
 .ent-item-obs    { font-size: 11px; color: var(--gray-600); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
+.ent-badge-agotado { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: #dc2626; padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+.ent-item.agotado .ent-item-precio { background: #f1f5f9; color: #94a3b8; text-decoration: line-through; }
+.ent-item.agotado { opacity: .75; }
+.ent-toggle-agotado { font-size: 10px; font-weight: 600; border: none; border-radius: 20px; padding: 2px 9px; cursor: pointer; transition: background .15s; white-space: nowrap; flex-shrink: 0; }
+.ent-toggle-agotado.marcar   { background: #fee2e2; color: #dc2626; }
+.ent-toggle-agotado.marcar:hover { background: #fecaca; }
+.ent-toggle-agotado.desmarcar { background: #dcfce7; color: #16a34a; }
+.ent-toggle-agotado.desmarcar:hover { background: #bbf7d0; }
 .ent-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.25rem .75rem; gap: 4px; }
 .ent-empty-icon  { font-size: 26px; opacity: .3; }
 .ent-empty-txt   { font-size: 12px; color: var(--gray-400); text-align: center; font-weight: 600; }
@@ -1008,6 +1016,11 @@ tbody tr:hover { background: var(--gray-50); }
         <div class="entrada-form-field entrada-form-full">
           <label>Observaciones</label>
           <textarea id="meObs" rows="2" placeholder="Info adicional, condiciones, etc."></textarea>
+        </div>
+        <div class="entrada-form-field entrada-form-full" style="flex-direction:row;align-items:center;gap:10px;padding:10px 12px;background:#fff7f7;border:1px solid #fecaca;border-radius:10px;">
+          <input type="checkbox" id="meAgotado" style="width:16px;height:16px;accent-color:#dc2626;cursor:pointer;flex-shrink:0">
+          <label for="meAgotado" style="font-size:13px;font-weight:600;color:#dc2626;cursor:pointer;text-transform:none;letter-spacing:0">Marcar como AGOTADO</label>
+          <span style="font-size:11px;color:#94a3b8;margin-left:auto">Los otros locales verán la entrada como agotada</span>
         </div>
       </div>
     </div>
@@ -2712,15 +2725,24 @@ function renderEntradasSucursal() {
             fechaStr = parseInt(parts[2]) + ' ' + meses[parseInt(parts[1]) - 1];
           }
         }
-        html += '<div class="ent-item' + (puedeEditar ? ' editable' : '') + '"' + (puedeEditar ? ' onclick="abrirModalEntrada(' + eData + ', \'' + suc + '\')"' : '') + '>';
+        var isAgotado = !!e.agotado;
+        html += '<div class="ent-item' + (puedeEditar ? ' editable' : '') + (isAgotado ? ' agotado' : '') + '"' + (puedeEditar ? ' onclick="abrirModalEntrada(' + eData + ', \'' + suc + '\')"' : '') + '>';
         html += '<div class="ent-item-row1">';
         html += '<span class="ent-item-icon">🎟</span>';
         html += '<span class="ent-item-nombre" title="' + e.nombre + '">' + e.nombre + '</span>';
-        html += '<span class="ent-item-precio">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
+        if (isAgotado) {
+          html += '<span class="ent-badge-agotado">AGOTADO</span>';
+        } else {
+          html += '<span class="ent-item-precio">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
+        }
+        if (puedeEditar) {
+          html += '<button class="ent-toggle-agotado ' + (isAgotado ? 'desmarcar' : 'marcar') + '" onclick="event.stopPropagation();toggleAgotado(' + eData + ', \'' + suc + '\')" title="' + (isAgotado ? 'Marcar como disponible' : 'Marcar como agotado') + '">' + (isAgotado ? '✓ Disponible' : '✗ Agotado') + '</button>';
+        }
         html += '</div>';
-        if (fechaStr || e.obs) {
+        if (fechaStr || e.obs || isAgotado) {
           html += '<div class="ent-item-meta">';
           if (fechaStr) html += '<span class="ent-item-fecha">📅 ' + fechaStr + '</span>';
+          if (isAgotado) html += '<span class="ent-item-precio" style="text-decoration:line-through;background:#f1f5f9;color:#94a3b8">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
           if (e.obs) html += '<span class="ent-item-obs" title="' + e.obs + '">' + e.obs + '</span>';
           html += '</div>';
         }
@@ -2802,11 +2824,12 @@ function renderEntradasSidebar() {
 function abrirModalEntrada(entrada, suc) {
   var esNueva = !entrada || !entrada.id;
   document.getElementById('meTitle').textContent = esNueva ? 'Nueva entrada' : 'Editar entrada';
-  document.getElementById('meId').value     = entrada ? (entrada.id     || '') : '';
-  document.getElementById('meNombre').value = entrada ? (entrada.nombre || '') : '';
-  document.getElementById('mePrecio').value = entrada ? (entrada.precio || '') : '';
-  document.getElementById('meFecha').value  = entrada ? (entrada.fecha  || '') : '';
-  document.getElementById('meObs').value    = entrada ? (entrada.obs    || '') : '';
+  document.getElementById('meId').value      = entrada ? (entrada.id     || '') : '';
+  document.getElementById('meNombre').value  = entrada ? (entrada.nombre || '') : '';
+  document.getElementById('mePrecio').value  = entrada ? (entrada.precio || '') : '';
+  document.getElementById('meFecha').value   = entrada ? (entrada.fecha  || '') : '';
+  document.getElementById('meObs').value     = entrada ? (entrada.obs    || '') : '';
+  document.getElementById('meAgotado').checked = entrada ? !!entrada.agotado : false;
 
   var sucSel = document.getElementById('meSucursal');
   var sucWrap = document.getElementById('meSucursalWrap');
@@ -2835,18 +2858,19 @@ function abrirModalEntrada(entrada, suc) {
 }
 
 async function guardarEntrada() {
-  var id     = document.getElementById('meId').value.trim();
-  var suc    = document.getElementById('meSucursal').value.trim();
-  var nombre = document.getElementById('meNombre').value.trim();
-  var precio = document.getElementById('mePrecio').value.trim();
-  var fecha  = document.getElementById('meFecha').value.trim();
-  var obs    = document.getElementById('meObs').value.trim();
+  var id      = document.getElementById('meId').value.trim();
+  var suc     = document.getElementById('meSucursal').value.trim();
+  var nombre  = document.getElementById('meNombre').value.trim();
+  var precio  = document.getElementById('mePrecio').value.trim();
+  var fecha   = document.getElementById('meFecha').value.trim();
+  var obs     = document.getElementById('meObs').value.trim();
+  var agotado = document.getElementById('meAgotado').checked;
 
   if (!suc)    { toast('⚠ Elegí una sucursal', 'error'); return; }
   if (!nombre) { toast('⚠ El nombre es obligatorio', 'error'); document.getElementById('meNombre').focus(); return; }
   if (!precio) { toast('⚠ El precio es obligatorio', 'error'); document.getElementById('mePrecio').focus(); return; }
 
-  var payload = { accion: 'guardarEntrada', id: id, sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs };
+  var payload = { id: id, sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs, agotado: agotado };
   cerrarModalEntrada();
 
   try {
@@ -2857,14 +2881,33 @@ async function guardarEntrada() {
       toast('✓ Entrada guardada', 'success');
       cargarEntradas();
     } else {
-      actualizarEntradaLocal(suc, id, { id: id || Date.now().toString(), sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs });
+      actualizarEntradaLocal(suc, id, { id: id || Date.now().toString(), sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs, agotado: agotado });
       renderEntradas();
       toast('✓ Guardada localmente', 'success');
     }
   } catch(e) {
-    actualizarEntradaLocal(suc, id, { id: id || Date.now().toString(), sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs });
+    actualizarEntradaLocal(suc, id, { id: id || Date.now().toString(), sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs, agotado: agotado });
     renderEntradas();
     toast('✓ Guardada localmente', 'success');
+  }
+}
+
+async function toggleAgotado(entrada, suc) {
+  var nuevoEstado = !entrada.agotado;
+  // Actualizar localmente de inmediato
+  actualizarEntradaLocal(suc, entrada.id, Object.assign({}, entrada, { agotado: nuevoEstado }));
+  renderEntradas();
+
+  try {
+    var payload = { id: entrada.id, sucursal: suc, nombre: entrada.nombre, precio: entrada.precio, fecha: entrada.fecha || '', obs: entrada.obs || '', agotado: nuevoEstado };
+    var url = API_URL + '?accion=guardarEntrada&datos=' + encodeURIComponent(JSON.stringify(payload));
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (data.ok) {
+      toast(nuevoEstado ? '✗ Marcado como agotado' : '✓ Marcado como disponible', nuevoEstado ? 'error' : 'success');
+    }
+  } catch(e) {
+    // El cambio local ya está hecho, continuar silenciosamente
   }
 }
 
