@@ -1512,8 +1512,10 @@ async function abrirModalCarga(suc) {
   }
 
   // Si hay horario ya cargado para esta semana, pre-cargar los empleados
+  // (saltea filas con el mismo nombre repetidas, por si quedaron duplicadas de antes)
   if (horariosData[suc] && horariosData[suc].length > 0) {
     horariosData[suc].forEach(function(emp) {
+      if (empleadosAgregados.find(function(e){ return e.id === emp.empleado; })) return;
       // Buscar si es del local (viene en empleadosLista) o externo
       var enLista = empleadosLista.indexOf(emp.empleado) >= 0;
       empleadosAgregados.push({ id: emp.empleado, nombre: emp.empleado, externo: !enLista });
@@ -1682,6 +1684,7 @@ function agregarEmpleado() {
   var sel = document.getElementById('empSelect');
   if (!sel || !sel.value) return;
   var id = sel.value;
+  if (empleadosAgregados.find(function(e){ return e.id === id; })) return;
   // Inicializar turnos vacíos
   horariosEditando[id] = {};
   DIAS_KEY.forEach(function(dk){ horariosEditando[id][dk] = { tipo:'libre', h1:'', h2:'', h3:'', h4:'' }; });
