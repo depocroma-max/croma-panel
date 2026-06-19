@@ -343,27 +343,62 @@ td { padding: 10px 14px; vertical-align: middle; }
 .semana-label    { font-size: 13px; font-weight: 600; color: var(--black); min-width: 160px; text-align: center; }
 .btn-semana      { width: 30px; height: 30px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; color: var(--gray-600); transition: all .15s; }
 .btn-semana:hover { background: var(--black); color: var(--white); border-color: var(--black); }
-.horarios-grid   { display: flex; flex-direction: column; gap: 1.25rem; }
 
 /* Tabla horarios admin */
-.hor-suc-block   { background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
-.hor-suc-head    { display: flex; align-items: center; gap: 10px; padding: .85rem 1.25rem; border-bottom: 1px solid var(--gray-100); background: var(--gray-50); }
-.hor-suc-stripe  { width: 4px; height: 20px; border-radius: 2px; flex-shrink: 0; }
-.hor-suc-nombre  { font-family: var(--font-display); font-size: 16px; letter-spacing: 1px; color: var(--black); }
-.hor-suc-sub     { font-size: 12px; color: var(--gray-400); margin-left: auto; }
 .hor-table-wrap  { overflow-x: auto; }
 .hor-table       { width: 100%; border-collapse: collapse; font-size: 12px; }
 .hor-table th    { padding: 8px 12px; text-align: center; font-size: 10px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--gray-100); white-space: nowrap; background: var(--gray-50); }
-.hor-table th:first-child { text-align: left; min-width: 130px; }
+.hor-table th:first-child { text-align: left; min-width: 150px; }
 .hor-table td    { padding: 8px 12px; border-bottom: 1px solid var(--gray-100); text-align: center; vertical-align: middle; }
 .hor-table td:first-child { text-align: left; font-weight: 500; color: var(--black); font-size: 12px; }
 .hor-table tr:last-child td { border-bottom: none; }
 .hor-table tr:hover td { background: var(--gray-50); }
-.hor-turno       { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-.hor-turno.corrido  { background: #dbeafe; color: #1e40af; }
-.hor-turno.cortado  { background: #fef3c7; color: #92400e; }
-.hor-turno.libre    { background: var(--gray-100); color: var(--gray-400); }
-.hor-turno.empty    { color: var(--gray-200); font-size: 10px; }
+
+/* ── HORARIO SEMANAL — sidebar de locales + panel único ── */
+.hor-layout       { display: flex; gap: 1.25rem; align-items: flex-start; }
+.hor-sidebar      { width: 230px; flex-shrink: 0; background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; position: sticky; top: 1rem; }
+.hor-sidebar-search { padding: .85rem; border-bottom: 1px solid var(--gray-100); }
+.hor-sidebar-search input { width: 100%; height: 32px; padding: 0 10px; font-family: var(--font-body); font-size: 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--gray-50); }
+.hor-sidebar-search input:focus { outline: none; border-color: var(--black); background: var(--white); }
+.hor-sidebar-list  { display: flex; flex-direction: column; max-height: 360px; overflow-y: auto; }
+.hor-sidebar-item  { display: flex; align-items: center; gap: 8px; padding: .65rem .85rem; border: none; border-bottom: 1px solid var(--gray-100); background: none; cursor: pointer; font-family: var(--font-body); font-size: 12px; color: var(--black); text-align: left; width: 100%; transition: background .12s; }
+.hor-sidebar-item:hover { background: var(--gray-50); }
+.hor-sidebar-item.active { background: var(--gray-50); font-weight: 700; box-shadow: inset 3px 0 0 var(--black); }
+.hor-sidebar-pin   { font-size: 12px; flex-shrink: 0; }
+.hor-sidebar-nombre{ flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hor-sidebar-dot   { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.hor-sidebar-dot.ok   { background: #16a34a; }
+.hor-sidebar-dot.pend { background: var(--gray-200); }
+.hor-sidebar-empty { padding: 1rem .85rem; font-size: 12px; color: var(--gray-400); text-align: center; }
+.hor-leyenda       { display: flex; flex-wrap: wrap; gap: .6rem 1rem; padding: 1rem 1.25rem; border-top: 1px solid var(--gray-100); }
+.hor-leyenda-item  { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--gray-600); }
+.hor-leyenda-item b { font-weight: 600; color: var(--black); }
+.hor-leyenda-item small { color: var(--gray-400); }
+.hor-leyenda-dot   { width: 11px; height: 11px; border-radius: 4px; flex-shrink: 0; }
+
+.hor-panel        { flex: 1; min-width: 0; background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
+.hor-panel-head    { display: flex; align-items: center; gap: 10px; padding: 1rem 1.25rem; border-bottom: 1px solid var(--gray-100); flex-wrap: wrap; }
+.hor-panel-titulo  { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 18px; letter-spacing: 1px; color: var(--black); }
+.hor-panel-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.btn-editar-hor    { padding: 4px 12px; font-size: 11px; font-weight: 600; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); cursor: pointer; color: var(--black); transition: all .15s; }
+.btn-editar-hor:hover { background: var(--black); color: var(--white); }
+
+.hor-emp-cell      { display: flex; align-items: center; gap: 8px; }
+.hor-avatar        { width: 30px; height: 30px; border-radius: 50%; background: var(--black); color: var(--white); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+.hor-avatar img    { width: 100%; height: 100%; object-fit: cover; }
+
+.hor-cell          { display: inline-block; padding: 4px 9px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; white-space: nowrap; line-height: 1.5; }
+.hor-cell-manana   { background: #dcfce7; color: #16a34a; }
+.hor-cell-tarde    { background: #dbeafe; color: #2563eb; }
+.hor-cell-noche    { background: #fef3c7; color: #b45309; }
+.hor-cell-cierre   { background: #ede9fe; color: #7c3aed; }
+.hor-cell-libre    { background: var(--gray-100); color: var(--gray-400); font-weight: 500; }
+
+@media (max-width: 900px) {
+  .hor-layout      { flex-direction: column; }
+  .hor-sidebar     { width: 100%; position: static; }
+  .hor-sidebar-list{ max-height: 220px; }
+}
 
 /* Panel carga encargado */
 .carga-panel     { background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
@@ -588,7 +623,7 @@ tbody tr:hover { background: var(--gray-50); }
 .obs-cell { max-width: 160px; }
 
 .cajas-title, .horarios-title { font-size: 20px; }
-.caja-card, .hor-suc-block, .carga-panel {
+.caja-card, .hor-panel, .carga-panel {
   border-radius: var(--radius-lg);
   border-color: var(--gray-100);
   box-shadow: var(--shadow-sm);
@@ -881,8 +916,16 @@ tbody tr:hover { background: var(--gray-50); }
         </div>
       </div>
       <div class="semana-info-bar" id="semanaInfoBar"></div>
-      <div class="horarios-grid" id="horariosGrid">
-        <div class="loading-state"><div class="spinner"></div><p>Cargando horarios...</p></div>
+      <div class="hor-layout">
+        <aside class="hor-sidebar">
+          <div class="hor-sidebar-search">
+            <input type="text" id="horSidebarBuscar" placeholder="Buscar local..." oninput="filtrarSidebarLocales()" />
+          </div>
+          <div class="hor-sidebar-list" id="horSidebarList"></div>
+        </aside>
+        <div id="horariosGrid">
+          <div class="loading-state"><div class="spinner"></div><p>Cargando horarios...</p></div>
+        </div>
       </div>
     </div>
 
@@ -1061,6 +1104,9 @@ var todosLosPedidos = [];
 var vistaActual = 'hoy';
 var entradasData = {}; // { sucursal: [ {id, nombre, precio, fecha, obs} ] }
 var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04N6VzJktRa3xvvI_7t0Zq3l6LcMY-rW2pgcKjuj9Xwp/exec';
+// API de Croma Horarios — se usa solo para traer fotos de perfil de los empleados
+var HORARIOS_API_URL = 'https://script.google.com/macros/s/AKfycbzEwxqe32k8lzi0_8sj1zAjj7Fd9mT5viE79jRxQsFWWl_MSnEGYspH8tDBOPWicTEF/exec';
+var perfilesFotosCache = null; // [{nombre, foto_url}] — se carga una sola vez
 
 // ── USUARIOS: admin + un usuario por local ──
 // Formato: { usuario: { pass, rol, sucursal } }
@@ -1346,9 +1392,53 @@ function setVista(v) {
 
 // ── HORARIOS SEMANAL ──
 var horariosData = {}; // { sucursal: [ {empleado, lun, mar...} ] }
+var horarioSucActiva = null;   // sucursal seleccionada en el sidebar
+var horarioBusquedaSidebar = '';
 
 function actualizarSemanaLabel() {
   document.getElementById('semanaLabel').textContent = getSemanaStr(semanaOffset);
+}
+
+// Trae las fotos de perfil desde Croma Horarios (una sola vez, se cachea)
+async function obtenerPerfilesFotos() {
+  if (perfilesFotosCache !== null) return perfilesFotosCache;
+  try {
+    var resp = await fetch(HORARIOS_API_URL + '?accion=perfiles');
+    var json = await resp.json();
+    perfilesFotosCache = (json.ok && json.empleados) ? json.empleados : [];
+  } catch(e) {
+    perfilesFotosCache = [];
+  }
+  return perfilesFotosCache;
+}
+
+// Empareja "34 MATI TERUEL" (panel) contra el nombre completo cargado en Croma Horarios
+function buscarFotoEmpleado(nombreEmpleado) {
+  if (!perfilesFotosCache || !perfilesFotosCache.length) return '';
+  var palabras = String(nombreEmpleado).replace(/^\d+\s+/, '').toUpperCase().split(' ').filter(function(w){ return w.length > 1; });
+  if (!palabras.length) return '';
+  var perfil = perfilesFotosCache.find(function(p) {
+    var pn = String(p.nombre || '').toUpperCase();
+    return palabras.every(function(w){ return pn.indexOf(w) >= 0; });
+  });
+  return (perfil && perfil.foto_url) || '';
+}
+
+// Clasifica un turno (ej "09:00-13:30" o "17:00-21:00 | 21:30-23:00") según la hora
+// de inicio, siguiendo la leyenda: Mañana 09-13 · Tarde 13-17 · Noche 17-21 · Cierre 21-00
+function clasificarTurnoColor(val) {
+  if (!val || val === 'LIBRE') return 'libre';
+  var primerBloque = val.split('|')[0].trim();
+  var horaInicio = parseInt(primerBloque.split('-')[0].split(':')[0], 10);
+  if (isNaN(horaInicio)) return 'libre';
+  if (horaInicio < 13) return 'manana';
+  if (horaInicio < 17) return 'tarde';
+  if (horaInicio < 21) return 'noche';
+  return 'cierre';
+}
+
+function iniciales(nombre) {
+  return String(nombre).replace(/^\d+\s+/, '').split(' ').filter(Boolean).slice(0,2).map(function(p){ return p[0]; }).join('').toUpperCase();
 }
 
 async function cargarHorarios() {
@@ -1369,29 +1459,17 @@ async function cargarHorarios() {
 
   try {
     var url = API_URL + '?accion=obtenerHorarios&semana=' + encodeURIComponent(semanaId);
-    var resp = await fetch(url);
-    var data = await resp.json();
-    if (data.ok) {
-      horariosData = data.horarios || {};
-      renderHorarios(semanaId, dias);
-    } else {
-      // Si no hay datos todavía, renderizar igual con vacíos
-      horariosData = {};
-      renderHorarios(semanaId, dias);
-    }
+    var resultados = await Promise.all([fetch(url), obtenerPerfilesFotos()]);
+    var data = await resultados[0].json();
+    horariosData = data.ok ? (data.horarios || {}) : {};
   } catch(e) {
     horariosData = {};
-    renderHorarios(semanaId, dias);
   }
+  renderHorarios(semanaId, dias);
 }
 
 function renderHorarios(semanaId, dias) {
-  var grid = document.getElementById('horariosGrid');
-  var html = '';
-
-  // Título
-  var tituloEl = document.getElementById('horariosTitleTxt');
-  tituloEl.textContent = 'Horario semanal';
+  document.getElementById('horariosTitleTxt').textContent = 'Horario semanal';
 
   // Encargado ve todas las sucursales — la suya primero
   var sucursalesVer = SUCURSALES.slice();
@@ -1399,82 +1477,129 @@ function renderHorarios(semanaId, dias) {
     sucursalesVer = sucursalesVer.filter(function(s){ return s !== sesionSucursal; });
     sucursalesVer.unshift(sesionSucursal);
   }
+  _horSucursalesVer = sucursalesVer;
+  _horDiasActuales  = dias;
 
-  sucursalesVer.forEach(function(suc) {
-    var empleados = horariosData[suc] || [];
-    var cargado   = empleados.length > 0;
-    var sucKey    = suc.split(' ')[0]; // '01', '05', etc.
-    var varColor  = '--suc-' + sucKey;
+  if (!horarioSucActiva || sucursalesVer.indexOf(horarioSucActiva) < 0) {
+    horarioSucActiva = sucursalesVer[0] || null;
+  }
 
-    html += '<div class="hor-suc-block" id="suc_' + suc.replace(/\s+/g,'_') + '">';
-    html += '<div class="hor-suc-head">';
-    html += '<div class="hor-suc-stripe" style="background:var(' + varColor + ')"></div>';
-    html += '<span class="hor-suc-nombre">' + suc + '</span>';
-    html += '<span class="hor-suc-sub">';
-    if (cargado) {
-      html += '<span class="hor-ok-tag">✓ Horario cargado</span>';
-    } else {
-      html += '<span class="hor-pendiente-tag">⏳ Pendiente</span>';
-    }
-    html += '</span>';
-
-    // Botón cargar solo para admin o encargado de esa sucursal
-    if (sesionRol === 'admin' || sesionRol === 'horarios' || sesionRol === 'operador' || (sesionRol === 'encargado' && sesionSucursal === suc)) {
-      html += '<button onclick="abrirModalCarga(\'' + suc + '\')" style="margin-left:12px;padding:4px 12px;font-size:11px;font-weight:600;border:1px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--white);cursor:pointer;color:var(--black);transition:all .15s" onmouseover="this.style.background=\'var(--black)\';this.style.color=\'var(--white)\'" onmouseout="this.style.background=\'var(--white)\';this.style.color=\'var(--black)\'">' + (cargado ? '✎ Editar' : '+ Cargar') + '</button>';
-    }
-
-    // Botón compartir — visible para todos si hay horario cargado
-    if (cargado) {
-      var sucIdSafe = suc.replace(/\s+/g,'_');
-      html += '<button class="btn-compartir" onclick="compartirHorario(\'' + sucIdSafe + '\')" title="Copiar imagen">';
-      html += '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor;flex-shrink:0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
-      html += ' Compartir imagen</button>';
-      html += '<button class="btn-compartir" onclick="compartirEmail(\'' + sucIdSafe + '\')" title="Compartir por mail" style="border-color:#3b82f6;color:#3b82f6">';
-      html += '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;flex-shrink:0"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>';
-      html += ' Mail</button>';
-    }
-
-    html += '</div>';
-
-    if (cargado) {
-      // Tabla de horarios
-      html += '<div class="hor-table-wrap"><table class="hor-table">';
-      html += '<thead><tr><th>Empleado</th>';
-      dias.forEach(function(d, i) {
-        var esWeekend = (i === 5 || i === 6);
-        html += '<th style="' + (esWeekend ? 'color:var(--accent)' : '') + '">' + DIAS_LABEL[i] + '<br><span style="font-size:9px;font-weight:400">' + d.getDate() + '</span></th>';
-      });
-      html += '</tr></thead><tbody>';
-
-      empleados.forEach(function(emp) {
-        html += '<tr><td>' + emp.empleado + '</td>';
-        DIAS_KEY.forEach(function(dk) {
-          var val = emp[dk] || '';
-          html += '<td>' + formatHorarioCell(val) + '</td>';
-        });
-        html += '</tr>';
-      });
-
-      html += '</tbody></table></div>';
-    } else {
-      html += '<div class="caja-sin-cierre-msg" style="padding:1.5rem">Sin horario cargado para esta semana</div>';
-    }
-    html += '</div>';
-  });
-
-  grid.innerHTML = html || '<div class="empty-state">Sin sucursales</div>';
+  renderSidebarLocales();
+  renderContenidoLocal();
 }
 
-function formatHorarioCell(val) {
-  if (!val || val.trim() === '' || val === 'LIBRE') {
-    return '<span class="hor-turno libre">Libre</span>';
+var _horSucursalesVer = [];
+var _horDiasActuales  = [];
+
+function filtrarSidebarLocales() {
+  horarioBusquedaSidebar = document.getElementById('horSidebarBuscar').value;
+  renderSidebarLocales();
+}
+
+function seleccionarLocalHorario(suc) {
+  horarioSucActiva = suc;
+  renderSidebarLocales();
+  renderContenidoLocal();
+}
+
+function renderSidebarLocales() {
+  var lista = document.getElementById('horSidebarList');
+  if (!lista) return;
+  var filtro = horarioBusquedaSidebar.trim().toLowerCase();
+  var visibles = _horSucursalesVer.filter(function(s){ return s.toLowerCase().indexOf(filtro) >= 0; });
+
+  var html = '';
+  visibles.forEach(function(suc) {
+    var empleados = horariosData[suc] || [];
+    var cargado   = empleados.length > 0;
+    var sucKey    = suc.split(' ')[0];
+    var activo    = suc === horarioSucActiva;
+    html += '<button type="button" class="hor-sidebar-item' + (activo ? ' active' : '') + '" onclick="seleccionarLocalHorario(\'' + suc.replace(/'/g, "\\'") + '\')">';
+    html += '<span class="hor-sidebar-pin" style="color:var(--suc-' + sucKey + ')">📍</span>';
+    html += '<span class="hor-sidebar-nombre">' + suc + '</span>';
+    html += '<span class="hor-sidebar-dot ' + (cargado ? 'ok' : 'pend') + '" title="' + (cargado ? 'Horario cargado' : 'Pendiente') + '"></span>';
+    html += '</button>';
+  });
+  lista.innerHTML = html || '<div class="hor-sidebar-empty">Sin coincidencias</div>';
+}
+
+function leyendaItemHorario(clase, label, rango) {
+  return '<div class="hor-leyenda-item"><span class="hor-leyenda-dot hor-cell-' + clase + '"></span><b>' + label + '</b><small>' + rango + '</small></div>';
+}
+
+function renderContenidoLocal() {
+  var grid = document.getElementById('horariosGrid');
+  var suc  = horarioSucActiva;
+  var dias = _horDiasActuales;
+  if (!suc) { grid.innerHTML = '<div class="empty-state">Sin locales</div>'; return; }
+
+  var empleados = horariosData[suc] || [];
+  var cargado   = empleados.length > 0;
+  var sucKey    = suc.split(' ')[0];
+  var sucIdSafe = suc.replace(/\s+/g, '_');
+
+  var html = '<div class="hor-panel" id="suc_' + sucIdSafe + '">';
+  html += '<div class="hor-panel-head">';
+  html += '<div class="hor-panel-titulo"><span style="color:var(--suc-' + sucKey + ')">📍</span><span>' + suc + '</span></div>';
+  html += cargado ? '<span class="hor-ok-tag">✓ Horario cargado</span>' : '<span class="hor-pendiente-tag">⏳ Pendiente</span>';
+  html += '<div class="hor-panel-actions">';
+
+  if (sesionRol === 'admin' || sesionRol === 'horarios' || sesionRol === 'operador' || (sesionRol === 'encargado' && sesionSucursal === suc)) {
+    html += '<button class="btn-editar-hor" onclick="abrirModalCarga(\'' + suc + '\')">' + (cargado ? '✎ Editar' : '+ Cargar') + '</button>';
   }
-  // Si tiene dos bloques separados por " | " es partido
-  if (val.indexOf('|') >= 0) {
-    var partes = val.split('|').map(function(s){ return s.trim(); });
-    return '<span class="hor-turno cortado" title="Turno cortado">' + partes.join('<br>') + '</span>';
+
+  if (cargado) {
+    html += '<button class="btn-compartir" onclick="compartirHorario(\'' + sucIdSafe + '\')" title="Copiar imagen">';
+    html += '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor;flex-shrink:0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
+    html += ' Compartir imagen</button>';
+    html += '<button class="btn-compartir" onclick="compartirEmail(\'' + sucIdSafe + '\')" title="Compartir por mail" style="border-color:#3b82f6;color:#3b82f6">';
+    html += '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;flex-shrink:0"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>';
+    html += ' Mail</button>';
   }
-  return '<span class="hor-turno corrido">' + val.trim() + '</span>';
+
+  html += '</div></div>';
+
+  html += '<div class="hor-leyenda">';
+  html += leyendaItemHorario('manana', 'Mañana', '09:00 - 13:00');
+  html += leyendaItemHorario('tarde',  'Tarde',  '13:00 - 17:00');
+  html += leyendaItemHorario('noche',  'Noche',  '17:00 - 21:00');
+  html += leyendaItemHorario('cierre', 'Cierre', '21:00 - 00:00');
+  html += leyendaItemHorario('libre',  'Libre',  'Sin turno');
+  html += '</div>';
+
+  if (cargado) {
+    html += '<div class="hor-table-wrap"><table class="hor-table">';
+    html += '<thead><tr><th>Empleado</th>';
+    dias.forEach(function(d, i) {
+      var esWeekend = (i === 5 || i === 6);
+      html += '<th style="' + (esWeekend ? 'color:var(--accent)' : '') + '">' + DIAS_LABEL[i] + '<br><span style="font-size:9px;font-weight:400">' + d.getDate() + '</span></th>';
+    });
+    html += '</tr></thead><tbody>';
+
+    empleados.forEach(function(emp) {
+      var foto  = buscarFotoEmpleado(emp.empleado);
+      var inic  = iniciales(emp.empleado);
+      var nombreLimpio = emp.empleado.replace(/^\d+\s+/, '');
+      html += '<tr><td><div class="hor-emp-cell">';
+      html += '<div class="hor-avatar">' + (foto ? '<img src="' + foto + '" alt="" onerror="this.parentElement.textContent=\'' + inic + '\'">' : inic) + '</div>';
+      html += '<span>' + nombreLimpio + '</span>';
+      html += '</div></td>';
+      DIAS_KEY.forEach(function(dk) {
+        var val   = emp[dk] || '';
+        var clase = clasificarTurnoColor(val);
+        var texto = (!val || val === 'LIBRE') ? 'Libre' : val.replace('|', '<br>');
+        html += '<td><span class="hor-cell hor-cell-' + clase + '">' + texto + '</span></td>';
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+  } else {
+    html += '<div class="caja-sin-cierre-msg" style="padding:1.5rem">Sin horario cargado para esta semana</div>';
+  }
+  html += '</div>';
+
+  grid.innerHTML = html;
 }
 
 // ── MODAL CARGA ENCARGADO ──
