@@ -388,8 +388,9 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-avatar img    { width: 100%; height: 100%; object-fit: cover; }
 
 .hor-cell          { display: inline-block; padding: 4px 9px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; white-space: nowrap; line-height: 1.5; }
-.hor-cell-corrido  { background: #dbeafe; color: #2563eb; }
-.hor-cell-cortado  { background: #fef3c7; color: #b45309; }
+.hor-cell-corrido    { background: #dbeafe; color: #2563eb; }
+.hor-cell-medioturno { background: #dcfce7; color: #16a34a; }
+.hor-cell-cortado    { background: #fef3c7; color: #b45309; }
 .hor-cell-libre    { background: var(--gray-100); color: var(--gray-400); font-weight: 500; }
 
 @media (max-width: 900px) {
@@ -1426,7 +1427,14 @@ function buscarFotoEmpleado(nombreEmpleado) {
 // separados por " | ", ej "09:00-13:00 | 17:00-21:00") o Libre.
 function clasificarTurnoColor(val) {
   if (!val || val === 'LIBRE') return 'libre';
-  return val.indexOf('|') >= 0 ? 'cortado' : 'corrido';
+  if (val.indexOf('|') >= 0) return 'cortado';
+  var partes = val.split('-');
+  var ini = partes[0].split(':').map(Number);
+  var fin = (partes[1] || '').split(':').map(Number);
+  if (isNaN(ini[0]) || isNaN(fin[0])) return 'corrido';
+  var horas = (fin[0] * 60 + (fin[1] || 0) - (ini[0] * 60 + (ini[1] || 0))) / 60;
+  if (horas <= 0) horas += 24; // turno que cruza la medianoche
+  return horas < 8 ? 'medioturno' : 'corrido';
 }
 
 function iniciales(nombre) {
@@ -1552,9 +1560,10 @@ function renderContenidoLocal() {
   html += '</div></div>';
 
   html += '<div class="hor-leyenda">';
-  html += leyendaItemHorario('corrido', 'Corrido', 'Un solo bloque');
-  html += leyendaItemHorario('cortado', 'Cortado', 'Dos bloques');
-  html += leyendaItemHorario('libre',   'Libre',   'Sin turno');
+  html += leyendaItemHorario('corrido',    'Corrido',     '8 hs o más');
+  html += leyendaItemHorario('medioturno', 'Medio Turno', 'Menos de 8 hs');
+  html += leyendaItemHorario('cortado',    'Cortado',     'Dos bloques');
+  html += leyendaItemHorario('libre',      'Libre',       'Sin turno');
   html += '</div>';
 
   if (cargado) {
