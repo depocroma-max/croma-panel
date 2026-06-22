@@ -3042,14 +3042,23 @@ function renderEntradasSucursal() {
   grid.innerHTML = html;
 }
 
+function fmtFechaCortaEnt(fecha) {
+  if (!fecha) return '';
+  var parts = fecha.split('-');
+  if (parts.length !== 3) return '';
+  var meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return parseInt(parts[2], 10) + ' ' + meses[parseInt(parts[1], 10) - 1];
+}
+
 function renderEntradasEvento() {
   // Agrupa todas las entradas por nombre de evento
   var mapa = {};
   SUCURSALES_ENT.forEach(function(suc) {
     getEntFiltradas(suc).forEach(function(e) {
       var key = (e.nombre || '').trim().toLowerCase();
-      if (!mapa[key]) mapa[key] = { nombre: e.nombre, sucursales: [], precio: e.precio };
+      if (!mapa[key]) mapa[key] = { nombre: e.nombre, sucursales: [], precio: e.precio, fecha: e.fecha };
       mapa[key].sucursales.push(suc);
+      if (!mapa[key].fecha && e.fecha) mapa[key].fecha = e.fecha;
     });
   });
 
@@ -3063,9 +3072,10 @@ function renderEntradasEvento() {
   }
   var html = '';
   eventos.forEach(function(ev) {
-    var sucStr = ev.sucursales.map(function(s){ return s.replace(/^\d+\s+/,''); }).join(', ');
+    var sucStr   = ev.sucursales.map(function(s){ return s.replace(/^\d+\s+/,''); }).join(', ');
+    var fechaStr = fmtFechaCortaEnt(ev.fecha);
     html += '<div class="ent-evt-card">';
-    html += '<div><div class="ent-evt-card-nombre">' + ev.nombre + '</div>';
+    html += '<div><div class="ent-evt-card-nombre">' + ev.nombre + (fechaStr ? ' <span style="font-weight:400;color:var(--gray-400);font-size:12px">· ' + fechaStr + '</span>' : '') + '</div>';
     html += '<div class="ent-evt-card-suc">' + sucStr + '</div></div>';
     html += '<span class="ent-evt-card-badge">' + ev.sucursales.length + ' sucursal' + (ev.sucursales.length !== 1 ? 'es' : '') + '</span>';
     html += '</div>';
@@ -3078,8 +3088,9 @@ function renderEntradasSidebar() {
   SUCURSALES_ENT.forEach(function(suc) {
     (entradasData[suc] || []).forEach(function(e) {
       var key = (e.nombre || '').trim().toLowerCase();
-      if (!mapa[key]) mapa[key] = { nombre: e.nombre, sucursales: [] };
+      if (!mapa[key]) mapa[key] = { nombre: e.nombre, sucursales: [], fecha: e.fecha };
       mapa[key].sucursales.push(suc.replace(/^\d+\s+/,''));
+      if (!mapa[key].fecha && e.fecha) mapa[key].fecha = e.fecha;
     });
   });
 
@@ -3093,9 +3104,10 @@ function renderEntradasSidebar() {
   }
   var html = '';
   eventos.forEach(function(ev) {
+    var fechaStr = fmtFechaCortaEnt(ev.fecha);
     html += '<div class="ent-sb-item">';
     html += '<div class="ent-sb-nombre">' + ev.nombre + '<span class="ent-sb-badge">' + ev.sucursales.length + '</span></div>';
-    html += '<div class="ent-sb-suc">' + ev.sucursales.join(', ') + '</div>';
+    html += '<div class="ent-sb-suc">' + (fechaStr ? fechaStr + ' · ' : '') + ev.sucursales.join(', ') + '</div>';
     html += '</div>';
   });
   el.innerHTML = html;
