@@ -3014,7 +3014,7 @@ function renderEntradasSucursal() {
           html += '<span class="ent-item-precio">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
         }
         if (puedeEditar) {
-          html += '<button class="ent-toggle-agotado ' + (isAgotado ? 'desmarcar' : 'marcar') + '" onclick="event.stopPropagation();toggleAgotado(' + eData + ', \'' + suc + '\')" title="' + (isAgotado ? 'Marcar como disponible' : 'Marcar como agotado') + '">' + (isAgotado ? '✓ Disponible' : '✗ Agotado') + '</button>';
+          html += '<button class="ent-toggle-agotado ' + (isAgotado ? 'desmarcar' : 'marcar') + '" onclick="event.stopPropagation();toggleAgotado(' + eData + ', \'' + suc + '\')" title="' + (isAgotado ? 'Marcar como disponible' : 'Marcar como agotado') + '">' + (isAgotado ? '✓ Marcar disponible' : '⊘ Marcar agotado') + '</button>';
         }
         html += '</div>';
         if (fechaStr || e.obs || isAgotado) {
