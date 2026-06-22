@@ -863,7 +863,7 @@ tbody tr:hover { background: var(--gray-50); }
     </div>
 
     <!-- PEDIDOS: sidebar de locales + contenido -->
-    <div class="ped-layout">
+    <div class="ped-layout" id="pedLayout">
       <aside class="ped-sidebar">
         <div class="ped-sidebar-search">
           <input type="text" id="pedSidebarBuscar" placeholder="Buscar local..." oninput="filtrarSidebarLocalesPedidos()" />
@@ -1454,8 +1454,10 @@ function setVista(v) {
   document.getElementById('entradasBody').style.display      = esEntradas ? '' : 'none';
   var controlsEl = document.getElementById('controlsBar');
   var statsEl    = document.getElementById('statsRow');
-  if (controlsEl) controlsEl.style.display = esPedidos ? '' : 'none';
-  if (statsEl)    statsEl.style.display    = esPedidos ? '' : 'none';
+  var pedLayoutEl = document.getElementById('pedLayout');
+  if (controlsEl)  controlsEl.style.display  = esPedidos ? '' : 'none';
+  if (statsEl)     statsEl.style.display     = esPedidos ? '' : 'none';
+  if (pedLayoutEl) pedLayoutEl.style.display = esPedidos ? '' : 'none';
 
   // FAB solo visible en entradas
   var fab = document.getElementById('entFab');
