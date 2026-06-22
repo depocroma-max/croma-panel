@@ -153,6 +153,64 @@ td { padding: 10px 14px; vertical-align: middle; }
 .section-toggle { font-size: 11px; color: var(--gray-400); background: none; border: none; cursor: pointer; }
 .sol-collapsed { display: none; }
 
+/* ── FILTROS MEJORADOS ── */
+.ped-filtros-bar { display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: .85rem 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 2px 10px rgba(0,0,0,.04); }
+.ped-filtro-grupo { display: flex; flex-direction: column; gap: 5px; }
+.ped-filtro-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #94a3b8; }
+.ped-filtro-select { height: 36px; padding: 0 10px; font-family: var(--font-body); font-size: 13px; border: 1px solid #e2e8f0; border-radius: 9px; background: #f8fafc; color: #0d0d0d; cursor: pointer; transition: border .15s; min-width: 150px; }
+.ped-filtro-select:focus { outline: none; border-color: #0d0d0d; box-shadow: 0 0 0 2px rgba(0,0,0,.06); }
+.ped-search-wrap { display: flex; align-items: center; gap: 8px; height: 36px; border: 1px solid #e2e8f0; border-radius: 9px; background: #f8fafc; padding: 0 10px; min-width: 180px; }
+.ped-search-wrap svg { color: #94a3b8; flex-shrink: 0; }
+.ped-search-wrap input { border: none; background: none; font-family: var(--font-body); font-size: 13px; color: #0d0d0d; outline: none; width: 100%; }
+.ped-estado-pills { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ped-estado-pill { height: 30px; padding: 0 12px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1.5px solid transparent; transition: all .15s; white-space: nowrap; }
+.ped-estado-pill.todos     { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+.ped-estado-pill.SinVer    { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+.ped-estado-pill.EnProceso { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.ped-estado-pill.Revisar   { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.ped-estado-pill.active    { box-shadow: 0 0 0 2px currentColor; }
+
+/* ── PEDIDO CARDS ── */
+.ped-cards-grid { display: flex; flex-direction: column; gap: 6px; }
+.ped-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: .75rem 1rem; cursor: pointer; transition: box-shadow .15s, border-color .15s; }
+.ped-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); border-color: #cbd5e1; }
+.ped-card-row1 { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.ped-card-row2 { display: flex; align-items: center; gap: 12px; font-size: 12px; color: #475569; }
+.ped-card-row3 { display: flex; align-items: center; gap: 10px; margin-top: 5px; font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 5px; }
+.ped-card-cod { font-family: monospace; font-size: 13px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.ped-card-cod[data-suc="01 PASEO"]          { color: var(--suc-01); background: var(--suc-01-light); }
+.ped-card-cod[data-suc="05 WAVE"]           { color: var(--suc-05); background: var(--suc-05-light); }
+.ped-card-cod[data-suc="09 CIPO SAN MARTIN"]{ color: var(--suc-09); background: var(--suc-09-light); }
+.ped-card-cod[data-suc="10 PERITO MORENO"]  { color: var(--suc-10); background: var(--suc-10-light); }
+.ped-card-cod[data-suc="12 CENTENARIO"]     { color: var(--suc-12); background: var(--suc-12-light); }
+.ped-card-cod[data-suc="14 ROCA"]           { color: var(--suc-14); background: var(--suc-14-light); }
+.ped-card-detalle { font-size: 13px; color: #0d0d0d; font-weight: 500; }
+.ped-card-obs { font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+.ped-card-estado { margin-left: auto; flex-shrink: 0; }
+
+/* ── PEDIDOS — sidebar de locales ── */
+.ped-layout       { display: flex; gap: 1.25rem; align-items: flex-start; }
+.ped-sidebar      { width: 230px; flex-shrink: 0; background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; position: sticky; top: 1rem; }
+.ped-sidebar-search { padding: .85rem; border-bottom: 1px solid var(--gray-100); }
+.ped-sidebar-search input { width: 100%; height: 32px; padding: 0 10px; font-family: var(--font-body); font-size: 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--gray-50); }
+.ped-sidebar-search input:focus { outline: none; border-color: var(--black); background: var(--white); }
+.ped-sidebar-list  { display: flex; flex-direction: column; max-height: 420px; overflow-y: auto; }
+.ped-sidebar-item  { display: flex; align-items: center; gap: 8px; padding: .65rem .85rem; border: none; border-bottom: 1px solid var(--gray-100); background: none; cursor: pointer; font-family: var(--font-body); font-size: 12px; color: var(--black); text-align: left; width: 100%; transition: background .12s; }
+.ped-sidebar-item:hover { background: var(--gray-50); }
+.ped-sidebar-item.active { background: var(--gray-50); font-weight: 700; box-shadow: inset 3px 0 0 var(--black); }
+.ped-sidebar-pin   { font-size: 12px; flex-shrink: 0; }
+.ped-sidebar-nombre{ flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ped-sidebar-count { font-size: 10px; font-weight: 700; color: var(--gray-400); flex-shrink: 0; }
+.ped-sidebar-alerta{ width: 7px; height: 7px; border-radius: 50%; background: #dc2626; flex-shrink: 0; }
+.ped-sidebar-empty { padding: 1rem .85rem; font-size: 12px; color: var(--gray-400); text-align: center; }
+.ped-content       { flex: 1; min-width: 0; }
+
+@media (max-width: 900px) {
+  .ped-layout      { flex-direction: column; }
+  .ped-sidebar     { width: 100%; position: static; }
+  .ped-sidebar-list{ max-height: 220px; }
+}
+
 /* ── CAJAS ── */
 .cajas-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 1.25rem; }
 .cajas-title { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; color: var(--black); }
@@ -804,30 +862,57 @@ tbody tr:hover { background: var(--gray-50); }
       <div class="stat-card anim-in anim-in-d4"><div class="stat-val sol" id="statEnv">—</div><div class="stat-label">Solucionados</div></div>
     </div>
 
-    <!-- FILTROS -->
-    <div class="controls-bar anim-in anim-in-d2" id="controlsBar">
-      <select class="filter-select" id="filtroDias" onchange="cargarDatos()">
-        <option value="30">Últimos 30 días</option>
-        <option value="14">Últimos 14 días</option>
-        <option value="7">Últimos 7 días</option>
-      </select>
-      <select class="filter-select" id="filtroSuc" onchange="renderPanel()">
-        <option value="">Todas las sucursales</option>
-        <option>01 PASEO</option><option>05 WAVE</option>
-        <option>09 CIPO SAN MARTIN</option><option>10 PERITO MORENO</option>
-        <option>12 CENTENARIO</option><option>14 ROCA</option>
-      </select>
-      <select class="filter-select" id="filtroTipo" onchange="renderPanel()">
-        <option value="">Pedidos y Rotación</option>
-        <option value="PEDIDO">Solo Pedidos</option>
-        <option value="ROTACION">Solo Rotación</option>
-      </select>
-      <input class="filter-input" type="text" id="filtroCod" placeholder="Buscar COD..." oninput="renderPanel()">
-    </div>
+    <!-- PEDIDOS: sidebar de locales + contenido -->
+    <div class="ped-layout">
+      <aside class="ped-sidebar">
+        <div class="ped-sidebar-search">
+          <input type="text" id="pedSidebarBuscar" placeholder="Buscar local..." oninput="filtrarSidebarLocalesPedidos()" />
+        </div>
+        <div class="ped-sidebar-list" id="pedSidebarList"></div>
+      </aside>
 
-    <!-- PANEL PEDIDOS -->
-    <div id="panelPendientes"></div>
-    <div id="panelSolucionados" style="margin-top:1rem"></div>
+      <div class="ped-content">
+        <!-- FILTROS -->
+        <div class="ped-filtros-bar anim-in anim-in-d2" id="controlsBar">
+          <div class="ped-filtro-grupo">
+            <span class="ped-filtro-label">Período</span>
+            <select class="ped-filtro-select" id="filtroDias" onchange="cargarDatos()">
+              <option value="30">Últimos 30 días</option>
+              <option value="14">Últimos 14 días</option>
+              <option value="7">Últimos 7 días</option>
+            </select>
+          </div>
+          <div class="ped-filtro-grupo">
+            <span class="ped-filtro-label">Tipo</span>
+            <select class="ped-filtro-select" id="filtroTipo" onchange="renderPanel()">
+              <option value="">Todos</option>
+              <option value="PEDIDO">Pedido</option>
+              <option value="ROTACION">Rotación</option>
+            </select>
+          </div>
+          <div class="ped-filtro-grupo">
+            <span class="ped-filtro-label">Estado</span>
+            <div class="ped-estado-pills">
+              <button class="ped-estado-pill todos active" onclick="setFiltroEstado('')">Todos</button>
+              <button class="ped-estado-pill SinVer"    onclick="setFiltroEstado('SinVer')">Sin ver</button>
+              <button class="ped-estado-pill EnProceso" onclick="setFiltroEstado('EnProceso')">En proceso</button>
+              <button class="ped-estado-pill Revisar"   onclick="setFiltroEstado('Revisar')">Revisar</button>
+            </div>
+          </div>
+          <div class="ped-filtro-grupo" style="flex:1;min-width:160px">
+            <span class="ped-filtro-label">Buscar</span>
+            <div class="ped-search-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="filtroCod" placeholder="COD, talle, color..." oninput="renderPanel()">
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL PEDIDOS -->
+        <div id="panelPendientes"></div>
+        <div id="panelSolucionados" style="margin-top:1rem"></div>
+      </div>
+    </div>
 
     <!-- CAJAS -->
     <div id="cajasBody" style="display:none">
@@ -2231,16 +2316,78 @@ function actualizarStats() {
 }
 
 // ── FILTRADO ──
+var filtroEstadoActual = '';
+var pedSucActiva       = '';  // '' = Todos los locales
+var pedBusquedaSidebar = '';
+
+function setFiltroEstado(estado) {
+  filtroEstadoActual = estado;
+  document.querySelectorAll('.ped-estado-pill').forEach(function(btn) {
+    btn.classList.remove('active');
+  });
+  var target = estado === '' ? 'todos' : estado;
+  var pill = document.querySelector('.ped-estado-pill.' + target);
+  if (pill) pill.classList.add('active');
+  renderPanel();
+}
+
+// ── SIDEBAR DE LOCALES (PEDIDOS) ──
+function filtrarSidebarLocalesPedidos() {
+  pedBusquedaSidebar = document.getElementById('pedSidebarBuscar').value;
+  renderSidebarLocalesPedidos();
+}
+
+function seleccionarLocalPedidos(suc) {
+  pedSucActiva = suc;
+  renderSidebarLocalesPedidos();
+  renderPanel();
+}
+
+function renderSidebarLocalesPedidos() {
+  var lista = document.getElementById('pedSidebarList');
+  if (!lista) return;
+  var filtro = pedBusquedaSidebar.trim().toLowerCase();
+
+  var opciones = [''].concat(SUCURSALES.filter(function(s){ return s !== 'DEPO'; }));
+  var visibles = opciones.filter(function(s) {
+    var nombre = s === '' ? 'todos los locales' : s.toLowerCase();
+    return nombre.indexOf(filtro) >= 0;
+  });
+
+  var html = '';
+  visibles.forEach(function(suc) {
+    var cantidad = suc === ''
+      ? todosLosPedidos.filter(function(p){ return p.estado !== 'Solucionado'; }).length
+      : todosLosPedidos.filter(function(p){ return p.sucursal === suc && p.estado !== 'Solucionado'; }).length;
+    var sinRes = suc === ''
+      ? todosLosPedidos.filter(function(p){ return p.estado === 'SinVer' || p.estado === 'Revisar'; }).length
+      : todosLosPedidos.filter(function(p){ return p.sucursal === suc && (p.estado === 'SinVer' || p.estado === 'Revisar'); }).length;
+    var activo = suc === pedSucActiva;
+    var color  = suc === '' ? 'var(--black)' : (SUC_COLORS[suc] || 'var(--gray-400)');
+    html += '<button type="button" class="ped-sidebar-item' + (activo ? ' active' : '') + '" onclick="seleccionarLocalPedidos(\'' + suc.replace(/'/g, "\\'") + '\')">';
+    html += '<span class="ped-sidebar-pin" style="color:' + color + '">📍</span>';
+    html += '<span class="ped-sidebar-nombre">' + (suc === '' ? 'Todos los locales' : suc) + '</span>';
+    if (sinRes > 0) html += '<span class="ped-sidebar-alerta" title="' + sinRes + ' sin resolver"></span>';
+    html += '<span class="ped-sidebar-count">' + cantidad + '</span>';
+    html += '</button>';
+  });
+  lista.innerHTML = html || '<div class="ped-sidebar-empty">Sin coincidencias</div>';
+}
+
 function filtrar(soloSolucionados) {
-  var suc  = document.getElementById('filtroSuc').value;
-  var tipo = document.getElementById('filtroTipo').value;
-  var cod  = document.getElementById('filtroCod').value.trim().toUpperCase();
+  var suc    = pedSucActiva;
+  var tipo   = document.getElementById('filtroTipo').value;
+  var q      = document.getElementById('filtroCod').value.trim().toUpperCase();
+  var estado = filtroEstadoActual;
   return todosLosPedidos.filter(function(p) {
-    if (vistaActual === 'pedidos'      && p.tipo !== 'PEDIDO')     return false;
+    if (vistaActual === 'pedidos'      && p.tipo !== 'PEDIDO')   return false;
     if (vistaActual === 'reposiciones' && p.tipo !== 'ROTACION') return false;
-    if (tipo && p.tipo !== tipo)         return false;
-    if (suc  && p.sucursal !== suc)      return false;
-    if (cod  && String(p.cod).toUpperCase().indexOf(cod) < 0) return false;
+    if (tipo   && p.tipo !== tipo)                                return false;
+    if (suc    && p.sucursal !== suc)                             return false;
+    if (estado && p.estado !== estado)                            return false;
+    if (q && String(p.cod).toUpperCase().indexOf(q) < 0 &&
+             String(p.talle || '').toUpperCase().indexOf(q) < 0 &&
+             String(p.color || '').toUpperCase().indexOf(q) < 0) return false;
     var esSol = p.estado === 'Solucionado';
     if ( soloSolucionados && !esSol) return false;
     if (!soloSolucionados &&  esSol) return false;
@@ -2249,24 +2396,32 @@ function filtrar(soloSolucionados) {
 }
 
 // ── RENDER ──
-function buildFila(p) {
+function buildPedCard(p) {
   var idx = todosLosPedidos.indexOf(p);
   var fechaDisplay = p.fecha ? p.fecha.substring(8,10) + '/' + p.fecha.substring(5,7) : '—';
-  var obs = (p.obs || '').replace(/"/g, '&quot;');
-  var html = '<tr onclick="abrirModal(' + idx + ')">';
-  html += '<td class="hora">' + fechaDisplay + '</td>';
-  html += '<td class="hora">' + (p.hora || '—') + '</td>';
-  html += '<td><span class="badge-tipo ' + p.tipo + '">' + p.tipo + '</span></td>';
-  html += '<td><span class="cod" data-suc="' + p.sucursal + '">' + p.cod + '</span></td>';
-  html += '<td>' + (p.talle || '—') + '</td>';
-  html += '<td>' + (p.color || '—') + '</td>';
-  html += '<td style="font-weight:600">' + p.cantidad + '</td>';
-  html += '<td class="obs-cell" title="' + obs + '">' + (p.obs || '<span style="color:#ccc">—</span>') + '</td>';
-  html += '<td class="encargado-cell">' + p.encargado + '</td>';
-  html += '<td><span class="badge-estado ' + p.estado + '" id="b-' + idx + '">' + p.estado + '</span></td>';
-  html += '</tr>';
+  var talleColor = [p.talle, p.color].filter(Boolean).join(' · ') || '—';
+  var estadoLabel = { SinVer: 'Sin ver', EnProceso: 'En proceso', Revisar: 'Revisar', Solucionado: 'Solucionado' }[p.estado] || p.estado;
+
+  var html = '<div class="ped-card" onclick="abrirModal(' + idx + ')">';
+  // Fila 1: COD + tipo + estado
+  html += '<div class="ped-card-row1">';
+  html += '<span class="ped-card-cod" data-suc="' + p.sucursal + '">' + p.cod + '</span>';
+  html += '<span class="badge-tipo ' + p.tipo + '">' + p.tipo + '</span>';
+  if (p.talle || p.color) html += '<span class="ped-card-detalle">' + talleColor + '</span>';
+  if (p.cantidad && p.cantidad !== '1') html += '<span style="font-size:12px;color:#64748b;font-weight:600">×' + p.cantidad + '</span>';
+  html += '<span class="ped-card-estado"><span class="badge-estado ' + p.estado + '" id="b-' + idx + '">' + estadoLabel + '</span></span>';
+  html += '</div>';
+  // Fila 2: meta + obs
+  html += '<div class="ped-card-row3">';
+  html += '<span>👤 ' + (p.encargado || '—') + '</span>';
+  html += '<span>📅 ' + fechaDisplay + (p.hora ? ' ' + p.hora : '') + '</span>';
+  if (p.obs) html += '<span class="ped-card-obs" title="' + p.obs.replace(/"/g,'&quot;') + '">💬 ' + p.obs + '</span>';
+  html += '</div>';
+  html += '</div>';
   return html;
 }
+
+function buildFila(p) { return buildPedCard(p); }
 function buildFila_OLD(p) {
   var idx = todosLosPedidos.indexOf(p);
   var fechaDisplay = p.fecha ? p.fecha.substring(8,10) + '/' + p.fecha.substring(5,7) : '—';
@@ -2426,19 +2581,15 @@ function cerrarModalOverlay(e) {
 }
 
 function buildTablaHTML(lista) {
-  var html = '<div class="table-wrap"><table>';
-  html += '<thead><tr>';
-  html += '<th>Fecha</th><th>Hora</th><th>Tipo</th><th>COD</th>';
-  html += '<th>Talle</th><th>Color</th><th>Cant.</th>';
-  html += '<th>Observación</th><th>Encargado</th><th>Estado</th>';
-  html += '</tr></thead><tbody>';
-  lista.forEach(function(p) { html += buildFila(p); });
-  html += '</tbody></table></div>';
+  var html = '<div class="ped-cards-grid">';
+  lista.forEach(function(p) { html += buildPedCard(p); });
+  html += '</div>';
   return html;
 }
 
 function renderPanel() {
   if (vistaActual === 'cajas') return;
+  renderSidebarLocalesPedidos();
   var pendientes   = filtrar(false);
   var solucionados = filtrar(true);
 
@@ -2465,7 +2616,7 @@ function renderPanel() {
       htmlPend += '<span class="suc-count">' + lista.length + ' artículo' + (lista.length !== 1 ? 's' : '') + '</span>';
       if (sinRes > 0) htmlPend += '<span class="suc-alerta">' + sinRes + ' sin resolver</span>';
       htmlPend += '</div>';
-      htmlPend += '<div class="table-card">' + buildTablaHTML(lista) + '</div>';
+      htmlPend += buildTablaHTML(lista);
       htmlPend += '</div>';
     });
   }
@@ -2495,7 +2646,7 @@ function renderPanel() {
       htmlSol += '<span class="suc-nombre">' + suc + '</span>';
       htmlSol += '<span class="suc-count">' + lista.length + ' solucionado' + (lista.length !== 1 ? 's' : '') + '</span>';
       htmlSol += '</div>';
-      htmlSol += '<div class="table-card">' + buildTablaHTML(lista) + '</div>';
+      htmlSol += buildTablaHTML(lista);
       htmlSol += '</div>';
     });
     htmlSol += '</div>';
