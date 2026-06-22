@@ -388,10 +388,8 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-avatar img    { width: 100%; height: 100%; object-fit: cover; }
 
 .hor-cell          { display: inline-block; padding: 4px 9px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; white-space: nowrap; line-height: 1.5; }
-.hor-cell-manana   { background: #dcfce7; color: #16a34a; }
-.hor-cell-tarde    { background: #dbeafe; color: #2563eb; }
-.hor-cell-noche    { background: #fef3c7; color: #b45309; }
-.hor-cell-cierre   { background: #ede9fe; color: #7c3aed; }
+.hor-cell-corrido  { background: #dbeafe; color: #2563eb; }
+.hor-cell-cortado  { background: #fef3c7; color: #b45309; }
 .hor-cell-libre    { background: var(--gray-100); color: var(--gray-400); font-weight: 500; }
 
 @media (max-width: 900px) {
@@ -1424,17 +1422,11 @@ function buscarFotoEmpleado(nombreEmpleado) {
   return (perfil && perfil.foto_url) || '';
 }
 
-// Clasifica un turno (ej "09:00-13:30" o "17:00-21:00 | 21:30-23:00") según la hora
-// de inicio, siguiendo la leyenda: Mañana 09-13 · Tarde 13-17 · Noche 17-21 · Cierre 21-00
+// Clasifica un turno por tipo: Corrido (un solo bloque), Cortado (dos bloques
+// separados por " | ", ej "09:00-13:00 | 17:00-21:00") o Libre.
 function clasificarTurnoColor(val) {
   if (!val || val === 'LIBRE') return 'libre';
-  var primerBloque = val.split('|')[0].trim();
-  var horaInicio = parseInt(primerBloque.split('-')[0].split(':')[0], 10);
-  if (isNaN(horaInicio)) return 'libre';
-  if (horaInicio < 13) return 'manana';
-  if (horaInicio < 17) return 'tarde';
-  if (horaInicio < 21) return 'noche';
-  return 'cierre';
+  return val.indexOf('|') >= 0 ? 'cortado' : 'corrido';
 }
 
 function iniciales(nombre) {
@@ -1560,11 +1552,9 @@ function renderContenidoLocal() {
   html += '</div></div>';
 
   html += '<div class="hor-leyenda">';
-  html += leyendaItemHorario('manana', 'Mañana', '09:00 - 13:00');
-  html += leyendaItemHorario('tarde',  'Tarde',  '13:00 - 17:00');
-  html += leyendaItemHorario('noche',  'Noche',  '17:00 - 21:00');
-  html += leyendaItemHorario('cierre', 'Cierre', '21:00 - 00:00');
-  html += leyendaItemHorario('libre',  'Libre',  'Sin turno');
+  html += leyendaItemHorario('corrido', 'Corrido', 'Un solo bloque');
+  html += leyendaItemHorario('cortado', 'Cortado', 'Dos bloques');
+  html += leyendaItemHorario('libre',   'Libre',   'Sin turno');
   html += '</div>';
 
   if (cargado) {
