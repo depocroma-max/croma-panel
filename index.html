@@ -589,6 +589,12 @@ body { background: var(--gray-50); }
 .top-actions .btn-icon:hover { background: rgba(255,255,255,.11); transform: translateY(-1px); }
 .connection-status { height: 38px; padding: 5px 14px; border-radius: 999px; border-color: rgba(255,255,255,.12); background: rgba(255,255,255,.06); }
 
+/* Chip de sesión (igual a Horarios) */
+.sesion-chip { display: flex; align-items: center; gap: 8px; padding: 5px 10px 5px 12px; background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.18); border-radius: 20px; }
+.sesion-nombre { font-size: 12px; font-weight: 600; color: #e8e8e2; white-space: nowrap; letter-spacing: 0.2px; }
+.sesion-logout { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #888; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.sesion-logout:hover { background: #dc2626; border-color: #dc2626; color: white; }
+
 .app { padding: 1.5rem 2rem; }
 
 .dashboard-hero {
@@ -705,6 +711,8 @@ tbody tr:hover { background: var(--gray-50); }
   .brand-tridente { height: 22px; }
   .top-actions { gap: 5px; }
   .connection-status { display: none; }
+  .sesion-chip { padding: 3px 6px 3px 10px; }
+  .sesion-nombre { font-size: 10px; max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
   .dashboard-hero { align-items: flex-start; flex-direction: column; padding: 1.2rem; }
   .hero-pill { width: 100%; justify-content: center; }
   .stats-row { grid-template-columns: 1fr 1fr; }
@@ -841,15 +849,22 @@ tbody tr:hover { background: var(--gray-50); }
       <button class="nav-btn" id="navHorarios">Horario semanal</button>
       <button class="nav-btn" id="navEntradas">Entradas</button>
     </nav>
+    <div class="sesion-chip" id="sesionChip">
+      <span class="sesion-nombre" id="sesionNombre">👤 Admin</span>
+      <button class="sesion-logout" onclick="cerrarSesion()" title="Cerrar sesión">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
     <div class="top-actions">
       <span class="status-label" id="ultimaActualizacion"></span>
       <button class="btn-icon" id="btnActualizar" title="Actualizar">↻</button>
+      <button class="btn-icon" id="btnSelector" title="Volver al selector" onclick="window.location.href='https://depocroma-max.github.io/Croma-app/'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </button>
       <div class="connection-status connected">
         <div class="status-dot"></div>
         <span class="status-label" id="fechaHoy"></span>
       </div>
-      <button class="btn-icon" id="btnSelector" title="Volver al selector" onclick="window.location.href='https://depocroma-max.github.io/Croma-app/'">⌂</button>
-      <button class="btn-icon" id="btnLogout" title="Cerrar sesión" style="border-color:#444;color:#aaa" onclick="cerrarSesion()">⏻</button>
     </div>
   </header>
 
@@ -1326,6 +1341,13 @@ function iniciarSesion(rol, suc) {
   sessionStorage.setItem('croma_auth', '1');
   sessionStorage.setItem('croma_rol',  sesionRol);
   sessionStorage.setItem('croma_suc',  sesionSucursal || '');
+  var chip = document.getElementById('sesionNombre');
+  if (chip) {
+    var user = sessionStorage.getItem('croma_user') || localStorage.getItem('croma_user') || '';
+    chip.textContent = (rol === 'admin' || !user)
+      ? '👤 Admin'
+      : '👤 ' + user.charAt(0).toUpperCase() + user.slice(1);
+  }
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('dashApp').style.display = '';
   initNav();
