@@ -510,7 +510,9 @@ td { padding: 10px 14px; vertical-align: middle; }
 .emp-selector-wrap input:focus { outline: none; border-color: var(--black); }
 .btn-agregar-emp { height: 36px; padding: 0 16px; background: var(--black); color: var(--white); border: none; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
 .btn-agregar-emp:hover { opacity: .8; }
-.emp-externo-toggle { font-size: 12px; color: var(--gray-400); cursor: pointer; text-decoration: underline; white-space: nowrap; }
+.emp-externo-toggle { display: inline-flex; align-items: center; gap: 4px; height: 36px; padding: 0 14px; font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--black); background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s, color .15s; }
+.emp-externo-toggle:hover { background: var(--black); border-color: var(--black); color: var(--white); }
+.emp-externo-toggle.active { background: var(--black); border-color: var(--black); color: var(--white); }
 .carga-emp-header { display: flex; align-items: center; justify-content: space-between; padding: .6rem 1rem; background: var(--gray-50); border-bottom: 1px solid var(--gray-100); }
 .carga-emp-nombre { font-weight: 600; font-size: 13px; color: var(--black); }
 .carga-emp-num { font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent); background: #fee2e2; padding: 1px 6px; border-radius: 20px; margin-right: 6px; }
@@ -1936,6 +1938,8 @@ function toggleExternoInput() {
   if (!el) return;
   var visible = el.style.display === 'flex';
   el.style.display = visible ? 'none' : 'flex';
+  var toggleBtn = document.querySelector('.emp-externo-toggle');
+  if (toggleBtn) toggleBtn.classList.toggle('active', !visible);
   if (!visible) {
     // Escuchar cambio en el select para mostrar input manual
     var sel = document.getElementById('externoSelect');
