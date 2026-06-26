@@ -463,22 +463,24 @@ td { padding: 10px 14px; vertical-align: middle; }
 .carga-panel-suc { font-family: var(--font-display); font-size: 18px; letter-spacing: 2px; color: var(--white); }
 .carga-panel-sub { font-size: 12px; color: var(--gray-400); margin-left: auto; }
 .carga-body      { padding: 1.25rem; }
-.carga-empleado  { border: 1px solid var(--gray-100); border-radius: var(--radius-md); margin-bottom: 1rem; overflow: hidden; }
-.carga-emp-header{ display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; background: var(--gray-50); border-bottom: 1px solid var(--gray-100); }
-.carga-emp-nombre{ font-weight: 600; font-size: 13px; color: var(--black); }
-.carga-dias-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 1rem; }
-.carga-dia       { display: flex; flex-direction: column; gap: 4px; }
-.carga-dia-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gray-600); text-align: center; margin-bottom: 2px; }
+.carga-empleado  { border: 1px solid #e8e8e4; border-radius: 14px; margin-bottom: 1rem; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+.carga-emp-header{ display: flex; align-items: center; justify-content: space-between; padding: .75rem 1.1rem; background: #fafaf8; border-bottom: 1px solid #efefec; }
+.carga-emp-nombre{ font-weight: 700; font-size: 14px; color: var(--black); letter-spacing: .1px; }
+.carga-dias-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; padding: 1.1rem 1rem; }
+.carga-dia       { display: flex; flex-direction: column; gap: 5px; }
+.carga-dia-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gray-600); text-align: center; margin-bottom: 3px; }
+.carga-dia-label small { display: block; font-size: 12px; font-weight: 600; color: var(--black); margin-top: 1px; }
 .carga-dia-label.weekend { color: var(--accent); }
-.tipo-turno-sel  { width: 100%; padding: 4px 6px; font-family: var(--font-body); font-size: 11px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); color: var(--black); cursor: pointer; }
+.carga-dia-label.weekend small { color: var(--accent); }
+.tipo-turno-sel  { width: 100%; padding: 5px 6px; font-family: var(--font-body); font-size: 11px; border: 1px solid var(--gray-200); border-radius: 8px; background: var(--white); color: var(--black); cursor: pointer; }
 .tipo-turno-sel:focus { outline: none; border-color: var(--black); }
-.hora-input      { width: 100%; height: 28px; padding: 0 6px; font-family: var(--font-body); font-size: 11px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); color: var(--black); text-align: center; }
-.hora-input:focus{ outline: none; border-color: var(--black); }
+.hora-input      { width: 100%; height: 30px; padding: 0 6px; font-family: var(--font-body); font-size: 11px; border: 1px solid var(--gray-200); border-radius: 8px; background: var(--white); color: var(--black); text-align: center; }
+.hora-input:focus{ outline: none; border-color: var(--black); box-shadow: 0 0 0 2px rgba(13,13,13,.06); }
 .hora-separador  { text-align: center; font-size: 10px; color: var(--gray-400); }
 .carga-actions   { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 1rem 1.25rem; border-top: 1px solid var(--gray-100); background: var(--gray-50); }
-.btn-guardar-hor { padding: 8px 20px; background: var(--black); color: var(--white); border: none; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
-.btn-guardar-hor:hover { opacity: .8; }
-.btn-guardar-hor:disabled { opacity: .45; cursor: not-allowed; }
+.btn-guardar-hor { display:inline-flex; align-items:center; gap:6px; padding: 10px 22px; background: var(--accent); color: var(--white); border: none; border-radius: 10px; font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s, box-shadow .15s; box-shadow: 0 3px 10px rgba(232,37,26,.28); }
+.btn-guardar-hor:hover { background: #d01f15; }
+.btn-guardar-hor:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
 .hor-pendiente-tag { font-size: 11px; color: #d97706; background: #fef3c7; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
 .hor-ok-tag        { font-size: 11px; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
 
@@ -503,23 +505,25 @@ td { padding: 10px 14px; vertical-align: middle; }
 .chip-turno.corrido { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
 
 /* ── SELECTOR EMPLEADOS ── */
-.emp-selector-wrap { padding: 1rem 1.25rem; border-bottom: 1px solid var(--gray-100); background: var(--gray-50); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.emp-selector-wrap select { flex: 1; min-width: 200px; height: 36px; padding: 0 10px; font-family: var(--font-body); font-size: 13px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); color: var(--black); cursor: pointer; }
-.emp-selector-wrap select:focus { outline: none; border-color: var(--black); }
-.emp-selector-wrap input { flex: 1; min-width: 160px; height: 36px; padding: 0 10px; font-family: var(--font-body); font-size: 13px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); color: var(--black); }
-.emp-selector-wrap input:focus { outline: none; border-color: var(--black); }
-.btn-agregar-emp { height: 36px; padding: 0 16px; background: var(--black); color: var(--white); border: none; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
-.btn-agregar-emp:hover { opacity: .8; }
-.emp-externo-toggle { display: inline-flex; align-items: center; gap: 4px; height: 36px; padding: 0 14px; font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--black); background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s, color .15s; }
-.emp-externo-toggle:hover { background: var(--black); border-color: var(--black); color: var(--white); }
+.emp-selector-wrap { padding: 1rem 1.25rem; border-bottom: 1px solid var(--gray-100); background: var(--white); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.emp-selector-inner { position: relative; flex: 1; min-width: 200px; display: flex; align-items: center; }
+.emp-selector-icon { position: absolute; left: 11px; color: var(--accent); pointer-events: none; font-size: 15px; }
+.emp-selector-wrap select { width: 100%; height: 40px; padding: 0 10px 0 34px; font-family: var(--font-body); font-size: 13px; border: 1.5px solid #e2e8f0; border-radius: 10px; background: #fafaf8; color: var(--black); cursor: pointer; appearance: auto; }
+.emp-selector-wrap select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(232,37,26,.08); }
+.emp-selector-wrap input { flex: 1; min-width: 160px; height: 40px; padding: 0 10px; font-family: var(--font-body); font-size: 13px; border: 1.5px solid #e2e8f0; border-radius: 10px; background: #fafaf8; color: var(--black); }
+.emp-selector-wrap input:focus { outline: none; border-color: var(--accent); }
+.btn-agregar-emp { height: 40px; padding: 0 18px; background: var(--accent); color: var(--white); border: none; border-radius: 10px; font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s, box-shadow .15s; box-shadow: 0 2px 8px rgba(232,37,26,.25); }
+.btn-agregar-emp:hover { background: #d01f15; }
+.emp-externo-toggle { display: inline-flex; align-items: center; gap: 4px; height: 40px; padding: 0 16px; font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--black); background: var(--white); border: 1.5px solid #e2e8f0; border-radius: 10px; cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s, color .15s; }
+.emp-externo-toggle:hover { background: var(--gray-50); border-color: #cbd5e1; }
 .emp-externo-toggle.active { background: var(--black); border-color: var(--black); color: var(--white); }
-.carga-emp-header { display: flex; align-items: center; justify-content: space-between; padding: .6rem 1rem; background: var(--gray-50); border-bottom: 1px solid var(--gray-100); }
-.carga-emp-nombre { font-weight: 600; font-size: 13px; color: var(--black); }
-.carga-emp-num { font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent); background: #fee2e2; padding: 1px 6px; border-radius: 20px; margin-right: 6px; }
+.carga-emp-header { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1.1rem; background: #fafaf8; border-bottom: 1px solid #efefec; }
+.carga-emp-nombre { font-weight: 700; font-size: 14px; color: var(--black); }
+.carga-emp-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-size: 11px; font-weight: 700; color: var(--white); background: var(--accent); margin-right: 8px; flex-shrink: 0; }
 .carga-emp-externo { font-size: 10px; font-weight: 700; color: #92400e; background: #fef3c7; padding: 1px 6px; border-radius: 20px; margin-left: 6px; }
-.btn-quitar-emp { background: none; border: none; color: var(--gray-400); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px; border-radius: var(--radius-sm); transition: all .15s; }
+.btn-quitar-emp { background: none; border: none; color: var(--gray-400); cursor: pointer; font-size: 18px; line-height: 1; padding: 4px 6px; border-radius: 6px; transition: all .15s; }
 .btn-quitar-emp:hover { color: var(--accent); background: #fee2e2; }
-.emp-lista-vacia { text-align: center; padding: 2rem; color: var(--gray-400); font-size: 13px; }
+.emp-lista-vacia { text-align: center; padding: 2.5rem; color: var(--gray-400); font-size: 13px; }
 
 
 /* ─────────────────────────────────────────────
@@ -1106,10 +1110,13 @@ tbody tr:hover { background: var(--gray-50); }
 
 <div class="modal-overlay" id="modalHorarioOverlay" onclick="cerrarModalHorarioOverlay(event)">
   <div class="modal-box" style="max-width:980px;width:97vw">
-    <div class="modal-header">
-      <div class="modal-header-left">
-        <span class="modal-cod" id="mhSucursal" style="font-size:16px"></span>
-        <span style="font-size:11px;color:var(--gray-400);margin-left:8px" id="mhSemanaInfo"></span>
+    <div class="modal-header" style="padding:1.1rem 1.5rem;border-bottom:1px solid #efefec;">
+      <div class="modal-header-left" style="display:flex;align-items:center;gap:12px;">
+        <div style="width:36px;height:36px;background:#fee2e2;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🗓</div>
+        <div>
+          <div style="font-weight:700;font-size:16px;color:var(--black);letter-spacing:.2px" id="mhSucursal"></div>
+          <div style="font-size:11px;color:var(--gray-400);margin-top:1px" id="mhSemanaInfo"></div>
+        </div>
       </div>
       <button class="modal-close" onclick="cerrarModalHorario()">✕</button>
     </div>
@@ -1120,7 +1127,7 @@ tbody tr:hover { background: var(--gray-50); }
     </div>
     <div class="modal-actions" style="background:var(--gray-50)">
       <span id="mhStatus" style="font-size:12px;color:var(--gray-400)"></span>
-      <button class="btn-guardar-hor" id="btnGuardarHorario" onclick="guardarHorario()">Guardar horario</button>
+      <button class="btn-guardar-hor" id="btnGuardarHorario" onclick="guardarHorario()">🗓 Guardar horario</button>
       <button class="modal-btn cancelar" onclick="cerrarModalHorario()">Cancelar</button>
     </div>
   </div>
@@ -1770,14 +1777,14 @@ function buildSelectorHTML() {
   var html = '<div class="emp-selector-wrap" id="empSelectorWrap">';
 
   // Select normal (empleados del local)
-  html += '<select id="empSelect">';
+  html += '<div class="emp-selector-inner"><span class="emp-selector-icon">👤</span><select id="empSelect">';
   html += '<option value="">— Elegir empleado del local —</option>';
   disponibles.forEach(function(emp) {
     // emp viene como "34 MATI TERUEL" — mostrar como "#34 MATI TERUEL"
     var display = emp.replace(/^(\d+)\s+/, '#$1 ');
     html += '<option value="' + emp + '">' + display + '</option>';
   });
-  html += '</select>';
+  html += '</select></div>';
 
   html += '<button class="btn-agregar-emp" onclick="agregarEmpleado()">+ Agregar</button>';
   html += '<span class="emp-externo-toggle" onclick="toggleExternoInput()">+ Externo</span>';
@@ -1814,7 +1821,7 @@ function buildFilaEmpleado(emp, dias) {
 
   // Separar número y nombre para el badge
   var match   = emp.id.match(/^(\d+)\s+(.+)$/);
-  var numBadge = match ? '<span class="carga-emp-num">#' + match[1] + '</span>' : '';
+  var numBadge = match ? '<span class="carga-emp-num">' + match[1] + '</span>' : '';
   var nomShow  = match ? match[2] : emp.id;
 
   var html = '<div class="carga-empleado" id="emp_' + idKey + '">';
