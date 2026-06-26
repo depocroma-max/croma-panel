@@ -1378,6 +1378,13 @@ function cerrarSesion() {
 
 // ── INIT ──
 (function(){
+  // Si viene con ?token= en la URL, guardarlo en sessionStorage
+  var _urlToken = new URLSearchParams(location.search).get('token');
+  if (_urlToken) {
+    sessionStorage.setItem('croma_token', _urlToken);
+    history.replaceState(null, '', location.pathname);
+  }
+
   var hoy = new Date();
   var dias  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   var meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
