@@ -858,7 +858,7 @@ tbody tr:hover { background: var(--gray-50); }
     <div class="top-actions">
       <span class="status-label" id="ultimaActualizacion"></span>
       <button class="btn-icon" id="btnActualizar" title="Actualizar">↻</button>
-      <button class="btn-icon" id="btnSelector" title="Volver al selector" onclick="window.location.href='https://depocroma-max.github.io/Croma-app/'">
+      <button class="btn-icon" id="btnSelector" title="Volver al selector" onclick="window.location.href='https://croma-app.com.ar/'">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       </button>
       <div class="connection-status connected">
@@ -1366,14 +1366,14 @@ function iniciarSesion(rol, suc) {
 
 function hacerLogin() {
   // El login es centralizado en Croma-app — redirigir
-  location.href = 'https://depocroma-max.github.io/Croma-app/';
+  location.href = 'https://croma-app.com.ar/';
 }
 
 function cerrarSesion() {
   clearTokenPanel();
   sessionStorage.removeItem('croma_horarios_session');
   localStorage.removeItem('croma_horarios_session');
-  location.href = 'https://depocroma-max.github.io/Croma-app/';
+  location.href = 'https://croma-app.com.ar/';
 }
 
 // ── INIT ──
@@ -1399,7 +1399,7 @@ function cerrarSesion() {
     setTimeout(function(){ hideSplash(); iniciarSesion(rol, suc); }, 900);
   } else {
     // Sin token válido → redirigir al login central
-    setTimeout(function(){ location.href = 'https://depocroma-max.github.io/Croma-app/'; }, 900);
+    setTimeout(function(){ location.href = 'https://croma-app.com.ar/'; }, 900);
     return;
   }
 
