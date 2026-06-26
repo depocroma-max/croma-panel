@@ -1210,20 +1210,23 @@ var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04
 var HORARIOS_API_URL = 'https://script.google.com/macros/s/AKfycbzEwxqe32k8lzi0_8sj1zAjj7Fd9mT5viE79jRxQsFWWl_MSnEGYspH8tDBOPWicTEF/exec';
 var perfilesFotosCache = null; // [{nombre, foto_url}] — se carga una sola vez
 
-// ── USUARIOS: admin + un usuario por local ──
-// Formato: { usuario: { pass, rol, sucursal } }
-// rol: 'admin' ve todo | 'encargado' solo carga su local
-var CREDENCIALES = {
-  'admin':    { pass: 'cromacajas',  rol: 'admin',      sucursal: null },
-  'paseo':    { pass: 'paseo2024',   rol: 'encargado',  sucursal: '01 PASEO' },
-  'wave':     { pass: 'wave2024',    rol: 'encargado',  sucursal: '05 WAVE' },
-  'cipolletti':{ pass: 'cipo2024',   rol: 'encargado',  sucursal: '09 CIPO SAN MARTIN' },
-  'perito':   { pass: 'perito2024',  rol: 'encargado',  sucursal: '10 PERITO MORENO' },
-  'centenario':{ pass: 'cente2024',  rol: 'encargado',  sucursal: '12 CENTENARIO' },
-  'roca':     { pass: 'roca2024',    rol: 'encargado',  sucursal: '14 ROCA' },
-  'agus':     { pass: 'agus2024',    rol: 'operador',   sucursal: null },
-  'depo':     { pass: 'depo2024',    rol: 'encargado',  sucursal: 'DEPO' }
-};
+// Auth via JWT — validado por el backend
+function getTokenPanel() {
+  return sessionStorage.getItem('croma_token') || localStorage.getItem('croma_token');
+}
+function getUserPanel() {
+  var t = getTokenPanel();
+  if (!t) return null;
+  try {
+    var payload = JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    if (payload.exp * 1000 < Date.now()) { clearTokenPanel(); return null; }
+    return payload;
+  } catch(e) { clearTokenPanel(); return null; }
+}
+function clearTokenPanel() {
+  sessionStorage.removeItem('croma_token');
+  localStorage.removeItem('croma_token');
+}
 
 var sesionRol      = null;
 var sesionSucursal = null;
@@ -1343,10 +1346,11 @@ function iniciarSesion(rol, suc) {
   sessionStorage.setItem('croma_suc',  sesionSucursal || '');
   var chip = document.getElementById('sesionNombre');
   if (chip) {
-    var user = sessionStorage.getItem('croma_user') || localStorage.getItem('croma_user') || '';
-    chip.textContent = (rol === 'admin' || !user)
+    var jwtU = getUserPanel();
+    var userName = (jwtU && jwtU.usuario) ? jwtU.usuario : '';
+    chip.textContent = (rol === 'admin' || !userName)
       ? '👤 Admin'
-      : '👤 ' + user.charAt(0).toUpperCase() + user.slice(1);
+      : '👤 ' + userName.charAt(0).toUpperCase() + userName.slice(1);
   }
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('dashApp').style.display = '';
@@ -1361,37 +1365,14 @@ function iniciarSesion(rol, suc) {
 }
 
 function hacerLogin() {
-  var user = document.getElementById('loginUser').value.trim().toLowerCase();
-  var pass = document.getElementById('loginPass').value;
-  var recordar = document.getElementById('loginRecordar').checked;
-  var err  = document.getElementById('loginError');
-  var cred = CREDENCIALES[user];
-  if (cred && cred.pass === pass) {
-    if (recordar) {
-      localStorage.setItem('croma_remember', '1');
-      localStorage.setItem('croma_auth', '1');
-      localStorage.setItem('croma_rol',  cred.rol);
-      localStorage.setItem('croma_suc',  cred.sucursal || '');
-      localStorage.setItem('croma_user', user);
-    } else {
-      localStorage.removeItem('croma_remember');
-      localStorage.removeItem('croma_auth');
-      localStorage.removeItem('croma_rol');
-      localStorage.removeItem('croma_suc');
-      localStorage.removeItem('croma_user');
-    }
-    err.textContent = '';
-    iniciarSesion(cred.rol, cred.sucursal);
-  } else {
-    err.textContent = 'Usuario o contraseña incorrectos';
-    document.getElementById('loginPass').value = '';
-    document.getElementById('loginPass').focus();
-  }
+  // El login es centralizado en Croma-app — redirigir
+  location.href = 'https://depocroma-max.github.io/Croma-app/';
 }
 
 function cerrarSesion() {
-  sessionStorage.clear();
-  ['croma_auth','croma_rol','croma_suc','croma_remember'].forEach(function(k){ localStorage.removeItem(k); });
+  clearTokenPanel();
+  sessionStorage.removeItem('croma_horarios_session');
+  localStorage.removeItem('croma_horarios_session');
   location.href = 'https://depocroma-max.github.io/Croma-app/';
 }
 
@@ -1410,18 +1391,14 @@ function cerrarSesion() {
     setTimeout(function(){ splash.style.display = 'none'; }, 650);
   }
 
-  // Verificar token de Croma App
-  var authSession = sessionStorage.getItem('croma_auth') === '1';
-  var authLocal   = localStorage.getItem('croma_auth') === '1' && localStorage.getItem('croma_remember') === '1';
-
-  if (authSession || authLocal) {
-    var store = authSession ? sessionStorage : localStorage;
-    var rol = store.getItem('croma_rol') || 'admin';
-    var suc = store.getItem('croma_suc') || null;
-    if (suc === '') suc = null;
+  // Verificar JWT de Croma App
+  var jwtUser = getUserPanel();
+  if (jwtUser) {
+    var rol = jwtUser.rol || 'encargado';
+    var suc = jwtUser.sucursal || null;
     setTimeout(function(){ hideSplash(); iniciarSesion(rol, suc); }, 900);
   } else {
-    // Sin token → redirigir al login central
+    // Sin token válido → redirigir al login central
     setTimeout(function(){ location.href = 'https://depocroma-max.github.io/Croma-app/'; }, 900);
     return;
   }
