@@ -1385,8 +1385,9 @@ function cerrarSesion() {
 
 // ── INIT ──
 (function(){
-  // Si viene con ?token= en la URL, guardarlo en sessionStorage
-  var _urlToken = new URLSearchParams(location.search).get('token');
+  // Lee el token desde el hash (#token=...) para que no quede en logs del servidor
+  var _hashParams = new URLSearchParams(location.hash.slice(1));
+  var _urlToken   = _hashParams.get('token') || new URLSearchParams(location.search).get('token');
   if (_urlToken) {
     sessionStorage.setItem('croma_token', _urlToken);
     history.replaceState(null, '', location.pathname);
