@@ -12,6 +12,8 @@
 <meta name="apple-mobile-web-app-title" content="Croma Panel">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -401,6 +403,38 @@ td { padding: 10px 14px; vertical-align: middle; }
 .semana-label    { font-size: 13px; font-weight: 600; color: var(--black); min-width: 160px; text-align: center; }
 .btn-semana      { width: 30px; height: 30px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; color: var(--gray-600); transition: all .15s; }
 .btn-semana:hover { background: var(--black); color: var(--white); border-color: var(--black); }
+
+/* ── MAPA DE REPARTO ── */
+.mapa-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 1rem; }
+.mapa-title  { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; color: var(--black); }
+.mapa-estado { display: flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 20px; background: var(--gray-100); border: 1px solid var(--gray-200); font-size: 12px; font-weight: 600; color: var(--gray-600); }
+.mapa-estado-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-400); }
+.mapa-estado.activa   { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+.mapa-estado.activa   .mapa-estado-dot { background: #10b981; box-shadow: 0 0 6px #10b98188; animation: mapaPulse 1.6s infinite; }
+.mapa-estado.inactiva { background: var(--gray-100); border-color: var(--gray-200); color: var(--gray-600); }
+@keyframes mapaPulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+.mapa-layout { display: flex; gap: 1.25rem; align-items: stretch; }
+.mapa-canvas { flex: 1; min-height: 540px; height: 66vh; border-radius: var(--radius-md); border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); z-index: 1; background: var(--gray-100); }
+.mapa-side { width: 300px; flex-shrink: 0; background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 1rem 1.1rem; display: flex; flex-direction: column; }
+.mapa-side-label { font-size: 11px; font-weight: 500; letter-spacing: .5px; text-transform: uppercase; color: var(--gray-400); margin-bottom: 4px; }
+.mapa-ruta-nombre { font-family: var(--font-display); font-size: 22px; letter-spacing: 1px; color: var(--black); margin-bottom: 14px; }
+.mapa-paradas { list-style: none; display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; }
+.mapa-parada { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: var(--radius-sm); position: relative; }
+.mapa-parada-num { width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; border: 1.5px solid var(--gray-200); color: var(--gray-400); background: var(--white); }
+.mapa-parada-txt { font-size: 13px; color: var(--gray-800); }
+.mapa-parada-hecha    .mapa-parada-num { background: #10b981; border-color: #10b981; color: var(--white); }
+.mapa-parada-hecha    .mapa-parada-txt { color: var(--gray-400); text-decoration: line-through; }
+.mapa-parada-actual { background: #fff1f0; }
+.mapa-parada-actual   .mapa-parada-num { background: var(--accent); border-color: var(--accent); color: var(--white); box-shadow: 0 0 0 4px rgba(232,37,26,.15); }
+.mapa-parada-actual   .mapa-parada-txt { color: var(--black); font-weight: 600; }
+.mapa-parada-vacio { font-size: 13px; color: var(--gray-400); padding: 8px 6px; }
+.mapa-gps-info { margin-top: auto; padding-top: 12px; font-size: 11px; color: var(--gray-400); }
+.mapa-camion-pin { font-size: 26px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,.4)); text-align: center; }
+@media (max-width: 900px) {
+  .mapa-layout { flex-direction: column; }
+  .mapa-side { width: 100%; }
+  .mapa-canvas { height: 50vh; min-height: 360px; }
+}
 
 /* Tabla horarios admin */
 .hor-table-wrap  { overflow-x: auto; }
@@ -852,6 +886,7 @@ tbody tr:hover { background: var(--gray-50); }
       <button class="nav-btn" id="navCajas">Cajas de locales</button>
       <button class="nav-btn" id="navHorarios">Horario semanal</button>
       <button class="nav-btn" id="navEntradas">Entradas</button>
+      <button class="nav-btn" id="navMapa">Mapa de reparto</button>
     </nav>
     <div class="sesion-chip" id="sesionChip">
       <span class="sesion-nombre" id="sesionNombre">👤 Admin</span>
@@ -1035,6 +1070,29 @@ tbody tr:hover { background: var(--gray-50); }
       </div>
     </div>
 
+    <!-- MAPA DE REPARTO -->
+    <div id="mapaBody" style="display:none">
+      <div class="mapa-header">
+        <span class="mapa-title">Mapa de reparto</span>
+        <div class="mapa-estado inactiva" id="mapaEstado">
+          <span class="mapa-estado-dot"></span>
+          <span id="mapaEstadoTxt">Conectando…</span>
+        </div>
+      </div>
+      <div class="mapa-layout">
+        <div id="mapaLeaflet" class="mapa-canvas"></div>
+        <aside class="mapa-side">
+          <div class="mapa-side-label">Ruta</div>
+          <div class="mapa-ruta-nombre" id="mapaRutaNombre">—</div>
+          <div class="mapa-side-label">Paradas</div>
+          <ol class="mapa-paradas" id="mapaParadas">
+            <li class="mapa-parada-vacio">Cargando…</li>
+          </ol>
+          <div class="mapa-gps-info" id="mapaGpsInfo"></div>
+        </aside>
+      </div>
+    </div>
+
   </div>
 </div>
 <!-- MODAL PEDIDO -->
@@ -1204,6 +1262,7 @@ tbody tr:hover { background: var(--gray-50); }
     <button class="drawer-nav-btn" id="drawerNavCajas">Cajas de locales</button>
     <button class="drawer-nav-btn" id="drawerNavHorarios">Horario semanal</button>
     <button class="drawer-nav-btn" id="drawerNavEntradas">Entradas</button>
+    <button class="drawer-nav-btn" id="drawerNavMapa">Mapa de reparto</button>
   </nav>
 </div>
 
@@ -1302,8 +1361,8 @@ function initNav() {
   if (btnAct) btnAct.addEventListener('click', function(){ if(vistaActual==='horarios') cargarHorarios(); else cargarDatos(); });
 
   var navMap = {
-    navPedidos:'hoy', navCajas:'cajas', navHorarios:'horarios', navEntradas:'entradas',
-    drawerNavPedidos:'hoy', drawerNavCajas:'cajas', drawerNavHorarios:'horarios', drawerNavEntradas:'entradas'
+    navPedidos:'hoy', navCajas:'cajas', navHorarios:'horarios', navEntradas:'entradas', navMapa:'mapa',
+    drawerNavPedidos:'hoy', drawerNavCajas:'cajas', drawerNavHorarios:'horarios', drawerNavEntradas:'entradas', drawerNavMapa:'mapa'
   };
   Object.keys(navMap).forEach(function(id) {
     var el = document.getElementById(id);
@@ -1437,7 +1496,7 @@ function cerrarSesion() {
 // ── VISTAS ──
 function setVista(v) {
   vistaActual = v;
-  ['navPedidos','navCajas','navHorarios','navEntradas'].forEach(function(id) {
+  ['navPedidos','navCajas','navHorarios','navEntradas','navMapa'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     var target = id.replace('nav','').toLowerCase();
@@ -1445,10 +1504,11 @@ function setVista(v) {
       (target === 'pedidos'  && (v === 'hoy' || v === 'pedidos' || v === 'reposiciones')) ||
       (target === 'cajas'    && v === 'cajas') ||
       (target === 'horarios' && v === 'horarios') ||
-      (target === 'entradas' && v === 'entradas')
+      (target === 'entradas' && v === 'entradas') ||
+      (target === 'mapa'     && v === 'mapa')
     );
   });
-  ['drawerNavPedidos','drawerNavCajas','drawerNavHorarios','drawerNavEntradas'].forEach(function(id) {
+  ['drawerNavPedidos','drawerNavCajas','drawerNavHorarios','drawerNavEntradas','drawerNavMapa'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     var target = id.replace('drawerNav','').toLowerCase();
@@ -1456,19 +1516,23 @@ function setVista(v) {
       (target === 'pedidos'  && (v === 'hoy' || v === 'pedidos' || v === 'reposiciones')) ||
       (target === 'cajas'    && v === 'cajas') ||
       (target === 'horarios' && v === 'horarios') ||
-      (target === 'entradas' && v === 'entradas')
+      (target === 'entradas' && v === 'entradas') ||
+      (target === 'mapa'     && v === 'mapa')
     );
   });
 
   var esHorarios = v === 'horarios';
   var esCajas    = v === 'cajas';
   var esEntradas = v === 'entradas';
-  var esPedidos  = !esHorarios && !esCajas && !esEntradas;
+  var esMapa     = v === 'mapa';
+  var esPedidos  = !esHorarios && !esCajas && !esEntradas && !esMapa;
   document.getElementById('panelPendientes').style.display   = esPedidos ? '' : 'none';
   document.getElementById('panelSolucionados').style.display = esPedidos ? '' : 'none';
   document.getElementById('cajasBody').style.display         = esCajas    ? '' : 'none';
   document.getElementById('horariosBody').style.display      = esHorarios ? '' : 'none';
   document.getElementById('entradasBody').style.display      = esEntradas ? '' : 'none';
+  document.getElementById('mapaBody').style.display          = esMapa     ? '' : 'none';
+  if (!esMapa) detenerMapaReparto();
   var controlsEl = document.getElementById('controlsBar');
   var statsEl    = document.getElementById('statsRow');
   var pedLayoutEl = document.getElementById('pedLayout');
@@ -1487,9 +1551,166 @@ function setVista(v) {
     irHoyCajas();
   } else if (esEntradas) {
     cargarEntradas();
+  } else if (esMapa) {
+    iniciarMapaReparto();
   } else {
     renderPanel();
   }
+}
+
+
+// ── MAPA DE REPARTO (tracking del camión vía Firestore) ──
+var FIRESTORE_BASE = 'https://firestore.googleapis.com/v1/projects/reparto-croma/databases/(default)/documents';
+var FIRESTORE_KEY  = 'AIzaSyA3_HplHsotmcwcAu3NZTO78aazCHq0VF8';
+// Coordenadas fijas de las sucursales (para dibujar los locales en el mapa)
+var MAPA_SUCURSALES = [
+  { nombre: 'Perito',          lat: -38.958313, lon: -68.057062 },
+  { nombre: 'Paseo',           lat: -38.958063, lon: -68.056187 },
+  { nombre: 'Wave',            lat: -38.957313, lon: -68.059687 },
+  { nombre: 'Cipo San Martín', lat: -38.940438, lon: -67.996437 },
+  { nombre: 'Roca 180',        lat: -38.938313, lon: -67.999313 },
+  { nombre: 'Centenario',      lat: -38.833313, lon: -68.120812 },
+  { nombre: 'Depósito',        lat: -38.958313, lon: -68.057062 }
+];
+var mapaLeaflet = null;
+var mapaCamionMarker = null;
+var mapaPollTimer = null;
+var mapaSeguirCamion = true;   // recentra el mapa sobre el camión en cada lectura
+
+function mapaEscape(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+
+// Lee un campo numérico de Firestore, venga como doubleValue o integerValue
+function mapaNum(field) {
+  if (!field) return null;
+  if (field.doubleValue  != null) return Number(field.doubleValue);
+  if (field.integerValue != null) return Number(field.integerValue);
+  return null;
+}
+
+async function mapaFetchDoc(path) {
+  try {
+    var res = await fetch(FIRESTORE_BASE + '/' + path + '?key=' + FIRESTORE_KEY);
+    if (!res.ok) return null;
+    var json = await res.json();
+    return json.fields || null;
+  } catch (e) { return null; }
+}
+
+async function obtenerUbicacionCamion() {
+  var f = await mapaFetchDoc('ubicacion/actual');
+  if (!f) return null;
+  var lat = mapaNum(f.lat), lon = mapaNum(f.lon);
+  if (lat == null || lon == null) return null;
+  return { lat: lat, lon: lon, precision: mapaNum(f.precision) };
+}
+
+async function obtenerRutaEstado() {
+  var f = await mapaFetchDoc('estado/ruta');
+  if (!f || !f.activa || !f.activa.booleanValue) return { activa: false };
+  var vals = (f.paradas && f.paradas.arrayValue && f.paradas.arrayValue.values) || [];
+  return {
+    activa: true,
+    ruta: f.ruta ? f.ruta.stringValue : '',
+    paradaActual: f.paradaActual ? Number(f.paradaActual.integerValue || 0) : 0,
+    paradas: vals.map(function (v) { return v.stringValue; })
+  };
+}
+
+function initMapaLeaflet() {
+  if (mapaLeaflet || typeof L === 'undefined') return;
+  mapaLeaflet = L.map('mapaLeaflet', { zoomControl: true }).setView([-38.9403, -67.9964], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(mapaLeaflet);
+  // Marcadores fijos de las sucursales
+  MAPA_SUCURSALES.forEach(function (s) {
+    L.circleMarker([s.lat, s.lon], {
+      radius: 6, color: '#0d0d0d', weight: 2, fillColor: '#ffffff', fillOpacity: 1
+    }).addTo(mapaLeaflet).bindTooltip(s.nombre, { direction: 'top', offset: [0, -6] });
+  });
+}
+
+function mapaIconoCamion() {
+  return L.divIcon({
+    className: 'mapa-camion-icon',
+    html: '<div class="mapa-camion-pin">🚚</div>',
+    iconSize: [36, 36], iconAnchor: [18, 18]
+  });
+}
+
+function renderMapaParadas(ruta) {
+  var cont = document.getElementById('mapaParadas');
+  var nom  = document.getElementById('mapaRutaNombre');
+  if (!cont || !nom) return;
+  if (!ruta.activa || !ruta.paradas.length) {
+    nom.textContent = '—';
+    cont.innerHTML = '<li class="mapa-parada-vacio">No hay una ruta activa en este momento.</li>';
+    return;
+  }
+  nom.textContent = ruta.ruta || 'Ruta';
+  cont.innerHTML = ruta.paradas.map(function (p, i) {
+    var estado = i < ruta.paradaActual ? 'hecha' : (i === ruta.paradaActual ? 'actual' : 'pendiente');
+    var num = estado === 'hecha' ? '✓' : (i + 1);
+    return '<li class="mapa-parada mapa-parada-' + estado + '">' +
+             '<span class="mapa-parada-num">' + num + '</span>' +
+             '<span class="mapa-parada-txt">' + mapaEscape(p) + '</span>' +
+           '</li>';
+  }).join('');
+}
+
+async function mapaTick() {
+  var ubi  = await obtenerUbicacionCamion();
+  var ruta = await obtenerRutaEstado();
+  if (!document.getElementById('mapaBody') || document.getElementById('mapaBody').style.display === 'none') return;
+
+  // Estado (chip)
+  var estadoWrap = document.getElementById('mapaEstado');
+  var estadoTxt  = document.getElementById('mapaEstadoTxt');
+  if (estadoWrap && estadoTxt) {
+    if (ruta.activa) {
+      estadoWrap.classList.add('activa'); estadoWrap.classList.remove('inactiva');
+      estadoTxt.textContent = 'Reparto en curso';
+    } else {
+      estadoWrap.classList.remove('activa'); estadoWrap.classList.add('inactiva');
+      estadoTxt.textContent = 'Sin reparto activo';
+    }
+  }
+
+  // Camión
+  var gpsInfo = document.getElementById('mapaGpsInfo');
+  if (ubi && mapaLeaflet) {
+    var ll = [ubi.lat, ubi.lon];
+    if (!mapaCamionMarker) {
+      mapaCamionMarker = L.marker(ll, { icon: mapaIconoCamion(), zIndexOffset: 1000 }).addTo(mapaLeaflet);
+      mapaLeaflet.setView(ll, 14);
+    } else {
+      mapaCamionMarker.setLatLng(ll);
+    }
+    if (mapaSeguirCamion) mapaLeaflet.panTo(ll, { animate: true });
+    if (gpsInfo) gpsInfo.textContent = ubi.precision != null ? ('📍 GPS ±' + Math.round(ubi.precision) + ' m') : '📍 Camión en línea';
+  } else if (gpsInfo) {
+    gpsInfo.textContent = 'Sin señal GPS del camión todavía.';
+  }
+
+  renderMapaParadas(ruta);
+}
+
+function iniciarMapaReparto() {
+  initMapaLeaflet();
+  // El contenedor estaba oculto: Leaflet necesita recalcular su tamaño
+  if (mapaLeaflet) setTimeout(function () { mapaLeaflet.invalidateSize(); }, 120);
+  mapaTick();
+  if (mapaPollTimer) clearInterval(mapaPollTimer);
+  mapaPollTimer = setInterval(mapaTick, 4000);   // refresco cada 4 s
+}
+
+function detenerMapaReparto() {
+  if (mapaPollTimer) { clearInterval(mapaPollTimer); mapaPollTimer = null; }
 }
 
 
