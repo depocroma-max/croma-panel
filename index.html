@@ -1462,7 +1462,7 @@ function cerrarSesion() {
   var splash = document.getElementById('splashScreen');
   function hideSplash() {
     splash.classList.add('splash-hide');
-    setTimeout(function(){ splash.style.display = 'none'; }, 650);
+    setTimeout(function(){ splash.style.display = 'none'; }, 600);
   }
 
   // Verificar JWT de Croma App
@@ -1470,10 +1470,10 @@ function cerrarSesion() {
   if (jwtUser) {
     var rol = jwtUser.rol || 'encargado';
     var suc = jwtUser.sucursal || null;
-    setTimeout(function(){ hideSplash(); iniciarSesion(rol, suc); }, 900);
+    setTimeout(function(){ hideSplash(); iniciarSesion(rol, suc); }, 1200);
   } else {
     // Sin token válido → redirigir al login central
-    setTimeout(function(){ location.href = 'https://croma-app.com.ar/'; }, 900);
+    setTimeout(function(){ location.href = 'https://croma-app.com.ar/'; }, 1200);
     return;
   }
 
