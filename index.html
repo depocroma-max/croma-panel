@@ -429,7 +429,7 @@ td { padding: 10px 14px; vertical-align: middle; }
 .mapa-parada-actual   .mapa-parada-txt { color: var(--black); font-weight: 600; }
 .mapa-parada-vacio { font-size: 13px; color: var(--gray-400); padding: 8px 6px; }
 .mapa-gps-info { margin-top: auto; padding-top: 12px; font-size: 11px; color: var(--gray-400); }
-.mapa-camion-pin { font-size: 26px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,.4)); text-align: center; }
+.mapa-camion-icon { filter: drop-shadow(0 2px 3px rgba(0,0,0,.4)); }
 @media (max-width: 900px) {
   .mapa-layout { flex-direction: column; }
   .mapa-side { width: 100%; }
@@ -1636,10 +1636,10 @@ function initMapaLeaflet() {
 }
 
 function mapaIconoCamion() {
-  return L.divIcon({
-    className: 'mapa-camion-icon',
-    html: '<div class="mapa-camion-pin">🚚</div>',
-    iconSize: [36, 36], iconAnchor: [18, 18]
+  return L.icon({
+    iconUrl: 'camion-croma.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
   });
 }
 
