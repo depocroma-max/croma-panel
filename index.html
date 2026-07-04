@@ -857,6 +857,18 @@ tbody tr:hover { background: var(--gray-50); }
 @media (max-width: 900px)  { .entradas-layout { flex-direction: column; } .entradas-sidebar { width: 100%; position: static; } }
 @media (max-width: 700px)  { .ent-suc-grid { grid-template-columns: 1fr; } .ent-kpis { grid-template-columns: 1fr 1fr; } .ent-search { min-width: unset; width: 100%; } }
 
+/* ── STAT CARD VARIANTS — Fase 3F ── */
+.stat-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.stat-ic   { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stat-card.stat-neutral { border-top: 3px solid var(--gray-400); }
+.stat-card.stat-danger  { border-top: 3px solid var(--danger); }
+.stat-card.stat-warning { border-top: 3px solid var(--warning); }
+.stat-card.stat-success { border-top: 3px solid var(--success); }
+.stat-neutral .stat-ic  { background: var(--gray-100);    color: var(--gray-600); }
+.stat-danger  .stat-ic  { background: var(--danger-bg);   color: var(--danger); }
+.stat-warning .stat-ic  { background: var(--warning-bg);  color: var(--warning); }
+.stat-success .stat-ic  { background: var(--success-bg);  color: var(--success); }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -915,10 +927,34 @@ tbody tr:hover { background: var(--gray-50); }
 
     <!-- STATS -->
     <div class="stats-row anim-in" id="statsRow">
-      <div class="stat-card anim-in anim-in-d1"><div class="stat-val" id="statTotal">—</div><div class="stat-label">Artículos</div></div>
-      <div class="stat-card anim-in anim-in-d2"><div class="stat-val rev" id="statPend">—</div><div class="stat-label">Sin ver</div></div>
-      <div class="stat-card anim-in anim-in-d3"><div class="stat-val proc" id="statProc">—</div><div class="stat-label">En proceso</div></div>
-      <div class="stat-card anim-in anim-in-d4"><div class="stat-val sol" id="statEnv">—</div><div class="stat-label">Solucionados</div></div>
+      <div class="stat-card stat-neutral anim-in anim-in-d1">
+        <div class="stat-meta">
+          <span class="stat-label">Artículos</span>
+          <span class="stat-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/><path d="m7.5 4.27 9 5.15"/></svg></span>
+        </div>
+        <div class="stat-val" id="statTotal">—</div>
+      </div>
+      <div class="stat-card stat-danger anim-in anim-in-d2">
+        <div class="stat-meta">
+          <span class="stat-label">Sin ver</span>
+          <span class="stat-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+        </div>
+        <div class="stat-val rev" id="statPend">—</div>
+      </div>
+      <div class="stat-card stat-warning anim-in anim-in-d3">
+        <div class="stat-meta">
+          <span class="stat-label">En proceso</span>
+          <span class="stat-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+        </div>
+        <div class="stat-val proc" id="statProc">—</div>
+      </div>
+      <div class="stat-card stat-success anim-in anim-in-d4">
+        <div class="stat-meta">
+          <span class="stat-label">Solucionados</span>
+          <span class="stat-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span>
+        </div>
+        <div class="stat-val sol" id="statEnv">—</div>
+      </div>
     </div>
 
     <!-- PEDIDOS: sidebar de locales + contenido -->
@@ -983,9 +1019,27 @@ tbody tr:hover { background: var(--gray-50); }
         </div>
       </div>
       <div class="cajas-resumen">
-        <div class="stat-card"><div class="stat-val sol" id="cajaStat-cerro">—</div><div class="stat-label">Cerraron</div></div>
-        <div class="stat-card"><div class="stat-val rev" id="cajaStat-sinCierre">—</div><div class="stat-label">Sin cierre</div></div>
-        <div class="stat-card"><div class="stat-val" id="cajaStat-alertas" style="color:#dc2626">—</div><div class="stat-label">Con alertas</div></div>
+        <div class="stat-card stat-success">
+          <div class="stat-meta">
+            <span class="stat-label">Cerraron</span>
+            <span class="stat-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span>
+          </div>
+          <div class="stat-val sol" id="cajaStat-cerro">—</div>
+        </div>
+        <div class="stat-card stat-danger">
+          <div class="stat-meta">
+            <span class="stat-label">Sin cierre</span>
+            <span class="stat-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span>
+          </div>
+          <div class="stat-val rev" id="cajaStat-sinCierre">—</div>
+        </div>
+        <div class="stat-card stat-danger">
+          <div class="stat-meta">
+            <span class="stat-label">Con alertas</span>
+            <span class="stat-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+          </div>
+          <div class="stat-val" id="cajaStat-alertas" style="color:#dc2626">—</div>
+        </div>
       </div>
       <div class="cajas-grid" id="cajasGrid"></div>
     </div>
