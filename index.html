@@ -1177,7 +1177,7 @@ tbody tr:hover { background: var(--gray-50); }
       <span class="modal-obs-label">Observación del local</span>
       <div class="modal-obs-box" id="modalObs"></div>
       <div id="modalObsSolWrap" style="display:none;margin-bottom:1rem">
-        <span class="modal-obs-label" style="color:#15803d">✓ Resolución</span>
+        <span class="modal-obs-label" style="color:#15803d;display:flex;align-items:center;gap:4px"><svg class="ic-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> Resolución</span>
         <div class="modal-obs-box" id="modalObsSol" style="border-color:#86efac;background:#f0fdf4;color:#15803d;font-style:normal;font-weight:500"></div>
       </div>
       <div class="modal-sol-box" id="modalSolBox">
@@ -2059,7 +2059,7 @@ function buildSelectorHTML() {
   var html = '<div class="emp-selector-wrap" id="empSelectorWrap">';
 
   // Select normal (empleados del local)
-  html += '<div class="emp-selector-inner"><span class="emp-selector-icon">👤</span><select id="empSelect">';
+  html += '<div class="emp-selector-inner"><span class="emp-selector-icon">' + icon('user','ic-xs') + '</span><select id="empSelect">';
   html += '<option value="">— Elegir empleado del local —</option>';
   disponibles.forEach(function(emp) {
     // emp viene como "34 MATI TERUEL" — mostrar como "#34 MATI TERUEL"
@@ -2794,13 +2794,13 @@ function abrirModal(idx) {
   var actions = document.getElementById('modalActions');
   if (!esSol) {
     actions.innerHTML =
-      '<button class="modal-btn sol"  data-estado="Solucionado" onclick="modalAccionBtn(this)">✓ Solucionado</button>' +
-      '<button class="modal-btn proc" data-estado="EnProceso"   onclick="modalAccionBtn(this)">⏳ En proceso</button>' +
-      '<button class="modal-btn rev"  data-estado="Revisar"      onclick="modalAccionBtn(this)">⚠ Revisar</button>' +
+      '<button class="modal-btn sol"  data-estado="Solucionado" onclick="modalAccionBtn(this)">' + icon('check','ic-xs') + ' Solucionado</button>' +
+      '<button class="modal-btn proc" data-estado="EnProceso"   onclick="modalAccionBtn(this)">' + icon('clock','ic-xs') + ' En proceso</button>' +
+      '<button class="modal-btn rev"  data-estado="Revisar"      onclick="modalAccionBtn(this)">' + icon('alertTriangle','ic-xs') + ' Revisar</button>' +
       '<button class="modal-btn cancelar" onclick="cerrarModal()">Cancelar</button>';
   } else {
     actions.innerHTML =
-      '<button class="modal-btn reabrir" data-estado="SinVer"    onclick="modalAccionBtn(this)">↩ Reabrir</button>' +
+      '<button class="modal-btn reabrir" data-estado="SinVer"    onclick="modalAccionBtn(this)">' + icon('arrowLeft','ic-xs') + ' Reabrir</button>' +
       '<button class="modal-btn cancelar" onclick="cerrarModal()">Cancelar</button>';
   }
 
@@ -2819,7 +2819,7 @@ function modalAccion(nuevoEstado) {
       solBox.classList.add('show');
       // Cambiar botón a "Confirmar"
       var btn = document.querySelector('.modal-btn.sol');
-      if (btn) { btn.textContent = '✓ Confirmar'; btn.removeAttribute('data-estado'); btn.onclick = confirmarSolucionado; }
+      if (btn) { btn.innerHTML = icon('check','ic-xs') + ' Confirmar'; btn.removeAttribute('data-estado'); btn.onclick = confirmarSolucionado; }
       document.getElementById('modalSolObs').focus();
       return;
     }
@@ -3105,7 +3105,7 @@ function abrirModalCaja(idx) {
   var extras = '';
   if (c.ausente) {
     extras += '<div class="informe-novedad-item">';
-    extras += '<span class="informe-novedad-icon">👤</span>';
+    extras += '<span class="informe-novedad-icon">' + icon('user','ic-xs') + '</span>';
     extras += '<div class="informe-novedad-content">';
     extras += '<div class="informe-novedad-label">Ausente</div>';
     extras += '<div class="informe-novedad-val">' + c.ausente + '</div>';
@@ -3119,9 +3119,9 @@ function abrirModalCaja(idx) {
       var nombre = match ? match[1].trim() : f.trim();
       var evalVal = match ? match[2].trim() : '';
       var evalClass = evalVal === 'Si' ? 'apto' : evalVal === 'No' ? 'no-apto' : 'regular';
-      var evalLabel = evalVal === 'Si' ? '👍 Apto' : evalVal === 'No' ? '👎 No apto' : '😐 Regular';
+      var evalLabel = evalVal === 'Si' ? 'Apto' : evalVal === 'No' ? 'No apto' : 'Regular';
       extras += '<div class="informe-novedad-item">';
-      extras += '<span class="informe-novedad-icon">⭐</span>';
+      extras += '<span class="informe-novedad-icon">' + icon('star','ic-xs') + '</span>';
       extras += '<div class="informe-novedad-content">';
       extras += '<div class="informe-novedad-label">Franquero/a</div>';
       extras += '<div class="informe-novedad-val">' + nombre + '</div>';
@@ -3131,7 +3131,7 @@ function abrirModalCaja(idx) {
   }
   if (c.mantenimiento) {
     extras += '<div class="informe-novedad-item">';
-    extras += '<span class="informe-novedad-icon">🔧</span>';
+    extras += '<span class="informe-novedad-icon">' + icon('wrench','ic-xs') + '</span>';
     extras += '<div class="informe-novedad-content">';
     extras += '<div class="informe-novedad-label">Mantenimiento</div>';
     extras += '<div class="informe-novedad-val">' + c.mantenimiento + '</div>';
@@ -3148,7 +3148,7 @@ function informeCheckRow(label, val, invertido) {
   var esOk  = invertido ? (val === 'No' || val === '') : (val === 'Si');
   var esBad = invertido ? (val === 'Si') : (val === 'No');
   var color = esOk ? '#16a34a' : (esBad ? '#dc2626' : '#a0a09a');
-  var texto = val === 'Si' ? '✓ Sí' : val === 'No' ? '✗ No' : '—';
+  var texto = val === 'Si' ? icon('check','ic-xs') + ' Sí' : val === 'No' ? icon('x','ic-xs') + ' No' : '—';
   return '<div class="informe-check-row">' +
     '<span class="informe-check-label">' + label + '</span>' +
     '<span style="color:' + color + ';font-weight:600">' + texto + '</span>' +
@@ -3168,7 +3168,7 @@ function checkRowModal(label, val, invertido) {
   var esOk  = invertido ? (val === 'No' || val === '') : (val === 'Si');
   var esBad = invertido ? (val === 'Si') : (val === 'No');
   var clase = esOk ? 'ok' : (esBad ? 'bad' : 'neutral');
-  var texto = val === 'Si' ? '✓ Sí' : val === 'No' ? '✗ No' : '—';
+  var texto = val === 'Si' ? icon('check','ic-xs') + ' Sí' : val === 'No' ? icon('x','ic-xs') + ' No' : '—';
   return '<div class="caja-check-row">' +
     '<span class="caja-check-label">' + label + '</span>' +
     '<span class="caja-check-val ' + clase + '">' + texto + '</span></div>';
@@ -3178,7 +3178,7 @@ function checkRow(label, val, invertido) {
   var esOk  = invertido ? (val === 'No' || val === '') : (val === 'Si');
   var esBad = invertido ? (val === 'Si') : (val === 'No');
   var clase = esOk ? 'ok' : (esBad ? 'bad' : 'neutral');
-  var texto = val === 'Si' ? '✓ Sí' : val === 'No' ? '✗ No' : '—';
+  var texto = val === 'Si' ? icon('check','ic-xs') + ' Sí' : val === 'No' ? icon('x','ic-xs') + ' No' : '—';
   return '<div class="caja-check-row" style="padding:3px 0;font-size:12px">' +
     '<span class="caja-check-label" style="color:var(--gray-600)">' + label + '</span>' +
     '<span class="caja-check-val ' + clase + '">' + texto + '</span></div>';
