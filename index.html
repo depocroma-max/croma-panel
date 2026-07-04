@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<link rel="stylesheet" href="croma-ds.css?v=20260703-ds" />
+<link rel="stylesheet" href="croma-ds.css?v=20260704-ds" />
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -857,6 +857,10 @@ tbody tr:hover { background: var(--gray-50); }
 @media (max-width: 900px)  { .entradas-layout { flex-direction: column; } .entradas-sidebar { width: 100%; position: static; } }
 @media (max-width: 700px)  { .ent-suc-grid { grid-template-columns: 1fr; } .ent-kpis { grid-template-columns: 1fr 1fr; } .ent-search { min-width: unset; width: 100%; } }
 
+/* ── ICON UTILITY — Fase 3G ── */
+.ic-xs { width: 13px; height: 13px; vertical-align: middle; flex-shrink: 0; display: inline-block; }
+.caja-extra-icon svg { width: 14px; height: 14px; vertical-align: middle; }
+
 /* ── STAT CARD VARIANTS — Fase 3F ── */
 .stat-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .stat-ic   { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -1322,7 +1326,7 @@ tbody tr:hover { background: var(--gray-50); }
   </nav>
 </div>
 
-<script src="croma-icons.js?v=20260703-ds"></script>
+<script src="croma-icons.js?v=20260704-ds"></script>
 <script>
 var SUCURSALES = ['01 PASEO','05 WAVE','09 CIPO SAN MARTIN','10 PERITO MORENO','12 CENTENARIO','14 ROCA','DEPO'];
 var todosLosPedidos = [];
@@ -1896,7 +1900,7 @@ function renderSidebarLocales() {
     var sucKey    = suc.split(' ')[0];
     var activo    = suc === horarioSucActiva;
     html += '<button type="button" class="hor-sidebar-item' + (activo ? ' active' : '') + '" onclick="seleccionarLocalHorario(\'' + suc.replace(/'/g, "\\'") + '\')">';
-    html += '<span class="hor-sidebar-pin" style="color:var(--suc-' + sucKey + ')">📍</span>';
+    html += '<span class="hor-sidebar-pin" style="color:var(--suc-' + sucKey + ')">' + icon('mapPin', 'ic-xs') + '</span>';
     html += '<span class="hor-sidebar-nombre">' + suc + '</span>';
     html += '<span class="hor-sidebar-dot ' + (cargado ? 'ok' : 'pend') + '" title="' + (cargado ? 'Horario cargado' : 'Pendiente') + '"></span>';
     html += '</button>';
@@ -1921,7 +1925,7 @@ function renderContenidoLocal() {
 
   var html = '<div class="hor-panel" id="suc_' + sucIdSafe + '">';
   html += '<div class="hor-panel-head">';
-  html += '<div class="hor-panel-titulo"><span style="color:var(--suc-' + sucKey + ')">📍</span><span>' + suc + '</span></div>';
+  html += '<div class="hor-panel-titulo"><span style="color:var(--suc-' + sucKey + ')">' + icon('mapPin', 'ic-xs') + '</span><span>' + suc + '</span></div>';
   html += cargado ? '<span class="hor-ok-tag">✓ Horario cargado</span>' : '<span class="hor-pendiente-tag">⏳ Pendiente</span>';
   html += '<div class="hor-panel-actions">';
 
@@ -2663,7 +2667,7 @@ function renderSidebarLocalesPedidos() {
     var activo = suc === pedSucActiva;
     var color  = suc === '' ? 'var(--black)' : (SUC_COLORS[suc] || 'var(--gray-400)');
     html += '<button type="button" class="ped-sidebar-item' + (activo ? ' active' : '') + '" onclick="seleccionarLocalPedidos(\'' + suc.replace(/'/g, "\\'") + '\')">';
-    html += '<span class="ped-sidebar-pin" style="color:' + color + '">📍</span>';
+    html += '<span class="ped-sidebar-pin" style="color:' + color + '">' + icon('mapPin', 'ic-xs') + '</span>';
     html += '<span class="ped-sidebar-nombre">' + (suc === '' ? 'Todos los locales' : suc) + '</span>';
     if (sinRes > 0) html += '<span class="ped-sidebar-alerta" title="' + sinRes + ' sin resolver"></span>';
     html += '<span class="ped-sidebar-count">' + cantidad + '</span>';
@@ -2711,9 +2715,9 @@ function buildPedCard(p) {
   html += '</div>';
   // Fila 2: meta + obs
   html += '<div class="ped-card-row3">';
-  html += '<span>👤 ' + (p.encargado || '—') + '</span>';
-  html += '<span>📅 ' + fechaDisplay + (p.hora ? ' ' + p.hora : '') + '</span>';
-  if (p.obs) html += '<span class="ped-card-obs" title="' + p.obs.replace(/"/g,'&quot;') + '">💬 ' + p.obs + '</span>';
+  html += '<span>' + icon('user', 'ic-xs') + ' ' + (p.encargado || '—') + '</span>';
+  html += '<span>' + icon('calendar', 'ic-xs') + ' ' + fechaDisplay + (p.hora ? ' ' + p.hora : '') + '</span>';
+  if (p.obs) html += '<span class="ped-card-obs" title="' + p.obs.replace(/"/g,'&quot;') + '">' + icon('messageSquare', 'ic-xs') + ' ' + p.obs + '</span>';
   html += '</div>';
   html += '</div>';
   return html;
@@ -3033,7 +3037,7 @@ function renderCajas(cajas) {
     html += '</div>';
     if (c.ausente || c.franquero || c.mantenimiento) {
       html += '<div class="caja-extras">';
-      if (c.ausente) html += extraRow('👤', 'Ausente: <strong>' + c.ausente + '</strong>');
+      if (c.ausente) html += extraRow(icon('user', 'ic-xs'), 'Ausente: <strong>' + c.ausente + '</strong>');
       if (c.franquero) {
         // Cada franquero está separado por " | "
         var franks = c.franquero.split(' | ');
@@ -3045,17 +3049,17 @@ function renderCajas(cajas) {
             var nombre = match[1].trim();
             var eval_  = match[2].trim();
             var evalColor = eval_ === 'Si' ? '#16a34a' : eval_ === 'No' ? '#dc2626' : '#d97706';
-            var evalLabel = eval_ === 'Si' ? '👍 Apto' : eval_ === 'No' ? '👎 No apto' : '😐 Regular';
+            var evalLabel = eval_ === 'Si' ? 'Apto' : eval_ === 'No' ? 'No apto' : 'Regular';
             html += '<div class="caja-extra-item">';
-            html += '<span class="caja-extra-icon">⭐</span>';
+            html += '<span class="caja-extra-icon">' + icon('star', 'ic-xs') + '</span>';
             html += '<span class="caja-extra-text"><strong>' + nombre + '</strong> · <span style="color:' + evalColor + ';font-weight:600">' + evalLabel + '</span></span>';
             html += '</div>';
           } else {
-            html += extraRow('⭐', f);
+            html += extraRow(icon('star', 'ic-xs'), f);
           }
         });
       }
-      if (c.mantenimiento) html += extraRow('🔧', '<em>' + c.mantenimiento + '</em>');
+      if (c.mantenimiento) html += extraRow(icon('wrench', 'ic-xs'), '<em>' + c.mantenimiento + '</em>');
       html += '</div>';
     }
     html += '</div>';
@@ -3284,7 +3288,7 @@ function renderEntradasSucursal() {
     html += '<div class="ent-suc-body">';
     if (lista.length === 0 && !tieneEntradas) {
       html += '<div class="ent-empty-state">';
-      html += '<div class="ent-empty-icon">🎟</div>';
+      html += '<div class="ent-empty-icon">' + icon('ticket', 'icon-24') + '</div>';
       html += '<div class="ent-empty-txt">Aún no se cargaron entradas</div>';
       if (puedeEditar) html += '<div class="ent-empty-sub">Sé el primero en informar</div>';
       html += '</div>';
@@ -3304,7 +3308,7 @@ function renderEntradasSucursal() {
         var isAgotado = !!e.agotado;
         html += '<div class="ent-item' + (puedeEditar ? ' editable' : '') + (isAgotado ? ' agotado' : '') + '"' + (puedeEditar ? ' onclick="abrirModalEntrada(' + eData + ', \'' + suc + '\')"' : '') + '>';
         html += '<div class="ent-item-row1">';
-        html += '<span class="ent-item-icon">🎟</span>';
+        html += '<span class="ent-item-icon">' + icon('ticket', 'ic-xs') + '</span>';
         html += '<span class="ent-item-nombre" title="' + e.nombre + '">' + e.nombre + '</span>';
         if (isAgotado) {
           html += '<span class="ent-badge-agotado">AGOTADO</span>';
@@ -3317,7 +3321,7 @@ function renderEntradasSucursal() {
         html += '</div>';
         if (fechaStr || e.obs || isAgotado) {
           html += '<div class="ent-item-meta">';
-          if (fechaStr) html += '<span class="ent-item-fecha">📅 ' + fechaStr + '</span>';
+          if (fechaStr) html += '<span class="ent-item-fecha">' + icon('calendar', 'ic-xs') + ' ' + fechaStr + '</span>';
           if (isAgotado) html += '<span class="ent-item-precio" style="text-decoration:line-through;background:#f1f5f9;color:#94a3b8">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
           if (e.obs) html += '<span class="ent-item-obs" title="' + e.obs + '">' + e.obs + '</span>';
           html += '</div>';
