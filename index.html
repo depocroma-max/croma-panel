@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<link rel="stylesheet" href="croma-ds.css?v=20260706-3l" />
+<link rel="stylesheet" href="croma-ds.css?v=20260706-3m" />
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -878,6 +878,27 @@ tbody tr:hover { background: var(--gray-50); }
 .stat-warning .stat-ic  { background: var(--warning-bg);  color: var(--warning); }
 .stat-success .stat-ic  { background: var(--success-bg);  color: var(--success); }
 
+/* ── CONSISTENCIA — Fase 3M ── */
+
+/* Botones acción tabla pedidos: estilos que faltaban */
+.btn-accion { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: var(--radius-sm); border: 1px solid; cursor: pointer; font-family: var(--font-body); transition: all .12s; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.btn-accion.sol  { background: #dcfce7; color: #15803d; border-color: #86efac; }
+.btn-accion.sol:hover  { background: #16a34a; color: var(--white); border-color: #16a34a; }
+.btn-accion.proc { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.btn-accion.proc:hover { background: #d97706; color: var(--white); border-color: #d97706; }
+.btn-accion.rev  { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.btn-accion.rev:hover  { background: #dc2626; color: var(--white); border-color: #dc2626; }
+
+/* Modal buttons: inline-flex para alinear iconos */
+.modal-btn { display: inline-flex; align-items: center; gap: 5px; }
+
+/* Modal label resolución: variante verde (extrae inline style) */
+.modal-obs-label-sol { color: #15803d; display: flex; align-items: center; gap: 4px; }
+#modalObsSol { border-color: #86efac; background: #f0fdf4; color: #15803d; font-style: normal; font-weight: 500; }
+
+/* Stat alertas cajas: color DS */
+#cajaStat-alertas { color: var(--danger, #dc2626); }
+
 /* ── MICROINTERACCIONES — Fase 3L ── */
 
 /* Icono para empty states */
@@ -959,7 +980,7 @@ tbody tr:hover { background: var(--gray-50); }
 
   <!-- TOPBAR -->
   <header class="topbar">
-    <button class="hamburger-btn" id="hamburgerBtn"><span></span><span></span><span></span></button>
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menú"><span></span><span></span><span></span></button>
     <div class="brand">
       <img src="tridente_solo.png" class="brand-tridente" alt="Croma">
       <span class="brand-logo">CROMA</span>
@@ -974,15 +995,15 @@ tbody tr:hover { background: var(--gray-50); }
       <button class="nav-btn" id="navMapa">Mapa de reparto</button>
     </nav>
     <div class="sesion-chip" id="sesionChip">
-      <span class="sesion-nombre" id="sesionNombre">👤 Admin</span>
-      <button class="sesion-logout" onclick="cerrarSesion()" title="Cerrar sesión">
+      <span class="sesion-nombre" id="sesionNombre">Admin</span>
+      <button class="sesion-logout" onclick="cerrarSesion()" title="Cerrar sesión" aria-label="Cerrar sesión">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </button>
     </div>
     <div class="top-actions">
       <span class="status-label" id="ultimaActualizacion"></span>
-      <button class="btn-icon" id="btnActualizar" title="Actualizar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
-      <button class="btn-icon" id="btnSelector" title="Volver al selector" onclick="window.location.href='https://croma-app.com.ar/'">
+      <button class="btn-icon" id="btnActualizar" title="Actualizar" aria-label="Actualizar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
+      <button class="btn-icon" id="btnSelector" title="Volver al selector" aria-label="Volver al selector" onclick="window.location.href='https://croma-app.com.ar/'">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       </button>
       <div class="connection-status connected">
@@ -1109,7 +1130,7 @@ tbody tr:hover { background: var(--gray-50); }
             <span class="stat-label">Con alertas</span>
             <span class="stat-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
           </div>
-          <div class="stat-val" id="cajaStat-alertas" style="color:#dc2626">—</div>
+          <div class="stat-val" id="cajaStat-alertas">—</div>
         </div>
       </div>
       <div class="cajas-grid" id="cajasGrid"></div>
@@ -1124,7 +1145,6 @@ tbody tr:hover { background: var(--gray-50); }
           <div class="ent-subtitle">Entradas informadas por cada sucursal</div>
         </div>
         <div class="ent-search-wrap">
-          <span class="ent-search-icon">🔍</span>
           <input class="ent-search" type="text" id="entSearch" placeholder="Buscar entrada o evento..." oninput="filtrarEntradas()">
         </div>
       </div>
@@ -1178,9 +1198,9 @@ tbody tr:hover { background: var(--gray-50); }
       <div class="horarios-header">
         <span class="horarios-title" id="horariosTitleTxt">Horario semanal</span>
         <div class="semana-nav">
-          <button class="btn-semana" id="btnSemanaAnt" title="Semana anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button class="btn-semana" id="btnSemanaAnt" title="Semana anterior" aria-label="Semana anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
           <span class="semana-label" id="semanaLabel">—</span>
-          <button class="btn-semana" id="btnSemanaSig" title="Semana siguiente"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button class="btn-semana" id="btnSemanaSig" title="Semana siguiente" aria-label="Semana siguiente"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
         </div>
       </div>
       <div class="semana-info-bar" id="semanaInfoBar"></div>
@@ -1230,7 +1250,7 @@ tbody tr:hover { background: var(--gray-50); }
         <span class="modal-cod" id="modalCod"></span>
         <span class="modal-tipo" id="modalTipo"></span>
       </div>
-      <button class="modal-close" onclick="cerrarModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      <button class="modal-close" onclick="cerrarModal()" aria-label="Cerrar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div class="modal-body">
       <div class="modal-grid">
@@ -1244,8 +1264,8 @@ tbody tr:hover { background: var(--gray-50); }
       <span class="modal-obs-label">Observación del local</span>
       <div class="modal-obs-box" id="modalObs"></div>
       <div id="modalObsSolWrap" style="display:none;margin-bottom:1rem">
-        <span class="modal-obs-label" style="color:#15803d;display:flex;align-items:center;gap:4px"><svg class="ic-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> Resolución</span>
-        <div class="modal-obs-box" id="modalObsSol" style="border-color:#86efac;background:#f0fdf4;color:#15803d;font-style:normal;font-weight:500"></div>
+        <span class="modal-obs-label modal-obs-label-sol"><svg class="ic-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> Resolución</span>
+        <div class="modal-obs-box" id="modalObsSol"></div>
       </div>
       <div class="modal-sol-box" id="modalSolBox">
         <label>Observación al solucionar</label>
@@ -1266,7 +1286,7 @@ tbody tr:hover { background: var(--gray-50); }
       </div>
       <div class="informe-header-actions">
         <button class="btn-pdf" onclick="imprimirInforme()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg> Imprimir / PDF</button>
-        <button class="modal-close" onclick="cerrarModalCaja()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        <button class="modal-close" onclick="cerrarModalCaja()" aria-label="Cerrar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
       </div>
     </div>
     <div class="informe-body" style="max-height:75vh;overflow-y:auto">
@@ -1303,7 +1323,7 @@ tbody tr:hover { background: var(--gray-50); }
           <div style="font-size:11px;color:var(--gray-400);margin-top:1px" id="mhSemanaInfo"></div>
         </div>
       </div>
-      <button class="modal-close" onclick="cerrarModalHorario()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      <button class="modal-close" onclick="cerrarModalHorario()" aria-label="Cerrar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div class="modal-body" style="padding:0;max-height:80vh;overflow-y:auto">
       <div class="carga-body" id="mhBody">
@@ -1324,7 +1344,7 @@ tbody tr:hover { background: var(--gray-50); }
       <div class="modal-header-left">
         <span class="modal-cod" id="meTitle" style="font-size:15px">Nueva entrada</span>
       </div>
-      <button class="modal-close" onclick="cerrarModalEntrada()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      <button class="modal-close" onclick="cerrarModalEntrada()" aria-label="Cerrar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="meId">
@@ -1362,14 +1382,14 @@ tbody tr:hover { background: var(--gray-50); }
       </div>
     </div>
     <div class="modal-actions">
-      <button class="modal-btn sol" onclick="guardarEntrada()" style="display:inline-flex;align-items:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg> Guardar</button>
-      <button class="modal-btn rev" id="meBtnEliminar" onclick="eliminarEntrada()" style="display:none;align-items:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Eliminar</button>
+      <button class="modal-btn sol" onclick="guardarEntrada()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg> Guardar</button>
+      <button class="modal-btn rev" id="meBtnEliminar" onclick="eliminarEntrada()" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Eliminar</button>
       <button class="modal-btn cancelar" onclick="cerrarModalEntrada()" style="margin-left:auto">Cancelar</button>
     </div>
   </div>
 </div>
 <!-- FAB Nueva entrada -->
-<button class="ent-fab hidden" id="entFab" onclick="abrirModalEntrada(null, sesionRol==='encargado' ? sesionSucursal : '')" title="Nueva entrada">+</button>
+<button class="ent-fab hidden" id="entFab" onclick="abrirModalEntrada(null, sesionRol==='encargado' ? sesionSucursal : '')" title="Nueva entrada" aria-label="Nueva entrada">+</button>
 
 <div class="dash-toast" id="dashToast"></div>
 
@@ -1378,7 +1398,7 @@ tbody tr:hover { background: var(--gray-50); }
 <div class="drawer" id="drawer">
   <div class="drawer-header">
     <div style="font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:white">CROMA</div>
-    <button class="drawer-close" id="drawerClose"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    <button class="drawer-close" id="drawerClose" aria-label="Cerrar menú"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
   </div>
   <div style="padding:.75rem 1rem;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between">
     <span id="drawerUsuario" style="font-size:12px;color:#888"></span>
@@ -1993,7 +2013,7 @@ function renderContenidoLocal() {
   var html = '<div class="hor-panel" id="suc_' + sucIdSafe + '">';
   html += '<div class="hor-panel-head">';
   html += '<div class="hor-panel-titulo"><span style="color:var(--suc-' + sucKey + ')">' + icon('mapPin', 'ic-xs') + '</span><span>' + suc + '</span></div>';
-  html += cargado ? '<span class="hor-ok-tag">✓ Horario cargado</span>' : '<span class="hor-pendiente-tag">⏳ Pendiente</span>';
+  html += cargado ? '<span class="hor-ok-tag">' + icon('check','ic-xs') + ' Horario cargado</span>' : '<span class="hor-pendiente-tag">' + icon('clock','ic-xs') + ' Pendiente</span>';
   html += '<div class="hor-panel-actions">';
 
   if (sesionRol === 'admin' || sesionRol === 'horarios' || sesionRol === 'operador' || (sesionRol === 'encargado' && sesionSucursal === suc)) {
@@ -2178,7 +2198,7 @@ function buildFilaEmpleado(emp, dias) {
   html += '<div>' + numBadge + '<span class="carga-emp-nombre">' + nomShow + '</span>';
   if (emp.externo) html += '<span class="carga-emp-externo">EXTERNO</span>';
   html += '</div>';
-  html += '<button class="btn-quitar-emp" onclick="quitarEmpleado(\'' + emp.id + '\')" title="Quitar">✕</button>';
+  html += '<button class="btn-quitar-emp" onclick="quitarEmpleado(\'' + emp.id + '\')" title="Quitar" aria-label="Quitar empleado">' + icon('x','ic-xs') + '</button>';
   html += '</div>';
   html += '<div class="carga-dias-grid">';
 
@@ -2246,7 +2266,7 @@ function renderFormHorario() {
   var html  = buildSelectorHTML();
 
   if (empleadosAgregados.length === 0) {
-    html += '<div class="emp-lista-vacia">👆 Elegí los empleados que trabajan esta semana</div>';
+    html += '<div class="emp-lista-vacia">' + icon('users','ic-xs') + ' Elegí los empleados que trabajan esta semana</div>';
   } else {
     empleadosAgregados.forEach(function(emp) {
       html += buildFilaEmpleado(emp, dias);
@@ -2809,11 +2829,11 @@ function buildFila_OLD(p) {
   html += '<td><span class="badge-estado ' + p.estado + '" id="b-' + idx + '">' + p.estado + '</span></td>';
   html += '<td><div class="actions">';
   if (!esSol) {
-    html += '<button class="btn-accion sol"  data-idx="' + idx + '" data-estado="Solucionado" onclick="accion(this)">✓ Sol.</button>';
-    html += '<button class="btn-accion proc" data-idx="' + idx + '" data-estado="EnProceso"   onclick="accion(this)">⏳ Proceso</button>';
-    html += '<button class="btn-accion rev"  data-idx="' + idx + '" data-estado="Revisar"      onclick="accion(this)">⚠ Revisar</button>';
+    html += '<button class="btn-accion sol"  data-idx="' + idx + '" data-estado="Solucionado" onclick="accion(this)">' + icon('check','ic-xs') + ' Sol.</button>';
+    html += '<button class="btn-accion proc" data-idx="' + idx + '" data-estado="EnProceso"   onclick="accion(this)">' + icon('clock','ic-xs') + ' Proceso</button>';
+    html += '<button class="btn-accion rev"  data-idx="' + idx + '" data-estado="Revisar"      onclick="accion(this)">' + icon('alertTriangle','ic-xs') + ' Revisar</button>';
   } else {
-    html += '<button class="btn-accion proc" data-idx="' + idx + '" data-estado="SinVer"       onclick="accion(this)">↩ Reabrir</button>';
+    html += '<button class="btn-accion proc" data-idx="' + idx + '" data-estado="SinVer"       onclick="accion(this)">' + icon('arrowLeft','ic-xs') + ' Reabrir</button>';
   }
   html += '</div></td></tr>';
   return html;
@@ -3136,9 +3156,9 @@ function renderCajas(cajas) {
 
 function franqueroApto(val) {
   if (!val) return '';
-  if (val === 'Si') return ' · <span style="color:#16a34a;font-weight:600">Apto ✓</span>';
-  if (val === 'No') return ' · <span style="color:#dc2626;font-weight:600">No apto ✗</span>';
-  return ' · <span style="color:#d97706;font-weight:600">Regular ~</span>';
+  if (val === 'Si') return ' · <span style="color:#16a34a;font-weight:600">' + icon('check','ic-xs') + ' Apto</span>';
+  if (val === 'No') return ' · <span style="color:#dc2626;font-weight:600">' + icon('x','ic-xs') + ' No apto</span>';
+  return ' · <span style="color:#d97706;font-weight:600">Regular</span>';
 }
 
 
@@ -3383,7 +3403,7 @@ function renderEntradasSucursal() {
           html += '<span class="ent-item-precio">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
         }
         if (puedeEditar) {
-          html += '<button class="ent-toggle-agotado ' + (isAgotado ? 'desmarcar' : 'marcar') + '" onclick="event.stopPropagation();toggleAgotado(' + eData + ', \'' + suc + '\')" title="' + (isAgotado ? 'Marcar como disponible' : 'Marcar como agotado') + '">' + (isAgotado ? '✓ Marcar disponible' : '⊘ Marcar agotado') + '</button>';
+          html += '<button class="ent-toggle-agotado ' + (isAgotado ? 'desmarcar' : 'marcar') + '" onclick="event.stopPropagation();toggleAgotado(' + eData + ', \'' + suc + '\')" title="' + (isAgotado ? 'Marcar como disponible' : 'Marcar como agotado') + '">' + (isAgotado ? icon('check','ic-xs') + ' Marcar disponible' : icon('x','ic-xs') + ' Marcar agotado') + '</button>';
         }
         html += '</div>';
         if (fechaStr || e.obs || isAgotado) {
