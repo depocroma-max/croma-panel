@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<link rel="stylesheet" href="croma-ds.css?v=20260706-3k" />
+<link rel="stylesheet" href="croma-ds.css?v=20260706-3l" />
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -366,7 +366,7 @@ td { padding: 10px 14px; vertical-align: middle; }
 /* ── LOADING / EMPTY ── */
 .empty-state { text-align: center; padding: 3rem 1.5rem; color: var(--gray-400); font-size: 14px; }
 .loading-state { text-align: center; padding: 3rem; color: var(--gray-400); }
-.spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid var(--gray-200); border-top-color: var(--black); border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 12px; }
+.spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid var(--gray-200); border-top-color: var(--croma-red); border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 12px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── TOAST ── */
@@ -878,6 +878,39 @@ tbody tr:hover { background: var(--gray-50); }
 .stat-warning .stat-ic  { background: var(--warning-bg);  color: var(--warning); }
 .stat-success .stat-ic  { background: var(--success-bg);  color: var(--success); }
 
+/* ── MICROINTERACCIONES — Fase 3L ── */
+
+/* Icono para empty states */
+.es-icon { width: 28px; height: 28px; opacity: .35; flex-shrink: 0; display: block; }
+
+/* Empty state: flex-column centrado */
+.empty-state { display: flex; flex-direction: column; align-items: center; gap: .5rem; }
+.empty-state.error { color: var(--danger, #dc2626); }
+.empty-state.error .es-icon { opacity: .6; }
+
+/* Loading state: flex-column centrado */
+.loading-state { display: flex; flex-direction: column; align-items: center; gap: .25rem; }
+.loading-state p { font-size: 13px; margin: 0; text-align: center; }
+
+/* Transición: agregar transform a cards */
+.ped-card     { transition: box-shadow .15s, border-color .15s, transform .1s ease; }
+.caja-card    { transition: box-shadow .15s, transform .1s ease; }
+.ent-evt-card { transition: box-shadow .15s, transform .1s ease; }
+.btn-guardar-hor { transition: background .15s, box-shadow .15s, transform .1s ease; }
+.btn-agregar-emp { transition: background .15s, box-shadow .15s, transform .1s ease; }
+
+/* Press / active states */
+.ped-card:active                          { transform: scale(.99); box-shadow: var(--shadow-sm); }
+.caja-card:active                         { transform: scale(.99); box-shadow: var(--shadow-sm); }
+.ent-evt-card:active                      { transform: scale(.99); box-shadow: none; }
+.ped-sidebar-item:active,
+.hor-sidebar-item:active                  { background: var(--gray-100); }
+.drawer-nav-btn:active                    { background: rgba(255,255,255,.12); }
+.ent-fab:active                           { transform: scale(.96); box-shadow: 0 4px 16px rgba(232,37,26,.35); }
+.modal-btn:active                         { opacity: .85; transform: translateY(1px); }
+.btn-guardar-hor:not(:disabled):active,
+.btn-agregar-emp:active                   { transform: translateY(1px); box-shadow: none; }
+
 /* ── RESPONSIVE — Fase 3K ── */
 
 /* Touch targets: sidebar items en tablet/mobile */
@@ -1134,7 +1167,7 @@ tbody tr:hover { background: var(--gray-50); }
             <span class="ent-sb-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg> Por evento</span>
           </div>
           <div class="ent-sb-body" id="entSidebarEvt">
-            <div class="ent-sb-empty">Sin eventos cargados</div>
+            <div class="ent-sb-empty"><svg class="ic-xs" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg> Sin eventos cargados</div>
           </div>
         </div>
       </div>
@@ -1939,7 +1972,7 @@ function renderSidebarLocales() {
     html += '<span class="hor-sidebar-dot ' + (cargado ? 'ok' : 'pend') + '" title="' + (cargado ? 'Horario cargado' : 'Pendiente') + '"></span>';
     html += '</button>';
   });
-  lista.innerHTML = html || '<div class="hor-sidebar-empty">Sin coincidencias</div>';
+  lista.innerHTML = html || '<div class="hor-sidebar-empty">' + icon('info','ic-xs') + ' Sin coincidencias</div>';
 }
 
 function leyendaItemHorario(clase, label, rango) {
@@ -1950,7 +1983,7 @@ function renderContenidoLocal() {
   var grid = document.getElementById('horariosGrid');
   var suc  = horarioSucActiva;
   var dias = _horDiasActuales;
-  if (!suc) { grid.innerHTML = '<div class="empty-state">Sin locales</div>'; return; }
+  if (!suc) { grid.innerHTML = '<div class="empty-state">' + icon('mapPin','es-icon') + 'Sin locales</div>'; return; }
 
   var empleados = horariosData[suc] || [];
   var cargado   = empleados.length > 0;
@@ -2606,11 +2639,11 @@ async function cargarDatos() {
       mostrarUltimaActualizacion();
     } else {
       document.getElementById('panelPendientes').innerHTML =
-        '<div class="empty-state">⚠ ' + (data.error || 'Error desconocido') + '</div>';
+        '<div class="empty-state error">' + icon('alertTriangle','es-icon') + (data.error || 'Error desconocido') + '</div>';
     }
   } catch(e) {
     document.getElementById('panelPendientes').innerHTML =
-      '<div class="empty-state">⚠ No se pudo conectar.</div>';
+      '<div class="empty-state error">' + icon('alertTriangle','es-icon') + 'No se pudo conectar.</div>';
   }
 }
 
@@ -2707,7 +2740,7 @@ function renderSidebarLocalesPedidos() {
     html += '<span class="ped-sidebar-count">' + cantidad + '</span>';
     html += '</button>';
   });
-  lista.innerHTML = html || '<div class="ped-sidebar-empty">Sin coincidencias</div>';
+  lista.innerHTML = html || '<div class="ped-sidebar-empty">' + icon('info','ic-xs') + ' Sin coincidencias</div>';
 }
 
 function filtrar(soloSolucionados) {
@@ -2931,7 +2964,7 @@ function renderPanel() {
 
   var htmlPend = '';
   if (pendientes.length === 0) {
-    htmlPend = '<div class="empty-state">📭 Sin artículos pendientes.</div>';
+    htmlPend = '<div class="empty-state">' + icon('package','es-icon') + 'Sin artículos pendientes.</div>';
   } else {
     var grupos = {};
     SUCURSALES.forEach(function(s) { grupos[s] = []; });
@@ -3018,11 +3051,11 @@ async function cargarCajas() {
     if (data.ok) { renderCajas(data.cajas); }
     else {
       document.getElementById('cajasGrid').innerHTML =
-        '<div class="empty-state" style="grid-column:1/-1">⚠ ' + (data.error || 'Error') + '</div>';
+        '<div class="empty-state error" style="grid-column:1/-1">' + icon('alertTriangle','es-icon') + (data.error || 'Error') + '</div>';
     }
   } catch(e) {
     document.getElementById('cajasGrid').innerHTML =
-      '<div class="empty-state" style="grid-column:1/-1">⚠ Error de conexión</div>';
+      '<div class="empty-state error" style="grid-column:1/-1">' + icon('alertTriangle','es-icon') + 'Error de conexión</div>';
   }
 }
 
@@ -3401,7 +3434,7 @@ function renderEntradasEvento() {
   if (!listEl) return;
 
   if (eventos.length === 0) {
-    listEl.innerHTML = '<div class="empty-state">Sin eventos cargados.</div>';
+    listEl.innerHTML = '<div class="empty-state">' + icon('calendar','es-icon') + 'Sin eventos cargados.</div>';
     return;
   }
   var html = '';
@@ -3433,7 +3466,7 @@ function renderEntradasSidebar() {
   if (!el) return;
 
   if (eventos.length === 0) {
-    el.innerHTML = '<div class="ent-sb-empty">Sin eventos cargados</div>';
+    el.innerHTML = '<div class="ent-sb-empty">' + icon('calendar','ic-xs') + ' Sin eventos cargados</div>';
     return;
   }
   var html = '';
