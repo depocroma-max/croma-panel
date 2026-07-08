@@ -151,12 +151,14 @@ function guardarPedido(datos) {
     // Procesar pedidos (tipo PEDIDO)
     var pedidos = datos.pedidos || [];
     pedidos.forEach(function(p, i) {
-      if (p.cod && p.cod.trim() !== '') {
+      var cod = (p.cod || '').trim();
+      var obs = (p.obs || '').trim();
+      if (cod !== '' || obs !== '') {
         filas.push([
           generales.id, generales.ts, generales.fecha,
           generales.sucursal, generales.encargado,
           'PEDIDO', i + 1,
-          p.cod.trim().toUpperCase(), p.talle || '', p.color || '', p.cantidad || 1, p.obs || '',
+          cod.toUpperCase(), p.talle || '', p.color || '', p.cantidad || 1, obs,
           generales.remitos, generales.salidas, generales.diferencia,
           generales.mantenimiento, generales.ausente, generales.franquero, generales.gustoFranquero
         ]);
@@ -166,12 +168,14 @@ function guardarPedido(datos) {
     // Procesar reposiciones (tipo REPOSICION)
     var repos = datos.reposiciones || [];
     repos.forEach(function(r, i) {
-      if (r.cod && r.cod.trim() !== '') {
+      var cod = (r.cod || '').trim();
+      var obs = (r.obs || '').trim();
+      if (cod !== '' || obs !== '') {
         filas.push([
           generales.id, generales.ts, generales.fecha,
           generales.sucursal, generales.encargado,
           'REPOSICION', i + 1,
-          r.cod.trim().toUpperCase(), r.talle || '', r.color || '', r.cantidad || 1, r.obs || '',
+          cod.toUpperCase(), r.talle || '', r.color || '', r.cantidad || 1, obs,
           generales.remitos, generales.salidas, generales.diferencia,
           generales.mantenimiento, generales.ausente, generales.franquero, generales.gustoFranquero
         ]);
@@ -230,7 +234,7 @@ function obtenerPedidos(dias) {
 
     for (var i = 1; i < datos.length; i++) {
       var fila = datos[i];
-      if (fila[5] === 'CIERRE' || fila[7] === '') continue;
+      if (fila[5] === 'CIERRE') continue;
 
       var fechaFila = '';
       try {
