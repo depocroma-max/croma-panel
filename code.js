@@ -40,7 +40,7 @@ function doGet(e) {
   }
   if (accion === 'guardarHorario') {
     try {
-      var datos = JSON.parse(decodeURIComponent(params.datos || '{}'));
+      var datos = JSON.parse(params.datos || '{}');
       return jsonResponse(guardarHorario(datos));
     } catch(err) {
       return jsonResponse({ ok: false, error: 'JSON inválido: ' + err.message });
@@ -48,7 +48,7 @@ function doGet(e) {
   }
   if (accion === 'guardarPedido') {
     try {
-      var datos = JSON.parse(decodeURIComponent(params.datos || '{}'));
+      var datos = JSON.parse(params.datos || '{}');
       return jsonResponse(guardarPedido(datos));
     } catch(e) {
       return jsonResponse({ ok: false, error: 'JSON inválido: ' + e.message });
@@ -59,7 +59,7 @@ function doGet(e) {
   }
   if (accion === 'guardarEntrada') {
     try {
-      var datos = JSON.parse(decodeURIComponent(params.datos || '{}'));
+      var datos = JSON.parse(params.datos || '{}');
       return jsonResponse(guardarEntrada(datos));
     } catch(err) {
       return jsonResponse({ ok: false, error: 'JSON inválido: ' + err.message });
