@@ -1632,7 +1632,7 @@ function cerrarSesion() {
   if (drawerClose) drawerClose.addEventListener('click', cerrarDrawer);
   if (drawerOverlay) drawerOverlay.addEventListener('click', cerrarDrawer);
 
-  setInterval(function(){ if(vistaActual !== 'horarios') cargarDatos(); }, 2 * 60 * 1000);
+  setInterval(function(){ if(vistaActual !== 'horarios') cargarDatos(true); }, 2 * 60 * 1000);
 
   // Registrar Service Worker para instalación PWA
   if ('serviceWorker' in navigator) {
@@ -2637,11 +2637,15 @@ function cerrarModalHorarioOverlay(e) {
 }
 
 // ── API PEDIDOS ──
-async function cargarDatos() {
+// silencioso=true (auto-refresh en segundo plano): no vacía el panel ni
+// muestra el spinner, para no interrumpir al usuario mientras revisa pedidos.
+async function cargarDatos(silencioso) {
   if (sessionStorage.getItem('croma_auth') !== '1') return;
-  document.getElementById('panelPendientes').innerHTML =
-    '<div class="loading-state"><div class="spinner"></div><p>Cargando pedidos...</p></div>';
-  document.getElementById('panelSolucionados').innerHTML = '';
+  if (!silencioso) {
+    document.getElementById('panelPendientes').innerHTML =
+      '<div class="loading-state"><div class="spinner"></div><p>Cargando pedidos...</p></div>';
+    document.getElementById('panelSolucionados').innerHTML = '';
+  }
   try {
     var dias = document.getElementById('filtroDias').value || '30';
     var resp = await fetch(API_URL + '?accion=obtenerPedidos&dias=' + dias);
@@ -2657,11 +2661,14 @@ async function cargarDatos() {
       actualizarStats();
       renderPanel();
       mostrarUltimaActualizacion();
+    } else if (silencioso) {
+      toast('No se pudo actualizar pedidos', 'error');
     } else {
       document.getElementById('panelPendientes').innerHTML =
         '<div class="empty-state error">' + icon('alertTriangle','es-icon') + (data.error || 'Error desconocido') + '</div>';
     }
   } catch(e) {
+    if (silencioso) { toast('No se pudo actualizar pedidos', 'error'); return; }
     document.getElementById('panelPendientes').innerHTML =
       '<div class="empty-state error">' + icon('alertTriangle','es-icon') + 'No se pudo conectar.</div>';
   }
