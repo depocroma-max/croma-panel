@@ -441,6 +441,41 @@ td { padding: 10px 14px; vertical-align: middle; }
   .mapa-canvas { height: 50vh; min-height: 360px; }
 }
 
+/* ── STOCK (croma-api) ── */
+.stock-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.stock-title { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; color: var(--black); }
+.stock-search-bar { max-width: 480px; margin-bottom: 1.25rem; }
+.stock-resultados { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.5rem; }
+.stock-resultado-item { display: flex; flex-direction: column; gap: 2px; text-align: left; width: 100%; background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-md); padding: 10px 14px; cursor: pointer; font-family: var(--font-body); transition: box-shadow var(--transition-base), border-color var(--transition-fast); }
+.stock-resultado-item:hover { box-shadow: var(--shadow-sm); border-color: var(--gray-200); }
+.stock-resultado-cod  { font-size: 12px; font-weight: 700; color: var(--gray-600); letter-spacing: .3px; }
+.stock-resultado-desc { font-size: 14px; color: var(--black); }
+.stock-resultado-meta { font-size: 12px; color: var(--gray-400); }
+
+.stock-detalle-header  { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; padding-bottom: .75rem; border-bottom: 1px solid var(--gray-100); }
+.stock-detalle-titulo  { font-size: 16px; font-weight: 600; color: var(--black); }
+.stock-detalle-total   { font-size: 13px; color: var(--gray-600); }
+.stock-detalle-total b { color: var(--black); font-size: 16px; }
+
+.stock-fila { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--white); border: 1px solid var(--gray-100); margin-bottom: 6px; }
+.stock-fila-tag { font-size: 11px; font-weight: 700; letter-spacing: .4px; padding: 3px 9px; border-radius: var(--radius-pill); white-space: nowrap; }
+.stock-fila-sucursal .stock-fila-tag { background: var(--info-bg); color: var(--info); }
+.stock-fila-deposito .stock-fila-tag { background: var(--gray-100); color: var(--gray-600); }
+.stock-fila-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 140px; }
+.stock-fila-nombre   { font-size: 14px; color: var(--black); }
+.stock-fila-variante { font-size: 12px; color: var(--gray-400); }
+.stock-fila-cantidad { font-size: 16px; font-weight: 700; color: var(--black); margin-left: auto; }
+.stock-fila-sinstock { opacity: .55; }
+.stock-fila-sinstock .stock-fila-cantidad { color: var(--gray-400); font-weight: 500; }
+
+.stock-estado-icon { color: var(--gray-400); }
+.stock-estado-icon-danger { color: var(--danger); }
+
+@media (max-width: 700px) {
+  .stock-search-bar { max-width: 100%; }
+  .stock-fila-cantidad { width: 100%; margin-left: 0; text-align: right; }
+}
+
 /* Tabla horarios admin */
 .hor-table-wrap  { overflow-x: auto; }
 .hor-table       { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -993,6 +1028,7 @@ tbody tr:hover { background: var(--gray-50); }
       <button class="nav-btn" id="navHorarios">Horario semanal</button>
       <button class="nav-btn" id="navEntradas">Entradas</button>
       <button class="nav-btn" id="navMapa">Mapa de reparto</button>
+      <button class="nav-btn" id="navStock" style="display:none">Stock</button>
     </nav>
     <div class="sesion-chip" id="sesionChip">
       <span class="sesion-nombre" id="sesionNombre">Admin</span>
@@ -1240,6 +1276,19 @@ tbody tr:hover { background: var(--gray-50); }
       </div>
     </div>
 
+    <!-- STOCK -->
+    <div id="stockBody" style="display:none">
+      <div class="stock-header">
+        <span class="stock-title">Stock</span>
+      </div>
+      <div class="stock-search-bar">
+        <input type="text" id="stockBuscarInput" class="form-control" placeholder="Buscar producto por código o nombre..." autocomplete="off">
+      </div>
+      <div id="stockResultados" class="stock-resultados"></div>
+      <div id="stockDetalle" class="stock-detalle"></div>
+      <div id="stockEstado" class="stock-estado"></div>
+    </div>
+
   </div>
 </div>
 <!-- MODAL PEDIDO -->
@@ -1410,6 +1459,7 @@ tbody tr:hover { background: var(--gray-50); }
     <button class="drawer-nav-btn" id="drawerNavHorarios"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg> Horario semanal</button>
     <button class="drawer-nav-btn" id="drawerNavEntradas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg> Entradas</button>
     <button class="drawer-nav-btn" id="drawerNavMapa"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> Mapa de reparto</button>
+    <button class="drawer-nav-btn" id="drawerNavStock" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/></svg> Stock</button>
   </nav>
 </div>
 
@@ -1422,7 +1472,16 @@ var entradasData = {}; // { sucursal: [ {id, nombre, precio, fecha, obs} ] }
 var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04N6VzJktRa3xvvI_7t0Zq3l6LcMY-rW2pgcKjuj9Xwp/exec';
 // API de Croma Horarios — se usa solo para traer fotos de perfil de los empleados
 var HORARIOS_API_URL = 'https://script.google.com/macros/s/AKfycbzEwxqe32k8lzi0_8sj1zAjj7Fd9mT5viE79jRxQsFWWl_MSnEGYspH8tDBOPWicTEF/exec';
+// croma-api — stock real desde Sysneo (solo lectura). Requiere HTTPS antes de producción
+// (ver BRIEF-croma-api-sql.md) — mixed content bloquea fetch HTTP desde panel.croma-app.com.ar.
+var STOCK_API_URL = 'https://stock-api.croma-app.com.ar';
 var perfilesFotosCache = null; // [{nombre, foto_url}] — se carga una sola vez
+
+// Estado del buscador de Stock
+var stockUltimaAccion    = null; // { tipo:'buscar', q } | { tipo:'detalle', codigo } — para el botón Reintentar
+var stockAbortController = null;
+var stockSeq             = 0;    // descarta respuestas viejas si llega una búsqueda más nueva
+var stockDebounceTimer   = null;
 
 // Auth via JWT — validado por el backend
 function getTokenPanel() {
@@ -1509,13 +1568,17 @@ function initNav() {
   if (btnAct) btnAct.addEventListener('click', function(){ if(vistaActual==='horarios') cargarHorarios(); else cargarDatos(); });
 
   var navMap = {
-    navPedidos:'hoy', navCajas:'cajas', navHorarios:'horarios', navEntradas:'entradas', navMapa:'mapa',
-    drawerNavPedidos:'hoy', drawerNavCajas:'cajas', drawerNavHorarios:'horarios', drawerNavEntradas:'entradas', drawerNavMapa:'mapa'
+    navPedidos:'hoy', navCajas:'cajas', navHorarios:'horarios', navEntradas:'entradas', navMapa:'mapa', navStock:'stock',
+    drawerNavPedidos:'hoy', drawerNavCajas:'cajas', drawerNavHorarios:'horarios', drawerNavEntradas:'entradas', drawerNavMapa:'mapa', drawerNavStock:'stock'
   };
   Object.keys(navMap).forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('click', function(){ setVista(navMap[id]); cerrarDrawer(); });
   });
+
+  // Stock: buscador (input registrado una sola vez, no en iniciarVistaStock)
+  var stockInput = document.getElementById('stockBuscarInput');
+  if (stockInput) stockInput.addEventListener('input', stockOnInput);
 
   // Semana nav
   document.getElementById('btnSemanaAnt').addEventListener('click', function(){
@@ -1549,6 +1612,16 @@ function initNav() {
     if (elNE) elNE.style.display = 'none';
     var elDNE = document.getElementById('drawerNavEntradas');
     if (elDNE) elDNE.style.display = 'none';
+  }
+
+  // Stock: visible para admin y encargado (roles reales con acceso al panel, ver
+  // croma-backend/src/db/migrate.js y seed.js — jefe/operador quedan afuera a pedido
+  // explícito). Nace oculto por defecto en el HTML.
+  if (sesionRol === 'admin' || sesionRol === 'encargado') {
+    var elNS = document.getElementById('navStock');
+    if (elNS) elNS.style.display = '';
+    var elDNS = document.getElementById('drawerNavStock');
+    if (elDNS) elDNS.style.display = '';
   }
 }
 
@@ -1643,7 +1716,7 @@ function cerrarSesion() {
 // ── VISTAS ──
 function setVista(v) {
   vistaActual = v;
-  ['navPedidos','navCajas','navHorarios','navEntradas','navMapa'].forEach(function(id) {
+  ['navPedidos','navCajas','navHorarios','navEntradas','navMapa','navStock'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     var target = id.replace('nav','').toLowerCase();
@@ -1652,10 +1725,11 @@ function setVista(v) {
       (target === 'cajas'    && v === 'cajas') ||
       (target === 'horarios' && v === 'horarios') ||
       (target === 'entradas' && v === 'entradas') ||
-      (target === 'mapa'     && v === 'mapa')
+      (target === 'mapa'     && v === 'mapa') ||
+      (target === 'stock'    && v === 'stock')
     );
   });
-  ['drawerNavPedidos','drawerNavCajas','drawerNavHorarios','drawerNavEntradas','drawerNavMapa'].forEach(function(id) {
+  ['drawerNavPedidos','drawerNavCajas','drawerNavHorarios','drawerNavEntradas','drawerNavMapa','drawerNavStock'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     var target = id.replace('drawerNav','').toLowerCase();
@@ -1664,7 +1738,8 @@ function setVista(v) {
       (target === 'cajas'    && v === 'cajas') ||
       (target === 'horarios' && v === 'horarios') ||
       (target === 'entradas' && v === 'entradas') ||
-      (target === 'mapa'     && v === 'mapa')
+      (target === 'mapa'     && v === 'mapa') ||
+      (target === 'stock'    && v === 'stock')
     );
   });
 
@@ -1672,13 +1747,15 @@ function setVista(v) {
   var esCajas    = v === 'cajas';
   var esEntradas = v === 'entradas';
   var esMapa     = v === 'mapa';
-  var esPedidos  = !esHorarios && !esCajas && !esEntradas && !esMapa;
+  var esStock    = v === 'stock';
+  var esPedidos  = !esHorarios && !esCajas && !esEntradas && !esMapa && !esStock;
   document.getElementById('panelPendientes').style.display   = esPedidos ? '' : 'none';
   document.getElementById('panelSolucionados').style.display = esPedidos ? '' : 'none';
   document.getElementById('cajasBody').style.display         = esCajas    ? '' : 'none';
   document.getElementById('horariosBody').style.display      = esHorarios ? '' : 'none';
   document.getElementById('entradasBody').style.display      = esEntradas ? '' : 'none';
   document.getElementById('mapaBody').style.display          = esMapa     ? '' : 'none';
+  document.getElementById('stockBody').style.display         = esStock    ? '' : 'none';
   if (!esMapa) detenerMapaReparto();
   var controlsEl = document.getElementById('controlsBar');
   var statsEl    = document.getElementById('statsRow');
@@ -1700,6 +1777,8 @@ function setVista(v) {
     cargarEntradas();
   } else if (esMapa) {
     iniciarMapaReparto();
+  } else if (esStock) {
+    iniciarVistaStock();
   } else {
     renderPanel();
   }
@@ -3633,6 +3712,232 @@ function cerrarModalEntrada() {
 }
 function cerrarModalEntradaOverlay(e) {
   if (e.target === document.getElementById('modalEntradaOverlay')) cerrarModalEntrada();
+}
+
+// ── STOCK (croma-api) ──
+// Construcción de DOM sin innerHTML sobre datos de la API — ver BRIEF-croma-api-sql.md.
+// opts.html queda reservado solo para fragmentos estáticos (iconos de croma-icons.js),
+// nunca para texto que venga de croma-api.
+function elCrear(tag, opts) {
+  var e = document.createElement(tag);
+  if (opts) {
+    if (opts.className != null) e.className = opts.className;
+    if (opts.text != null) e.textContent = opts.text;
+    if (opts.html != null) e.innerHTML = opts.html;
+    if (opts.attrs) Object.keys(opts.attrs).forEach(function(k){ e.setAttribute(k, opts.attrs[k]); });
+  }
+  return e;
+}
+
+function stockRenderEstado(tipo, mensaje) {
+  var cont = document.getElementById('stockEstado');
+  if (!cont) return;
+  cont.replaceChildren();
+  if (tipo === 'ninguno') return;
+
+  var box = elCrear('div', { className: 'loading-state stock-estado-' + tipo });
+
+  if (tipo === 'inicial') {
+    box.appendChild(elCrear('span', { className: 'stock-estado-icon icon-24', html: icon('package', '') }));
+    box.appendChild(elCrear('p', { text: 'Buscá un producto por código o nombre para ver su stock.' }));
+  } else if (tipo === 'loading') {
+    box.appendChild(elCrear('div', { className: 'spinner' }));
+    box.appendChild(elCrear('p', { text: 'Buscando...' }));
+  } else if (tipo === 'sin-resultados') {
+    box.appendChild(elCrear('span', { className: 'stock-estado-icon icon-24', html: icon('info', '') }));
+    box.appendChild(elCrear('p', { text: mensaje || 'No se encontraron productos.' }));
+  } else if (tipo === 'error') {
+    box.appendChild(elCrear('span', { className: 'stock-estado-icon icon-24 stock-estado-icon-danger', html: icon('alertTriangle', '') }));
+    box.appendChild(elCrear('p', { text: mensaje || 'Error de conexión.' }));
+    var btn = elCrear('button', { className: 'btn btn-outline', text: 'Reintentar' });
+    btn.type = 'button';
+    btn.addEventListener('click', function(){ stockReintentar(); });
+    box.appendChild(btn);
+  }
+
+  cont.appendChild(box);
+}
+
+function stockReintentar() {
+  if (!stockUltimaAccion) return;
+  if (stockUltimaAccion.tipo === 'buscar') stockBuscar(stockUltimaAccion.q);
+  else if (stockUltimaAccion.tipo === 'detalle') stockVerDetalle(stockUltimaAccion.codigo);
+}
+
+function stockCancelarEnCurso() {
+  if (stockAbortController) { stockAbortController.abort(); stockAbortController = null; }
+}
+
+// Una fila por variante (talle/color) del mismo codigo_producto — nos quedamos con la
+// primera para descripcion/marca/rubro (no varían entre variantes en los datos reales).
+function stockDedupProductos(filas) {
+  var vistos = {};
+  var out = [];
+  filas.forEach(function(f) {
+    var cod = (f.codigo_producto || '').trim();
+    if (!cod || vistos[cod]) return;
+    vistos[cod] = true;
+    out.push(f);
+  });
+  return out;
+}
+
+function stockRenderResultados(productos) {
+  var cont = document.getElementById('stockResultados');
+  cont.replaceChildren();
+  productos.forEach(function(p) {
+    var item = elCrear('button', { className: 'stock-resultado-item' });
+    item.type = 'button';
+    item.appendChild(elCrear('span', { className: 'stock-resultado-cod',  text: p.codigo_producto }));
+    item.appendChild(elCrear('span', { className: 'stock-resultado-desc', text: p.descripcion || '(sin descripción)' }));
+    var meta = [p.marca, p.rubro].filter(function(x){ return x; }).join(' · ');
+    if (meta) item.appendChild(elCrear('span', { className: 'stock-resultado-meta', text: meta }));
+    item.addEventListener('click', function(){ stockVerDetalle(p.codigo_producto); });
+    cont.appendChild(item);
+  });
+}
+
+// Ajuste solo de presentación (no toca datos ni endpoints): "DEPO" (centro 0000 en
+// dbo.Stock_Productos) y el depósito 90 (dbo.Interfaz_WEB_stock_depositos) son el mismo
+// Depósito Central para el negocio, aunque Sysneo los trackea en dos tablas separadas —
+// la API sigue devolviendo cada fila con su propia cantidad real, acá solo se corrige
+// cómo se clasifica y etiqueta visualmente. Ninguno de los dos es una sucursal comercial.
+function stockClasificarFila(f) {
+  if (f.tipo === 'deposito' && Number(f.deposito) === 90) {
+    return { esDeposito: true, nombre: 'Depósito Central (DEPO)', codigoVisible: '90' };
+  }
+  if (f.tipo === 'deposito' && Number(f.deposito) === 93) {
+    return { esDeposito: true, nombre: 'Fallados', codigoVisible: '93' };
+  }
+  if (f.tipo === 'sucursal' && f.centro === '0000') {
+    return { esDeposito: true, nombre: 'Depósito Central (DEPO)', codigoVisible: 'DEPO' };
+  }
+  if (f.tipo === 'deposito') {
+    return { esDeposito: true, nombre: f.nombre || ('Depósito ' + f.deposito), codigoVisible: String(f.deposito) };
+  }
+  return { esDeposito: false, nombre: f.nombre || ('Centro ' + f.centro), codigoVisible: f.centro };
+}
+
+function stockRenderDetalle(codigo, filas) {
+  var cont = document.getElementById('stockDetalle');
+  cont.replaceChildren();
+
+  var total = filas.reduce(function(acc, f){ return acc + (Number(f.cantidad_stock) || 0); }, 0);
+
+  var header = elCrear('div', { className: 'stock-detalle-header' });
+  header.appendChild(elCrear('span', { className: 'stock-detalle-titulo', text: 'Producto ' + codigo }));
+  var totalEl = elCrear('span', { className: 'stock-detalle-total' });
+  totalEl.appendChild(document.createTextNode('Stock total: '));
+  totalEl.appendChild(elCrear('b', { text: String(total) }));
+  header.appendChild(totalEl);
+  cont.appendChild(header);
+
+  if (filas.length === 0) {
+    cont.appendChild(elCrear('p', { className: 'stock-resultado-meta', text: 'Sin filas de stock para este producto.' }));
+    return;
+  }
+
+  filas.forEach(function(f) {
+    var clas     = stockClasificarFila(f);
+    var sinStock = !(Number(f.cantidad_stock) > 0);
+    var fila = elCrear('div', {
+      className: 'stock-fila ' + (clas.esDeposito ? 'stock-fila-deposito' : 'stock-fila-sucursal') + (sinStock ? ' stock-fila-sinstock' : '')
+    });
+
+    fila.appendChild(elCrear('span', { className: 'stock-fila-tag', text: clas.esDeposito ? 'DEPÓSITO' : 'SUCURSAL' }));
+
+    var info = elCrear('div', { className: 'stock-fila-info' });
+    info.appendChild(elCrear('span', { className: 'stock-fila-nombre', text: clas.nombre }));
+    var variante = [];
+    if (clas.esDeposito && clas.codigoVisible) variante.push('Cód. ' + clas.codigoVisible);
+    if (f.talle) variante.push('Talle ' + f.talle);
+    if (f.color) variante.push('Color ' + f.color);
+    if (variante.length) info.appendChild(elCrear('span', { className: 'stock-fila-variante', text: variante.join(' · ') }));
+    fila.appendChild(info);
+
+    fila.appendChild(elCrear('span', { className: 'stock-fila-cantidad', text: String(f.cantidad_stock != null ? f.cantidad_stock : '—') }));
+
+    cont.appendChild(fila);
+  });
+}
+
+async function stockBuscar(texto) {
+  stockUltimaAccion = { tipo: 'buscar', q: texto };
+  stockCancelarEnCurso();
+  var miSeq = ++stockSeq;
+  var controller = new AbortController();
+  stockAbortController = controller;
+  document.getElementById('stockDetalle').replaceChildren();
+  stockRenderEstado('loading');
+  try {
+    var url = STOCK_API_URL + '/productos?q=' + encodeURIComponent(texto);
+    var resp = await fetch(url, { signal: controller.signal });
+    if (miSeq !== stockSeq) return;
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+    if (miSeq !== stockSeq) return;
+    if (!data.ok) throw new Error(data.error || 'Error de la API');
+
+    var productos = stockDedupProductos(data.data || []);
+    if (productos.length === 0) {
+      document.getElementById('stockResultados').replaceChildren();
+      stockRenderEstado('sin-resultados', 'No se encontraron productos para «' + texto + '».');
+      return;
+    }
+    stockRenderEstado('ninguno');
+    stockRenderResultados(productos);
+  } catch (err) {
+    if (err.name === 'AbortError') return; // cancelada por una búsqueda más nueva
+    if (miSeq !== stockSeq) return;
+    document.getElementById('stockResultados').replaceChildren();
+    stockRenderEstado('error', 'No se pudo conectar con la API de stock. ' + err.message);
+  }
+}
+
+async function stockVerDetalle(codigo) {
+  stockUltimaAccion = { tipo: 'detalle', codigo: codigo };
+  stockCancelarEnCurso();
+  var miSeq = ++stockSeq;
+  var controller = new AbortController();
+  stockAbortController = controller;
+  document.getElementById('stockResultados').replaceChildren();
+  stockRenderEstado('loading');
+  try {
+    var url = STOCK_API_URL + '/stock/producto/' + encodeURIComponent(codigo);
+    var resp = await fetch(url, { signal: controller.signal });
+    if (miSeq !== stockSeq) return;
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+    if (miSeq !== stockSeq) return;
+    if (!data.ok) throw new Error(data.error || 'Error de la API');
+
+    stockRenderEstado('ninguno');
+    stockRenderDetalle(codigo, data.data || []);
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    if (miSeq !== stockSeq) return;
+    document.getElementById('stockDetalle').replaceChildren();
+    stockRenderEstado('error', 'No se pudo obtener el stock de este producto. ' + err.message);
+  }
+}
+
+function stockOnInput(e) {
+  var texto = e.target.value.trim();
+  clearTimeout(stockDebounceTimer);
+  if (texto.length < 2) {
+    stockCancelarEnCurso();
+    stockUltimaAccion = null;
+    document.getElementById('stockResultados').replaceChildren();
+    document.getElementById('stockDetalle').replaceChildren();
+    stockRenderEstado('inicial');
+    return;
+  }
+  stockDebounceTimer = setTimeout(function(){ stockBuscar(texto); }, 350);
+}
+
+function iniciarVistaStock() {
+  if (sesionRol !== 'admin' && sesionRol !== 'encargado') return; // defensa en profundidad, ver initNav()
+  if (!stockUltimaAccion) stockRenderEstado('inicial');
 }
 
 // ── UTILS ──
