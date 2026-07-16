@@ -3797,20 +3797,18 @@ function stockRenderResultados(productos) {
   });
 }
 
-// Ajuste solo de presentación (no toca datos ni endpoints): "DEPO" (centro 0000 en
-// dbo.Stock_Productos) y el depósito 90 (dbo.Interfaz_WEB_stock_depositos) son el mismo
-// Depósito Central para el negocio, aunque Sysneo los trackea en dos tablas separadas —
-// la API sigue devolviendo cada fila con su propia cantidad real, acá solo se corrige
-// cómo se clasifica y etiqueta visualmente. Ninguno de los dos es una sucursal comercial.
+// Ajuste solo de presentación (no toca datos ni endpoints): los depositos 90/93
+// (dbo.Interfaz_WEB_stock_depositos, "DEPOSITO CENTRAL"/"FALLADOS" segun dbo.depositos) se
+// etiquetan por separado para no mezclarlos entre si. Centro 0000 (Administracion Central,
+// dbo.Stock_Productos) se filtra antes de llegar aca -- ver stockRenderDetalle -- porque es
+// una tercera fuente distinta que a veces no coincide con el desglose de depositos y generaba
+// confusion mostrada junto a las demas filas.
 function stockClasificarFila(f) {
   if (f.tipo === 'deposito' && Number(f.deposito) === 90) {
-    return { esDeposito: true, nombre: 'Depósito Central (DEPO)', codigoVisible: '90' };
+    return { esDeposito: true, nombre: 'Depósito 90 (Depósito Central)', codigoVisible: '90' };
   }
   if (f.tipo === 'deposito' && Number(f.deposito) === 93) {
-    return { esDeposito: true, nombre: 'Fallados', codigoVisible: '93' };
-  }
-  if (f.tipo === 'sucursal' && f.centro === '0000') {
-    return { esDeposito: true, nombre: 'Depósito Central (DEPO)', codigoVisible: 'DEPO' };
+    return { esDeposito: true, nombre: 'Depósito 93 (Fallados)', codigoVisible: '93' };
   }
   if (f.tipo === 'deposito') {
     return { esDeposito: true, nombre: f.nombre || ('Depósito ' + f.deposito), codigoVisible: String(f.deposito) };
@@ -3818,9 +3816,13 @@ function stockClasificarFila(f) {
   return { esDeposito: false, nombre: f.nombre || ('Centro ' + f.centro), codigoVisible: f.centro };
 }
 
-function stockRenderDetalle(codigo, filas) {
+function stockRenderDetalle(codigo, filasCrudas) {
   var cont = document.getElementById('stockDetalle');
   cont.replaceChildren();
+
+  // Centro 0000 (Administracion Central) no se muestra: es una tercera fuente distinta
+  // de los depositos 90/93 y mezclarla en la misma lista de resultados generaba confusion.
+  var filas = filasCrudas.filter(function(f){ return !(f.tipo === 'sucursal' && f.centro === '0000'); });
 
   var total = filas.reduce(function(acc, f){ return acc + (Number(f.cantidad_stock) || 0); }, 0);
 
