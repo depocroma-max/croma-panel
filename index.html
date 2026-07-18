@@ -68,8 +68,8 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--b
 /* ── TOPBAR ── */
 .topbar { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 1rem; padding: 0 2rem; height: 56px; background: var(--black); border-bottom: 1px solid #222; }
 .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; }
-.brand-tridente { height: 28px; width: auto; object-fit: contain; margin-right: 2px; filter: drop-shadow(0 0 4px rgba(232,37,26,0.4)); }
-.brand-logo { font-family: var(--font-display); font-size: 22px; letter-spacing: 2px; color: var(--white); }
+.brand-tridente { height: 26px; width: auto; object-fit: contain; margin-right: 2px; filter: drop-shadow(0 0 4px rgba(232,37,26,0.4)); }
+.brand-logo { font-family: var(--font-display); font-size: 26px; letter-spacing: 3px; line-height: 1; color: var(--white); }
 .brand-divider { color: var(--gray-600); font-size: 14px; }
 .brand-section { font-size: 11px; font-weight: 500; letter-spacing: 3px; color: var(--gray-400); text-transform: uppercase; }
 .top-nav { display: flex; gap: 2px; margin-left: 1rem; }
@@ -1712,13 +1712,38 @@ function iniciarSesion(rol, suc) {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('dashApp').style.display = '';
   initNav();
-  if (sesionRol === 'operador') {
-    setVista('entradas');
-  } else if (sesionRol === 'encargado' || sesionRol === 'horarios') {
-    setVista('horarios');
-  } else {
+  var vistaInicial = obtenerVistaInicial();
+  if (vistaInicial === 'hoy') {
+    vistaActual = 'hoy';
+    try { localStorage.setItem('croma_panel_ultima_vista', 'hoy'); } catch(e) {}
     cargarDatos();
+  } else {
+    setVista(vistaInicial);
   }
+}
+
+// Recuerda la última pestaña visitada por sesión de navegador y la restaura al
+// volver a abrir el panel; si no hay ninguna guardada (o ya no está disponible
+// para el rol actual), entra directo a "En vivo" cuando el rol tiene acceso.
+function obtenerVistaInicial() {
+  var envivoOk = (sesionRol === 'admin' || sesionRol === 'encargado');
+  var vistasValidas = ['hoy', 'cajas', 'horarios', 'entradas', 'mapa'];
+  if (sesionRol === 'admin' || sesionRol === 'encargado') vistasValidas.push('stock', 'envivo');
+  if (sesionRol === 'encargado' || sesionRol === 'horarios' || sesionRol === 'operador') {
+    vistasValidas = vistasValidas.filter(function(v) { return v !== 'hoy' && v !== 'cajas'; });
+  }
+  if (sesionRol === 'horarios') {
+    vistasValidas = vistasValidas.filter(function(v) { return v !== 'entradas'; });
+  }
+
+  var guardada = null;
+  try { guardada = localStorage.getItem('croma_panel_ultima_vista'); } catch(e) {}
+  if (guardada && vistasValidas.indexOf(guardada) >= 0) return guardada;
+
+  if (envivoOk) return 'envivo';
+  if (sesionRol === 'operador') return 'entradas';
+  if (sesionRol === 'encargado' || sesionRol === 'horarios') return 'horarios';
+  return 'hoy';
 }
 
 function hacerLogin() {
@@ -1791,6 +1816,7 @@ function cerrarSesion() {
 // ── VISTAS ──
 function setVista(v) {
   vistaActual = v;
+  try { localStorage.setItem('croma_panel_ultima_vista', v); } catch(e) {}
   ['navPedidos','navCajas','navHorarios','navEntradas','navMapa','navStock','navEnVivo'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
