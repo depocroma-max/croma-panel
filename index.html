@@ -996,6 +996,41 @@ tbody tr:hover { background: var(--gray-50); }
   .entrada-form-grid{ grid-template-columns: 1fr; }
 }
 
+/* ── EN VIVO (fichadas de hoy, vía croma-horarios) ── */
+.envivo-header  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.envivo-title   { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; color: var(--black); }
+.envivo-board   { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.envivo-card    { display: flex; flex-direction: column; background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-lg); border-top: 3px solid var(--gray-200); box-shadow: var(--shadow-sm); overflow: hidden; }
+.envivo-card.activa { border-top-color: var(--card-suc, var(--gray-400)); }
+.envivo-card.vacia  { opacity: .72; }
+.envivo-card-head   { display: flex; align-items: center; gap: 8px; padding: 14px 16px 10px; }
+.envivo-card-pin    { display: inline-flex; align-items: center; }
+.envivo-card-suc    { font-weight: 600; font-size: 14px; letter-spacing: .2px; color: var(--black); }
+.envivo-card-count  { margin-left: auto; display: inline-flex; align-items: baseline; gap: 4px; }
+.envivo-card-count b { font-family: var(--font-display); font-size: 30px; line-height: 1; color: var(--success); }
+.envivo-card-count.cero b { color: var(--gray-400); }
+.envivo-card-count span { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--gray-400); }
+.envivo-presentes { display: flex; flex-direction: column; gap: 2px; padding: 0 8px 8px; }
+.envivo-emp       { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: var(--radius-sm); }
+.envivo-emp:hover { background: var(--gray-50); }
+.envivo-emp-avatar { position: relative; width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; overflow: hidden; }
+.envivo-emp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.envivo-emp-avatar .estado-dot { position: absolute; right: -1px; bottom: -1px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--white); }
+.estado-dot.presente { background: var(--success); }
+.estado-dot.pausa    { background: var(--warning); }
+.envivo-emp-info     { display: flex; flex-direction: column; min-width: 0; }
+.envivo-emp-nombre   { font-size: 13px; font-weight: 600; color: var(--black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.envivo-emp-meta     { font-size: 11px; color: var(--gray-600); }
+.envivo-card-foot { margin-top: auto; border-top: 1px dashed var(--gray-100); padding: 9px 16px; display: flex; flex-direction: column; gap: 4px; }
+.envivo-foot-line { font-size: 11.5px; color: var(--gray-600); display: flex; align-items: center; gap: 6px; }
+.envivo-foot-line b { color: var(--gray-800); font-weight: 600; }
+.envivo-foot-line.fin   { color: var(--gray-400); }
+.envivo-foot-line.fin b { color: var(--gray-500); font-weight: 500; }
+.envivo-vacia-msg { padding: 18px 16px; font-size: 12.5px; color: var(--gray-400); text-align: center; }
+@media (max-width: 700px) {
+  .envivo-board { grid-template-columns: 1fr; }
+}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -1029,6 +1064,7 @@ tbody tr:hover { background: var(--gray-50); }
       <button class="nav-btn" id="navEntradas">Entradas</button>
       <button class="nav-btn" id="navMapa">Mapa de reparto</button>
       <button class="nav-btn" id="navStock" style="display:none">Stock</button>
+      <button class="nav-btn" id="navEnVivo" style="display:none">En vivo</button>
     </nav>
     <div class="sesion-chip" id="sesionChip">
       <span class="sesion-nombre" id="sesionNombre">Admin</span>
@@ -1289,6 +1325,16 @@ tbody tr:hover { background: var(--gray-50); }
       <div id="stockEstado" class="stock-estado"></div>
     </div>
 
+    <!-- EN VIVO -->
+    <div id="envivoBody" style="display:none">
+      <div class="envivo-header">
+        <span class="envivo-title">Horario en vivo</span>
+      </div>
+      <div id="envivoContainer" class="envivo-board">
+        <div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>
+      </div>
+    </div>
+
   </div>
 </div>
 <!-- MODAL PEDIDO -->
@@ -1460,10 +1506,11 @@ tbody tr:hover { background: var(--gray-50); }
     <button class="drawer-nav-btn" id="drawerNavEntradas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg> Entradas</button>
     <button class="drawer-nav-btn" id="drawerNavMapa"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> Mapa de reparto</button>
     <button class="drawer-nav-btn" id="drawerNavStock" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/></svg> Stock</button>
+    <button class="drawer-nav-btn" id="drawerNavEnVivo" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> En vivo</button>
   </nav>
 </div>
 
-<script src="croma-icons.js?v=20260704-ds"></script>
+<script src="croma-icons.js?v=20260718-ds"></script>
 <script>
 var SUCURSALES = ['01 PASEO','05 WAVE','09 CIPO SAN MARTIN','10 PERITO MORENO','12 CENTENARIO','14 ROCA','DEPO'];
 var todosLosPedidos = [];
@@ -1568,8 +1615,8 @@ function initNav() {
   if (btnAct) btnAct.addEventListener('click', function(){ if(vistaActual==='horarios') cargarHorarios(); else cargarDatos(); });
 
   var navMap = {
-    navPedidos:'hoy', navCajas:'cajas', navHorarios:'horarios', navEntradas:'entradas', navMapa:'mapa', navStock:'stock',
-    drawerNavPedidos:'hoy', drawerNavCajas:'cajas', drawerNavHorarios:'horarios', drawerNavEntradas:'entradas', drawerNavMapa:'mapa', drawerNavStock:'stock'
+    navPedidos:'hoy', navCajas:'cajas', navHorarios:'horarios', navEntradas:'entradas', navMapa:'mapa', navStock:'stock', navEnVivo:'envivo',
+    drawerNavPedidos:'hoy', drawerNavCajas:'cajas', drawerNavHorarios:'horarios', drawerNavEntradas:'entradas', drawerNavMapa:'mapa', drawerNavStock:'stock', drawerNavEnVivo:'envivo'
   };
   Object.keys(navMap).forEach(function(id) {
     var el = document.getElementById(id);
@@ -1622,6 +1669,14 @@ function initNav() {
     if (elNS) elNS.style.display = '';
     var elDNS = document.getElementById('drawerNavStock');
     if (elDNS) elDNS.style.display = '';
+  }
+
+  // En vivo: mismo criterio de acceso que Stock (admin y encargado)
+  if (sesionRol === 'admin' || sesionRol === 'encargado') {
+    var elNEV = document.getElementById('navEnVivo');
+    if (elNEV) elNEV.style.display = '';
+    var elDNEV = document.getElementById('drawerNavEnVivo');
+    if (elDNEV) elDNEV.style.display = '';
   }
 }
 
@@ -1705,7 +1760,11 @@ function cerrarSesion() {
   if (drawerClose) drawerClose.addEventListener('click', cerrarDrawer);
   if (drawerOverlay) drawerOverlay.addEventListener('click', cerrarDrawer);
 
-  setInterval(function(){ if(vistaActual !== 'horarios') cargarDatos(true); }, 2 * 60 * 1000);
+  setInterval(function(){
+    if (vistaActual === 'envivo') renderEnVivoPanel();
+    else if (vistaActual !== 'horarios') cargarDatos(true);
+  }, 2 * 60 * 1000);
+  setInterval(function(){ if (vistaActual === 'envivo') cargarEnVivo(); }, 5 * 60 * 1000);
 
   // Registrar Service Worker para instalación PWA
   if ('serviceWorker' in navigator) {
@@ -1716,7 +1775,7 @@ function cerrarSesion() {
 // ── VISTAS ──
 function setVista(v) {
   vistaActual = v;
-  ['navPedidos','navCajas','navHorarios','navEntradas','navMapa','navStock'].forEach(function(id) {
+  ['navPedidos','navCajas','navHorarios','navEntradas','navMapa','navStock','navEnVivo'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     var target = id.replace('nav','').toLowerCase();
@@ -1726,10 +1785,11 @@ function setVista(v) {
       (target === 'horarios' && v === 'horarios') ||
       (target === 'entradas' && v === 'entradas') ||
       (target === 'mapa'     && v === 'mapa') ||
-      (target === 'stock'    && v === 'stock')
+      (target === 'stock'    && v === 'stock') ||
+      (target === 'envivo'   && v === 'envivo')
     );
   });
-  ['drawerNavPedidos','drawerNavCajas','drawerNavHorarios','drawerNavEntradas','drawerNavMapa','drawerNavStock'].forEach(function(id) {
+  ['drawerNavPedidos','drawerNavCajas','drawerNavHorarios','drawerNavEntradas','drawerNavMapa','drawerNavStock','drawerNavEnVivo'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     var target = id.replace('drawerNav','').toLowerCase();
@@ -1739,7 +1799,8 @@ function setVista(v) {
       (target === 'horarios' && v === 'horarios') ||
       (target === 'entradas' && v === 'entradas') ||
       (target === 'mapa'     && v === 'mapa') ||
-      (target === 'stock'    && v === 'stock')
+      (target === 'stock'    && v === 'stock') ||
+      (target === 'envivo'   && v === 'envivo')
     );
   });
 
@@ -1748,7 +1809,8 @@ function setVista(v) {
   var esEntradas = v === 'entradas';
   var esMapa     = v === 'mapa';
   var esStock    = v === 'stock';
-  var esPedidos  = !esHorarios && !esCajas && !esEntradas && !esMapa && !esStock;
+  var esEnVivo   = v === 'envivo';
+  var esPedidos  = !esHorarios && !esCajas && !esEntradas && !esMapa && !esStock && !esEnVivo;
   document.getElementById('panelPendientes').style.display   = esPedidos ? '' : 'none';
   document.getElementById('panelSolucionados').style.display = esPedidos ? '' : 'none';
   document.getElementById('cajasBody').style.display         = esCajas    ? '' : 'none';
@@ -1756,6 +1818,7 @@ function setVista(v) {
   document.getElementById('entradasBody').style.display      = esEntradas ? '' : 'none';
   document.getElementById('mapaBody').style.display          = esMapa     ? '' : 'none';
   document.getElementById('stockBody').style.display         = esStock    ? '' : 'none';
+  document.getElementById('envivoBody').style.display        = esEnVivo   ? '' : 'none';
   if (!esMapa) detenerMapaReparto();
   var controlsEl = document.getElementById('controlsBar');
   var statsEl    = document.getElementById('statsRow');
@@ -1779,6 +1842,8 @@ function setVista(v) {
     iniciarMapaReparto();
   } else if (esStock) {
     iniciarVistaStock();
+  } else if (esEnVivo) {
+    cargarEnVivo();
   } else {
     renderPanel();
   }
@@ -1990,6 +2055,188 @@ function clasificarTurnoColor(val) {
 
 function iniciales(nombre) {
   return String(nombre).replace(/^\d+\s+/, '').split(' ').filter(Boolean).slice(0,2).map(function(p){ return p[0]; }).join('').toUpperCase();
+}
+
+// ── EN VIVO (fichadas de hoy, mismo backend que Croma Horarios) ──
+var envivoData = null; // filas normalizadas del día
+var MESES_ES_ENVIVO = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+var ENVIVO_SUC_COLOR = { '01':'--suc-01','05':'--suc-05','09':'--suc-09','10':'--suc-10','12':'--suc-12','14':'--suc-14','DEPO':'--suc-depo' };
+
+function envivoSucId(nombreSuc) {
+  var m = String(nombreSuc).match(/^(\d{2})\s/);
+  return m ? m[1] : nombreSuc;
+}
+
+function hhmmAMinEnVivo(s) {
+  var m = String(s || '').match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return NaN;
+  return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+}
+
+// Determina si un empleado está presente/pausa/terminado según sus bloques de hoy
+function estadoEnVivoPanel(bloquesRaw, nowMin) {
+  var bloques = bloquesRaw.map(function(b) {
+    var ini = hhmmAMinEnVivo(b.ent);
+    var fin = hhmmAMinEnVivo(b.sal);
+    if (isNaN(ini) || isNaN(fin)) return null;
+    if (fin <= ini) fin += 1440; // cruza medianoche
+    return { ini: ini, fin: fin, iniStr: b.ent, finStr: b.sal };
+  }).filter(Boolean).sort(function(a, b) { return a.ini - b.ini; });
+  if (!bloques.length) return { estado: 'sinhora' };
+
+  var primero = bloques[0];
+  var ultimo  = bloques[bloques.length - 1];
+  for (var i = 0; i < bloques.length; i++) {
+    var bl = bloques[i];
+    if (nowMin >= bl.ini && nowMin < bl.fin) {
+      return { estado: 'presente', entra: bl.iniStr, salida: ultimo.finStr, salidaMin: ultimo.fin };
+    }
+  }
+  if (nowMin < primero.ini) return { estado: 'proximo', entra: primero.iniStr, entraMin: primero.ini };
+  if (nowMin >= ultimo.fin) return { estado: 'fin', salida: ultimo.finStr };
+  for (var j = 0; j < bloques.length - 1; j++) {
+    if (nowMin >= bloques[j].fin && nowMin < bloques[j + 1].ini) {
+      return { estado: 'pausa', vuelve: bloques[j + 1].iniStr, vuelveMin: bloques[j + 1].ini, salida: ultimo.finStr };
+    }
+  }
+  return { estado: 'fin', salida: ultimo.finStr };
+}
+
+function envivoNombreCorto(nombre) { return String(nombre || '').replace(/^\d+\s+/, ''); }
+
+function envivoAvatarHTML(nombre, colorVar, estadoDot) {
+  var foto = buscarFotoEmpleado(nombre);
+  var inic = iniciales(nombre);
+  var dot  = estadoDot ? '<span class="estado-dot ' + estadoDot + '"></span>' : '';
+  if (foto) {
+    return '<div class="envivo-emp-avatar"><img src="' + foto + '" alt="" onerror="this.style.display=\'none\';this.parentElement.insertAdjacentText(\'afterbegin\',\'' + inic + '\')">' + dot + '</div>';
+  }
+  return '<div class="envivo-emp-avatar" style="background:var(' + colorVar + '-light);color:var(' + colorVar + ')">' + inic + dot + '</div>';
+}
+
+async function cargarEnVivo() {
+  var cont = document.getElementById('envivoContainer');
+  cont.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>';
+
+  try {
+    var resultados = await Promise.all([
+      fetch(HORARIOS_API_URL + '?accion=horarios').then(function(r) { return r.json(); }),
+      obtenerPerfilesFotos()
+    ]);
+    var json = resultados[0];
+    if (json.ok === false) throw new Error(json.error || 'Error en servidor');
+
+    var NOMBRE_A_ID = {
+      'PASEO': '01', 'WAVE': '05', 'CIPO': '09', 'CIPO SAN MARTIN': '09',
+      'PERITO': '10', 'PERITO MORENO': '10', 'CENTE': '12', 'CENTENARIO': '12',
+      'ROCA180': '14', 'ROCA': '14', 'DEPO': 'DEPO', 'OFICINA': 'OFICINA'
+    };
+    envivoData = (json.data || []).map(function(r) {
+      var localRaw = String(r.LOCAL || r.local || r.HOJA || '').trim().toUpperCase();
+      var prefijo  = (localRaw.match(/^(\d{2})\b/) || [])[1];
+      var localId  = NOMBRE_A_ID[localRaw] || prefijo || localRaw;
+      return {
+        LOCAL: localId,
+        AÑO: String(r.AÑO || r.anio || ''),
+        MES: String(r.MES || r.mes || '').trim().toUpperCase(),
+        DIA: String(r.DIA || r.dia || '0'),
+        EMPLEADO: String(r.EMPLEADO || r.empleado || '').trim(),
+        H_ENTRADA: String(r.H_ENTRADA || r.entrada || ''),
+        H_SALIDA: String(r.H_SALIDA || r.salida || '')
+      };
+    });
+  } catch (e) {
+    envivoData = null;
+  }
+  renderEnVivoPanel();
+}
+
+function renderEnVivoPanel() {
+  var cont = document.getElementById('envivoContainer');
+  if (envivoData === null) {
+    cont.innerHTML = '<div class="envivo-vacia-msg">Error al cargar los datos en vivo</div>';
+    return;
+  }
+
+  var ahora  = new Date();
+  var nowMin = ahora.getHours() * 60 + ahora.getMinutes();
+  var mesHoy = MESES_ES_ENVIVO[ahora.getMonth()];
+
+  var registrosHoy = envivoData.filter(function(r) {
+    return String(r.AÑO) === String(ahora.getFullYear()) &&
+      r.MES === mesHoy &&
+      String(r.DIA) === String(ahora.getDate());
+  });
+
+  // Encargado ve todas las sucursales — la suya primero (mismo criterio que Horario semanal)
+  var sucursalesVer = SUCURSALES.filter(function(s) { return s !== 'DEPO'; });
+  if (sesionRol === 'encargado' && sesionSucursal) {
+    sucursalesVer = sucursalesVer.filter(function(s) { return s !== sesionSucursal; });
+    sucursalesVer.unshift(sesionSucursal);
+  }
+
+  var html = '';
+  sucursalesVer.forEach(function(nombreSuc) {
+    var sucId    = envivoSucId(nombreSuc);
+    var colorVar = ENVIVO_SUC_COLOR[sucId] || '--gray-400';
+    var regsSuc  = registrosHoy.filter(function(r) { return r.LOCAL === sucId; });
+
+    var porEmp = {};
+    regsSuc.forEach(function(r) {
+      if (!porEmp[r.EMPLEADO]) porEmp[r.EMPLEADO] = [];
+      if (r.H_ENTRADA && r.H_SALIDA) porEmp[r.EMPLEADO].push({ ent: r.H_ENTRADA, sal: r.H_SALIDA });
+    });
+
+    var presentes = [], pausados = [], terminados = [];
+    Object.keys(porEmp).forEach(function(emp) {
+      var est = estadoEnVivoPanel(porEmp[emp], nowMin);
+      if (est.estado === 'presente') presentes.push({ emp: emp, est: est });
+      else if (est.estado === 'pausa') pausados.push({ emp: emp, est: est });
+      else if (est.estado === 'fin') terminados.push({ emp: emp, est: est });
+    });
+    presentes.sort(function(a, b) { return a.est.salidaMin - b.est.salidaMin; });
+
+    var hayDatos = regsSuc.length > 0;
+
+    html += '<div class="envivo-card ' + (presentes.length ? 'activa' : 'vacia') + '" style="--card-suc:var(' + colorVar + ')">';
+    html += '<div class="envivo-card-head">';
+    html += '<span class="envivo-card-pin" style="color:var(' + colorVar + ')">' + icon('mapPin', 'icon-16') + '</span>';
+    html += '<span class="envivo-card-suc">' + nombreSuc + '</span>';
+    html += '<span class="envivo-card-count ' + (presentes.length ? '' : 'cero') + '"><b>' + presentes.length + '</b><span>en turno</span></span>';
+    html += '</div>';
+
+    if (presentes.length) {
+      html += '<div class="envivo-presentes">';
+      presentes.forEach(function(o) {
+        html += '<div class="envivo-emp">' +
+          envivoAvatarHTML(o.emp, colorVar, 'presente') +
+          '<div class="envivo-emp-info">' +
+          '<span class="envivo-emp-nombre">' + envivoNombreCorto(o.emp) + '</span>' +
+          '<span class="envivo-emp-meta">Ingreso ' + o.est.entra + ' - Sale ' + o.est.salida + '</span>' +
+          '</div></div>';
+      });
+      html += '</div>';
+    } else if (hayDatos) {
+      html += '<div class="envivo-vacia-msg">Nadie en turno ahora</div>';
+    } else {
+      html += '<div class="envivo-vacia-msg">Sin registros hoy</div>';
+    }
+
+    if (pausados.length || terminados.length) {
+      html += '<div class="envivo-card-foot">';
+      pausados.forEach(function(o) {
+        html += '<div class="envivo-foot-line">' + icon('pause', 'icon-14') + ' <b>' + envivoNombreCorto(o.emp) + '</b> en pausa · vuelve ' + o.est.vuelve + '</div>';
+      });
+      terminados.forEach(function(o) {
+        html += '<div class="envivo-foot-line fin">' + icon('check', 'icon-12') + '<b>' + envivoNombreCorto(o.emp) + '</b> terminó ' + o.est.salida + '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+  });
+
+  cont.innerHTML = html || '<div class="envivo-vacia-msg">Sin sucursales</div>';
 }
 
 async function cargarHorarios() {
