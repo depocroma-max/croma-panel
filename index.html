@@ -997,8 +997,26 @@ tbody tr:hover { background: var(--gray-50); }
 }
 
 /* ── EN VIVO (fichadas de hoy, vía croma-horarios) ── */
-.envivo-header  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-.envivo-title   { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; color: var(--black); }
+.envivo-bar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px;
+  background: var(--white); border: 1px solid var(--gray-100);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  padding: 14px 18px; margin-bottom: 1.25rem;
+}
+.envivo-bar-dia  { font-family: var(--font-display); font-size: 24px; letter-spacing: 1px; color: var(--black); text-transform: capitalize; }
+.envivo-bar-hora { font-size: 13px; color: var(--gray-600); }
+.envivo-bar-hora b { color: var(--black); font-variant-numeric: tabular-nums; }
+.envivo-bar-total { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-600); }
+.envivo-bar-total b { font-family: var(--font-display); font-size: 28px; line-height: 1; color: var(--success); }
+.envivo-live-dot {
+  width: 9px; height: 9px; border-radius: 50%; background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34,197,94,.5); animation: envivoPulse 1.8s infinite;
+}
+@keyframes envivoPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(34,197,94,.5); }
+  70%  { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+  100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
 .envivo-board   { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
 .envivo-card    { display: flex; flex-direction: column; background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-lg); border-top: 3px solid var(--gray-200); box-shadow: var(--shadow-sm); overflow: hidden; }
 .envivo-card.activa { border-top-color: var(--card-suc, var(--gray-400)); }
@@ -1058,13 +1076,13 @@ tbody tr:hover { background: var(--gray-50); }
       <span class="brand-section">Panel</span>
     </div>
     <nav class="top-nav" id="topNav">
+      <button class="nav-btn" id="navEnVivo" style="display:none">🟢 En vivo</button>
       <button class="nav-btn active" id="navPedidos">Pedidos</button>
       <button class="nav-btn" id="navCajas">Cajas de locales</button>
       <button class="nav-btn" id="navHorarios">Horario semanal</button>
       <button class="nav-btn" id="navEntradas">Entradas</button>
       <button class="nav-btn" id="navMapa">Mapa de reparto</button>
       <button class="nav-btn" id="navStock" style="display:none">Stock</button>
-      <button class="nav-btn" id="navEnVivo" style="display:none">En vivo</button>
     </nav>
     <div class="sesion-chip" id="sesionChip">
       <span class="sesion-nombre" id="sesionNombre">Admin</span>
@@ -1327,9 +1345,7 @@ tbody tr:hover { background: var(--gray-50); }
 
     <!-- EN VIVO -->
     <div id="envivoBody" style="display:none">
-      <div class="envivo-header">
-        <span class="envivo-title">Horario en vivo</span>
-      </div>
+      <div class="envivo-bar" id="envivoBar"></div>
       <div id="envivoContainer" class="envivo-board">
         <div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>
       </div>
@@ -1500,13 +1516,13 @@ tbody tr:hover { background: var(--gray-50); }
     <button class="drawer-salir-btn" onclick="cerrarSesion()">Salir</button>
   </div>
   <nav class="drawer-nav">
+    <button class="drawer-nav-btn" id="drawerNavEnVivo" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> En vivo</button>
     <button class="drawer-nav-btn active" id="drawerNavPedidos"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/><path d="m7.5 4.27 9 5.15"/></svg> Pedidos</button>
     <button class="drawer-nav-btn" id="drawerNavCajas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> Cajas de locales</button>
     <button class="drawer-nav-btn" id="drawerNavHorarios"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg> Horario semanal</button>
     <button class="drawer-nav-btn" id="drawerNavEntradas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg> Entradas</button>
     <button class="drawer-nav-btn" id="drawerNavMapa"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> Mapa de reparto</button>
     <button class="drawer-nav-btn" id="drawerNavStock" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/></svg> Stock</button>
-    <button class="drawer-nav-btn" id="drawerNavEnVivo" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> En vivo</button>
   </nav>
 </div>
 
@@ -2057,15 +2073,21 @@ function iniciales(nombre) {
   return String(nombre).replace(/^\d+\s+/, '').split(' ').filter(Boolean).slice(0,2).map(function(p){ return p[0]; }).join('').toUpperCase();
 }
 
-// ── EN VIVO (fichadas de hoy, mismo backend que Croma Horarios) ──
+// ── EN VIVO (fichadas de hoy, mismo backend y mismo diseño que Croma Horarios) ──
 var envivoData = null; // filas normalizadas del día
 var MESES_ES_ENVIVO = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-var ENVIVO_SUC_COLOR = { '01':'--suc-01','05':'--suc-05','09':'--suc-09','10':'--suc-10','12':'--suc-12','14':'--suc-14','DEPO':'--suc-depo' };
-
-function envivoSucId(nombreSuc) {
-  var m = String(nombreSuc).match(/^(\d{2})\s/);
-  return m ? m[1] : nombreSuc;
-}
+var DIAS_FULL_ENVIVO = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+// Mismas sucursales, orden y colores que croma-horarios (incluye DEPO y OFICINA)
+var ENVIVO_SUCURSALES = [
+  { id: '01',      nombre: '01 PASEO',           color: '#2563EB', colorLight: '#EFF6FF' },
+  { id: '05',      nombre: '05 WAVE',            color: '#10B981', colorLight: '#ECFDF5' },
+  { id: '09',      nombre: '09 CIPO SAN MARTIN', color: '#F97316', colorLight: '#FFF7ED' },
+  { id: '10',      nombre: '10 PERITO MORENO',   color: '#DB2777', colorLight: '#FDF2F8' },
+  { id: '12',      nombre: '12 CENTENARIO',      color: '#7C3AED', colorLight: '#F5F3FF' },
+  { id: '14',      nombre: '14 ROCA',            color: '#92400E', colorLight: '#FEF3C7' },
+  { id: 'DEPO',    nombre: 'DEPO',               color: '#4B5563', colorLight: '#F3F4F6' },
+  { id: 'OFICINA', nombre: 'OFICINA',            color: '#0891B2', colorLight: '#ECFEFF' }
+];
 
 function hhmmAMinEnVivo(s) {
   var m = String(s || '').match(/^(\d{1,2}):(\d{2})/);
@@ -2104,14 +2126,14 @@ function estadoEnVivoPanel(bloquesRaw, nowMin) {
 
 function envivoNombreCorto(nombre) { return String(nombre || '').replace(/^\d+\s+/, ''); }
 
-function envivoAvatarHTML(nombre, colorVar, estadoDot) {
+function envivoAvatarHTML(nombre, suc, estadoDot) {
   var foto = buscarFotoEmpleado(nombre);
   var inic = iniciales(nombre);
   var dot  = estadoDot ? '<span class="estado-dot ' + estadoDot + '"></span>' : '';
   if (foto) {
     return '<div class="envivo-emp-avatar"><img src="' + foto + '" alt="" onerror="this.style.display=\'none\';this.parentElement.insertAdjacentText(\'afterbegin\',\'' + inic + '\')">' + dot + '</div>';
   }
-  return '<div class="envivo-emp-avatar" style="background:var(' + colorVar + '-light);color:var(' + colorVar + ')">' + inic + dot + '</div>';
+  return '<div class="envivo-emp-avatar" style="background:' + suc.colorLight + ';color:' + suc.color + '">' + inic + dot + '</div>';
 }
 
 async function cargarEnVivo() {
@@ -2153,6 +2175,7 @@ async function cargarEnVivo() {
 
 function renderEnVivoPanel() {
   var cont = document.getElementById('envivoContainer');
+  var bar  = document.getElementById('envivoBar');
   if (envivoData === null) {
     cont.innerHTML = '<div class="envivo-vacia-msg">Error al cargar los datos en vivo</div>';
     return;
@@ -2168,18 +2191,18 @@ function renderEnVivoPanel() {
       String(r.DIA) === String(ahora.getDate());
   });
 
-  // Encargado ve todas las sucursales — la suya primero (mismo criterio que Horario semanal)
-  var sucursalesVer = SUCURSALES.filter(function(s) { return s !== 'DEPO'; });
+  // Encargado ve todas las sucursales (incl. DEPO y OFICINA) — la suya primero, igual que Horario semanal
+  var sucursalesVer = ENVIVO_SUCURSALES.slice();
   if (sesionRol === 'encargado' && sesionSucursal) {
-    sucursalesVer = sucursalesVer.filter(function(s) { return s !== sesionSucursal; });
-    sucursalesVer.unshift(sesionSucursal);
+    sucursalesVer.sort(function(a, b) {
+      return (b.nombre === sesionSucursal ? 1 : 0) - (a.nombre === sesionSucursal ? 1 : 0);
+    });
   }
 
+  var totalPresentes = 0;
   var html = '';
-  sucursalesVer.forEach(function(nombreSuc) {
-    var sucId    = envivoSucId(nombreSuc);
-    var colorVar = ENVIVO_SUC_COLOR[sucId] || '--gray-400';
-    var regsSuc  = registrosHoy.filter(function(r) { return r.LOCAL === sucId; });
+  sucursalesVer.forEach(function(suc) {
+    var regsSuc = registrosHoy.filter(function(r) { return r.LOCAL === suc.id; });
 
     var porEmp = {};
     regsSuc.forEach(function(r) {
@@ -2195,13 +2218,14 @@ function renderEnVivoPanel() {
       else if (est.estado === 'fin') terminados.push({ emp: emp, est: est });
     });
     presentes.sort(function(a, b) { return a.est.salidaMin - b.est.salidaMin; });
+    totalPresentes += presentes.length;
 
     var hayDatos = regsSuc.length > 0;
 
-    html += '<div class="envivo-card ' + (presentes.length ? 'activa' : 'vacia') + '" style="--card-suc:var(' + colorVar + ')">';
+    html += '<div class="envivo-card ' + (presentes.length ? 'activa' : 'vacia') + '" style="--card-suc:' + suc.color + '">';
     html += '<div class="envivo-card-head">';
-    html += '<span class="envivo-card-pin" style="color:var(' + colorVar + ')">' + icon('mapPin', 'icon-16') + '</span>';
-    html += '<span class="envivo-card-suc">' + nombreSuc + '</span>';
+    html += '<span class="envivo-card-pin" style="color:' + suc.color + '">' + icon('mapPin', 'icon-16') + '</span>';
+    html += '<span class="envivo-card-suc">' + suc.nombre + '</span>';
     html += '<span class="envivo-card-count ' + (presentes.length ? '' : 'cero') + '"><b>' + presentes.length + '</b><span>en turno</span></span>';
     html += '</div>';
 
@@ -2209,7 +2233,7 @@ function renderEnVivoPanel() {
       html += '<div class="envivo-presentes">';
       presentes.forEach(function(o) {
         html += '<div class="envivo-emp">' +
-          envivoAvatarHTML(o.emp, colorVar, 'presente') +
+          envivoAvatarHTML(o.emp, suc, 'presente') +
           '<div class="envivo-emp-info">' +
           '<span class="envivo-emp-nombre">' + envivoNombreCorto(o.emp) + '</span>' +
           '<span class="envivo-emp-meta">Ingreso ' + o.est.entra + ' - Sale ' + o.est.salida + '</span>' +
@@ -2237,6 +2261,15 @@ function renderEnVivoPanel() {
   });
 
   cont.innerHTML = html || '<div class="envivo-vacia-msg">Sin sucursales</div>';
+
+  if (bar) {
+    var hh = String(ahora.getHours()).padStart(2, '0');
+    var mm = String(ahora.getMinutes()).padStart(2, '0');
+    bar.innerHTML =
+      '<span class="envivo-bar-dia">' + DIAS_FULL_ENVIVO[ahora.getDay()] + ' ' + ahora.getDate() + ' ' + MESES_ES_ENVIVO[ahora.getMonth()].toLowerCase() + '</span>' +
+      '<span class="envivo-bar-hora">actualizado <b>' + hh + ':' + mm + '</b></span>' +
+      '<span class="envivo-bar-total"><span class="envivo-live-dot"></span>EN VIVO · <b>' + totalPresentes + '</b>&nbsp;trabajando</span>';
+  }
 }
 
 async function cargarHorarios() {
