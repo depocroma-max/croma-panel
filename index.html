@@ -482,24 +482,11 @@ td { padding: 10px 14px; vertical-align: middle; }
 .stock-suc-chevron { color: var(--gray-400); flex-shrink: 0; transition: transform var(--transition-fast); }
 .stock-suc-desplegable[open] .stock-suc-chevron { transform: rotate(90deg); }
 .stock-suc-variantes { display: flex; flex-direction: column; gap: 2px; padding: 4px 14px 10px 34px; border-top: 1px solid var(--gray-100); }
-.stock-variante-fila { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 13px; }
-.stock-variante-check { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
-.stock-variante-check:disabled { cursor: not-allowed; }
-.stock-variante-label { color: var(--gray-600); flex: 1; }
-.stock-variante-cantidad-pedir { width: 48px; height: 26px; padding: 0 4px; text-align: center; font-family: var(--font-body); font-size: 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); color: var(--black); flex-shrink: 0; }
-.stock-variante-cantidad-pedir:disabled { background: var(--gray-50); color: var(--gray-400); }
-.stock-variante-cantidad-pedir:focus { outline: none; border-color: var(--accent); }
+.stock-variante-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 13px; }
+.stock-variante-label { color: var(--gray-600); }
 .stock-variante-cantidad { font-weight: 600; color: var(--black); }
 .stock-variante-fila.sinstock { opacity: .55; }
 .stock-variante-fila.sinstock .stock-variante-cantidad { color: var(--gray-400); font-weight: 500; }
-
-/* Selección para armar el correo de solicitud -- fija abajo mientras hay items marcados. */
-.stock-seleccion-bar { position: sticky; bottom: 1rem; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--black); color: var(--white); border-radius: var(--radius-lg); padding: .75rem 1rem; margin-top: 1rem; box-shadow: var(--shadow-md); z-index: 5; }
-.stock-seleccion-count { font-size: 13px; font-weight: 600; margin-right: auto; }
-.stock-seleccion-bar .btn-date { background: transparent; color: var(--white); border-color: #444; }
-.stock-seleccion-bar .btn-date:hover { background: rgba(255,255,255,.12); color: var(--white); border-color: #666; }
-.stock-btn-solicitar { background: var(--accent) !important; border-color: var(--accent) !important; color: var(--white) !important; font-weight: 600; }
-.stock-btn-solicitar:hover { background: #c91f16 !important; }
 
 /* Colores por sucursal, mismo mapeo que el resto del panel (ver .caja-card[data-suc]) */
 .stock-fila-sucursal[data-suc="01 PASEO"]          { border-left-color: var(--suc-01); }
@@ -1398,11 +1385,6 @@ tbody tr:hover { background: var(--gray-50); }
       </div>
       <div id="stockDetalle" class="stock-detalle"></div>
       <div id="stockEstado" class="stock-estado"></div>
-      <div id="stockSeleccionBar" class="stock-seleccion-bar" style="display:none">
-        <span id="stockSeleccionCount" class="stock-seleccion-count"></span>
-        <button type="button" id="stockSeleccionLimpiar" class="btn-date">Limpiar selección</button>
-        <button type="button" id="stockSeleccionSolicitar" class="btn-date stock-btn-solicitar">Solicitar por correo</button>
-      </div>
     </div>
 
     <!-- EN VIVO -->
@@ -1607,7 +1589,6 @@ var stockUltimaAccion    = null; // { tipo:'buscar', q } | { tipo:'detalle', cod
 var stockAbortController = null;
 var stockSeq             = 0;    // descarta respuestas viejas si llega una búsqueda más nueva
 var stockDebounceTimer   = null;
-var stockSeleccion       = new Map(); // key "locale|talle|color" -> item, para el correo de solicitud
 
 // Auth via JWT — validado por el backend
 function getTokenPanel() {
@@ -1711,10 +1692,6 @@ function initNav() {
   if (stockColorInput) stockColorInput.addEventListener('input', stockOnInput);
   var stockLimpiarBtn = document.getElementById('stockFiltrosLimpiar');
   if (stockLimpiarBtn) stockLimpiarBtn.addEventListener('click', stockLimpiarFiltros);
-  var stockSelLimpiarBtn = document.getElementById('stockSeleccionLimpiar');
-  if (stockSelLimpiarBtn) stockSelLimpiarBtn.addEventListener('click', stockLimpiarSeleccion);
-  var stockSolicitarBtn = document.getElementById('stockSeleccionSolicitar');
-  if (stockSolicitarBtn) stockSolicitarBtn.addEventListener('click', stockSolicitarPorCorreo);
 
   // Semana nav
   document.getElementById('btnSemanaAnt').addEventListener('click', function(){
@@ -4205,19 +4182,7 @@ function stockAgruparPorLocal(clasificadas) {
   return Array.from(mapa.values()).sort(function(a, b) { return a.clas.orden - b.clas.orden; });
 }
 
-// Clave estable de una variante para el Map de selección -- local + talle + color alcanza
-// porque la seleccion se resetea en cada busqueda nueva (ver stockRenderProducto).
-function stockClaveSeleccion(nombreLocal, talle, color) {
-  return nombreLocal + '|' + (talle || '') + '|' + (color || '');
-}
-
-function stockToggleSeleccion(key, item, marcado) {
-  if (marcado) stockSeleccion.set(key, item);
-  else stockSeleccion.delete(key);
-  stockActualizarBarraSeleccion();
-}
-
-function stockCrearLocalDesplegable(grupo, ordenTalle, prodInfo) {
+function stockCrearLocalDesplegable(grupo, ordenTalle) {
   var clas = grupo.clas;
   var filas = grupo.filas.slice().sort(function(a, b) { return stockCompararVariante(a, b, ordenTalle); });
   var total = filas.reduce(function(acc, f){ return acc + (Number(f.cantidad_stock) || 0); }, 0);
@@ -4241,55 +4206,11 @@ function stockCrearLocalDesplegable(grupo, ordenTalle, prodInfo) {
     var sinStock = !(Number(f.cantidad_stock) > 0);
     var fila = elCrear('div', { className: 'stock-variante-fila' + (sinStock ? ' sinstock' : '') });
 
-    var disponible = Number(f.cantidad_stock) || 0;
-    var key = stockClaveSeleccion(clas.nombre, f.talle, f.color);
-
-    var check = elCrear('input', { className: 'stock-variante-check' });
-    check.type = 'checkbox';
-    check.disabled = sinStock;
-    check.checked = stockSeleccion.has(key);
-    fila.appendChild(check);
-
     var partes = [];
     if (clas.esDeposito && clas.codigoVisible) partes.push('Cód. ' + clas.codigoVisible);
     if (f.talle) partes.push('Talle ' + f.talle);
     partes.push('Color ' + (f.nombre_color || f.color || '—'));
     fila.appendChild(elCrear('span', { className: 'stock-variante-label', text: partes.join(' · ') }));
-
-    // Cantidad a pedir: nunca menos de 1 ni más de lo disponible en ese local/variante.
-    var qtyInput = elCrear('input', { className: 'stock-variante-cantidad-pedir' });
-    qtyInput.type = 'number';
-    qtyInput.min = '1';
-    qtyInput.max = String(disponible);
-    qtyInput.value = '1';
-    qtyInput.disabled = !check.checked;
-    var clampCantidad = function() {
-      var v = parseInt(qtyInput.value, 10);
-      if (isNaN(v) || v < 1) v = 1;
-      if (v > disponible) v = disponible;
-      qtyInput.value = String(v);
-      return v;
-    };
-
-    check.addEventListener('change', function() {
-      qtyInput.disabled = !check.checked;
-      if (!check.checked) qtyInput.value = '1';
-      stockToggleSeleccion(key, {
-        codigo: prodInfo.codigo,
-        descripcion: prodInfo.descripcion,
-        local: clas.nombre,
-        talle: f.talle,
-        color: f.nombre_color || f.color,
-        cantidadDisponible: disponible,
-        cantidadPedida: clampCantidad(),
-      }, check.checked);
-    });
-    qtyInput.addEventListener('input', function() {
-      var v = clampCantidad();
-      var item = stockSeleccion.get(key);
-      if (item) { item.cantidadPedida = v; stockSeleccion.set(key, item); }
-    });
-    fila.appendChild(qtyInput);
 
     fila.appendChild(elCrear('span', { className: 'stock-variante-cantidad', text: String(f.cantidad_stock != null ? f.cantidad_stock : '—') }));
     lista.appendChild(fila);
@@ -4299,13 +4220,13 @@ function stockCrearLocalDesplegable(grupo, ordenTalle, prodInfo) {
   return det;
 }
 
-function stockRenderGrupoLocales(cont, titulo, grupos, ordenTalle, prodInfo) {
+function stockRenderGrupoLocales(cont, titulo, grupos, ordenTalle) {
   if (grupos.length === 0) return;
   var label = elCrear('div', { className: 'stock-grupo-label' });
   label.appendChild(elCrear('span', { className: 'stock-grupo-label-text', text: titulo }));
   label.appendChild(elCrear('span', { className: 'stock-grupo-label-count', text: String(grupos.length) }));
   cont.appendChild(label);
-  grupos.forEach(function(g) { cont.appendChild(stockCrearLocalDesplegable(g, ordenTalle, prodInfo)); });
+  grupos.forEach(function(g) { cont.appendChild(stockCrearLocalDesplegable(g, ordenTalle)); });
 }
 
 var STOCK_FMT_PRECIO = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
@@ -4315,11 +4236,6 @@ var STOCK_FMT_PRECIO = new Intl.NumberFormat('es-AR', { style: 'currency', curre
 function stockRenderProducto(prodData, filasCrudas, talle, color) {
   var cont = document.getElementById('stockDetalle');
   cont.replaceChildren();
-
-  // Cada búsqueda nueva empieza con la selección vacía -- no tiene sentido arrastrar
-  // items marcados de un producto distinto al de correo de solicitud.
-  stockSeleccion = new Map();
-  stockActualizarBarraSeleccion();
 
   var variante0 = (prodData.variantes && prodData.variantes[0]) || {};
   var nombre = variante0.descripcion || ('Producto ' + prodData.producto);
@@ -4353,63 +4269,13 @@ function stockRenderProducto(prodData, filasCrudas, talle, color) {
   }
 
   var ordenTalle = stockOrdenTalleParaRubro(variante0.rubro);
-  var prodInfo = { codigo: prodData.producto, descripcion: nombre };
   var clasificadas = filas.map(function(f) { return { f: f, clas: stockClasificarFila(f) }; });
   var grupos = stockAgruparPorLocal(clasificadas);
   var gruposSucursal = grupos.filter(function(g){ return !g.clas.esDeposito; });
   var gruposDeposito = grupos.filter(function(g){ return g.clas.esDeposito; });
 
-  stockRenderGrupoLocales(cont, 'Sucursales', gruposSucursal, ordenTalle, prodInfo);
-  stockRenderGrupoLocales(cont, 'Depósito', gruposDeposito, ordenTalle, prodInfo);
-}
-
-function stockActualizarBarraSeleccion() {
-  var bar = document.getElementById('stockSeleccionBar');
-  if (!bar) return;
-  var n = stockSeleccion.size;
-  bar.style.display = n > 0 ? '' : 'none';
-  if (n > 0) {
-    document.getElementById('stockSeleccionCount').textContent = n + ' producto' + (n === 1 ? '' : 's') + ' seleccionado' + (n === 1 ? '' : 's');
-  }
-}
-
-function stockLimpiarSeleccion() {
-  stockSeleccion = new Map();
-  document.querySelectorAll('.stock-variante-check').forEach(function(chk){ chk.checked = false; });
-  document.querySelectorAll('.stock-variante-cantidad-pedir').forEach(function(inp){ inp.value = '1'; inp.disabled = true; });
-  stockActualizarBarraSeleccion();
-}
-
-// Arma un correo con lo seleccionado, agrupado por local de origen (a quien se le pide),
-// y abre el compositor de Gmail -- mismo patrón que compartirEmail() en Horarios. No
-// precarga destinatario: no hay un mapeo sucursal -> email todavía.
-function stockSolicitarPorCorreo() {
-  if (stockSeleccion.size === 0) return;
-
-  var porLocal = new Map();
-  stockSeleccion.forEach(function(item) {
-    if (!porLocal.has(item.local)) porLocal.set(item.local, []);
-    porLocal.get(item.local).push(item);
-  });
-
-  var solicitante = sesionSucursal || 'Panel Croma';
-  var lineas = ['Hola,', '', 'Desde ' + solicitante + ' solicitamos el envío de los siguientes productos:', ''];
-  porLocal.forEach(function(items, local) {
-    lineas.push('De ' + local + ':');
-    items.forEach(function(it) {
-      var variante = [it.talle ? 'Talle ' + it.talle : null, 'Color ' + it.color].filter(Boolean).join(' · ');
-      lineas.push('  • ' + it.codigo + ' — ' + it.descripcion + ' (' + variante + ') · cantidad solicitada: ' + it.cantidadPedida + ' (disponible: ' + it.cantidadDisponible + ')');
-    });
-    lineas.push('');
-  });
-  lineas.push('Saludos,');
-  lineas.push(solicitante);
-
-  var asunto = 'Solicitud de stock' + (sesionSucursal ? ' — ' + sesionSucursal : '');
-  var su = encodeURIComponent(asunto);
-  var bd = encodeURIComponent(lineas.join('\n'));
-  window.open('https://mail.google.com/mail/?view=cm&su=' + su + '&body=' + bd, '_blank');
-  toast('📧 Gmail abierto con la solicitud', 'success');
+  stockRenderGrupoLocales(cont, 'Sucursales', gruposSucursal, ordenTalle);
+  stockRenderGrupoLocales(cont, 'Depósito', gruposDeposito, ordenTalle);
 }
 
 // Busca el producto por codigo exacto (/productos/:codigo, para nombre y precio) y su
