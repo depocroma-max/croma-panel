@@ -450,6 +450,18 @@ td { padding: 10px 14px; vertical-align: middle; }
 .stock-input-cod   { font-family: monospace; letter-spacing: .5px; text-transform: uppercase; max-width: 110px; }
 .stock-input-talle,
 .stock-input-color { font-family: monospace; letter-spacing: .5px; text-transform: uppercase; max-width: 90px; }
+.stock-busqueda-catalogo { padding-top: .75rem; border-top: 1px dashed var(--gray-200); }
+.stock-grupo-nombre { min-width: 200px; flex: 1; }
+
+.stock-resultados { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.25rem; }
+.stock-resultado-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--white); border: 1px solid var(--gray-100); cursor: pointer; text-align: left; width: 100%; font: inherit; color: inherit; }
+.stock-resultado-item:hover { background: var(--gray-50); border-color: var(--gray-200); }
+.stock-resultado-cod { font-family: monospace; font-size: 11px; font-weight: 700; color: var(--gray-600); background: var(--gray-100); padding: 2px 7px; border-radius: var(--radius-sm); flex-shrink: 0; }
+.stock-resultado-info { flex: 1; min-width: 0; }
+.stock-resultado-nombre { font-size: 13px; font-weight: 600; color: var(--black); }
+.stock-resultado-meta { font-size: 12px; color: var(--gray-400); }
+.stock-resultado-chevron { color: var(--gray-400); flex-shrink: 0; }
+.stock-resultados-mas { font-size: 12px; color: var(--gray-400); padding: 4px 4px; }
 
 .stock-detalle-header  { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: .35rem; padding-bottom: .75rem; border-bottom: 1px solid var(--gray-100); }
 .stock-detalle-titulo-wrap { display: flex; align-items: baseline; gap: 8px; }
@@ -1383,6 +1395,29 @@ tbody tr:hover { background: var(--gray-50); }
         </div>
         <button type="button" id="stockFiltrosLimpiar" class="btn-date">Limpiar</button>
       </div>
+      <div class="stock-busqueda-bar stock-busqueda-catalogo">
+        <div class="ped-filtro-grupo stock-grupo-nombre">
+          <label class="ped-filtro-label" for="stockInputNombre">Nombre del artículo</label>
+          <input type="text" id="stockInputNombre" class="filter-input" placeholder="Ej: remera basica" autocomplete="off">
+        </div>
+        <div class="ped-filtro-grupo">
+          <label class="ped-filtro-label" for="stockInputMarca">Marca</label>
+          <input type="text" id="stockInputMarca" class="filter-input" list="stockMarcaLista" placeholder="Opcional" autocomplete="off">
+        </div>
+        <div class="ped-filtro-grupo">
+          <label class="ped-filtro-label" for="stockInputRubro">Rubro</label>
+          <input type="text" id="stockInputRubro" class="filter-input" list="stockRubroLista" placeholder="Opcional" autocomplete="off">
+        </div>
+        <div class="ped-filtro-grupo">
+          <label class="ped-filtro-label" for="stockInputSubrubro">Subrubro</label>
+          <input type="text" id="stockInputSubrubro" class="filter-input" list="stockSubrubroLista" placeholder="Opcional" autocomplete="off">
+        </div>
+        <button type="button" id="stockCatalogoLimpiar" class="btn-date">Limpiar</button>
+        <datalist id="stockMarcaLista"></datalist>
+        <datalist id="stockRubroLista"></datalist>
+        <datalist id="stockSubrubroLista"></datalist>
+      </div>
+      <div id="stockResultados" class="stock-resultados"></div>
       <div id="stockDetalle" class="stock-detalle"></div>
       <div id="stockEstado" class="stock-estado"></div>
     </div>
@@ -1590,6 +1625,15 @@ var stockAbortController = null;
 var stockSeq             = 0;    // descarta respuestas viejas si llega una búsqueda más nueva
 var stockDebounceTimer   = null;
 
+// Estado del buscador de catálogo (marca/rubro/subrubro/nombre) -- lista aparte del
+// buscador por código exacto de arriba, mismo patrón de abort+seq para descartar
+// respuestas viejas.
+var stockCatalogo             = null; // { marcas, rubros, subrubros } — /analisis/catalogo, cacheado
+var stockCatalogoCargando     = false;
+var stockCatalogoAbortController = null;
+var stockCatalogoSeq          = 0;
+var stockCatalogoDebounceTimer = null;
+
 // Auth via JWT — validado por el backend
 function getTokenPanel() {
   return sessionStorage.getItem('croma_token') || localStorage.getItem('croma_token');
@@ -1692,6 +1736,14 @@ function initNav() {
   if (stockColorInput) stockColorInput.addEventListener('input', stockOnInput);
   var stockLimpiarBtn = document.getElementById('stockFiltrosLimpiar');
   if (stockLimpiarBtn) stockLimpiarBtn.addEventListener('click', stockLimpiarFiltros);
+
+  // Stock: buscador de catálogo (marca/rubro/subrubro/nombre)
+  ['stockInputNombre', 'stockInputMarca', 'stockInputRubro', 'stockInputSubrubro'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', stockCatalogoOnInput);
+  });
+  var stockCatalogoLimpiarBtn = document.getElementById('stockCatalogoLimpiar');
+  if (stockCatalogoLimpiarBtn) stockCatalogoLimpiarBtn.addEventListener('click', stockLimpiarCatalogo);
 
   // Semana nav
   document.getElementById('btnSemanaAnt').addEventListener('click', function(){
@@ -4359,9 +4411,162 @@ function stockLimpiarFiltros() {
   stockDispararBusqueda();
 }
 
+// ── Buscador de catálogo (marca/rubro/subrubro/nombre) ──
+// A diferencia del buscador por código exacto de arriba (que trae el detalle completo de
+// UN producto), este devuelve una LISTA de productos que matchean el filtro -- clickear
+// una fila carga su detalle reusando stockBuscarProducto(), sin duplicar esa lógica.
+var STOCK_CATALOGO_LIMITE_LISTA = 40;
+
+function stockCatalogoOnInput() {
+  clearTimeout(stockCatalogoDebounceTimer);
+  stockCatalogoDebounceTimer = setTimeout(stockBuscarCatalogo, 350);
+}
+
+async function stockBuscarCatalogo() {
+  var q        = document.getElementById('stockInputNombre').value.trim();
+  var marca    = document.getElementById('stockInputMarca').value.trim();
+  var rubro    = document.getElementById('stockInputRubro').value.trim();
+  var subrubro = document.getElementById('stockInputSubrubro').value.trim();
+
+  if (stockCatalogoAbortController) stockCatalogoAbortController.abort();
+  if (!q && !marca && !rubro && !subrubro) {
+    stockCatalogoSeq++;
+    document.getElementById('stockResultados').replaceChildren();
+    return;
+  }
+
+  var miSeq = ++stockCatalogoSeq;
+  var controller = new AbortController();
+  stockCatalogoAbortController = controller;
+  stockRenderResultadosEstado('loading');
+  try {
+    var params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (marca) params.set('marca', marca);
+    if (rubro) params.set('rubro', rubro);
+    if (subrubro) params.set('subrubro', subrubro);
+    var resp = await fetch(STOCK_API_URL + '/productos?' + params.toString(), { signal: controller.signal });
+    if (miSeq !== stockCatalogoSeq) return;
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+    if (miSeq !== stockCatalogoSeq) return;
+    if (!data.ok) throw new Error(data.error || 'Error de la API');
+    stockRenderResultadosCatalogo(data.data || []);
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    if (miSeq !== stockCatalogoSeq) return;
+    stockRenderResultadosEstado('error', 'No se pudo buscar en el catálogo. ' + err.message);
+  }
+}
+
+// El backend devuelve una fila por variante (talle/color) -- acá solo interesa la lista
+// de productos distintos para elegir uno, así que se colapsa por código conservando el
+// orden (ya viene ordenado por descripción desde el server).
+function stockAgruparProductos(filas) {
+  var vistos = new Map();
+  filas.forEach(function(f) {
+    if (!vistos.has(f.codigo_producto)) vistos.set(f.codigo_producto, f);
+  });
+  return Array.from(vistos.values());
+}
+
+function stockRenderResultadosEstado(tipo, mensaje) {
+  var cont = document.getElementById('stockResultados');
+  cont.replaceChildren();
+  var box = elCrear('div', { className: 'loading-state stock-estado-' + tipo });
+  if (tipo === 'loading') {
+    box.appendChild(elCrear('div', { className: 'spinner' }));
+    box.appendChild(elCrear('p', { text: 'Buscando...' }));
+  } else if (tipo === 'vacio') {
+    box.appendChild(elCrear('span', { className: 'stock-estado-icon icon-24', html: icon('info', '') }));
+    box.appendChild(elCrear('p', { text: 'No se encontraron productos para ese filtro.' }));
+  } else if (tipo === 'error') {
+    box.appendChild(elCrear('span', { className: 'stock-estado-icon icon-24 stock-estado-icon-danger', html: icon('alertTriangle', '') }));
+    box.appendChild(elCrear('p', { text: mensaje || 'Error de conexión.' }));
+    var btn = elCrear('button', { className: 'btn btn-outline', text: 'Reintentar' });
+    btn.type = 'button';
+    btn.addEventListener('click', function(){ stockBuscarCatalogo(); });
+    box.appendChild(btn);
+  }
+  cont.appendChild(box);
+}
+
+function stockRenderResultadosCatalogo(filas) {
+  var productos = stockAgruparProductos(filas);
+  if (!productos.length) { stockRenderResultadosEstado('vacio'); return; }
+
+  var cont = document.getElementById('stockResultados');
+  cont.replaceChildren();
+  productos.slice(0, STOCK_CATALOGO_LIMITE_LISTA).forEach(function(p) {
+    var item = elCrear('button', { className: 'stock-resultado-item' });
+    item.type = 'button';
+    item.appendChild(elCrear('span', { className: 'stock-resultado-cod', text: p.codigo_producto }));
+    var info = elCrear('div', { className: 'stock-resultado-info' });
+    info.appendChild(elCrear('div', { className: 'stock-resultado-nombre', text: p.descripcion || '(sin nombre)' }));
+    info.appendChild(elCrear('div', { className: 'stock-resultado-meta', text: [p.marca, p.rubro, p.subrubro].filter(Boolean).join(' · ') }));
+    item.appendChild(info);
+    item.appendChild(elCrear('span', { className: 'stock-resultado-chevron icon-16', html: icon('chevronRight', '') }));
+    item.addEventListener('click', function(){ stockSeleccionarProducto(p.codigo_producto); });
+    cont.appendChild(item);
+  });
+  if (productos.length > STOCK_CATALOGO_LIMITE_LISTA) {
+    cont.appendChild(elCrear('p', { className: 'stock-resultados-mas', text: 'Mostrando ' + STOCK_CATALOGO_LIMITE_LISTA + ' de ' + productos.length + ' — afiná la búsqueda para ver el resto.' }));
+  }
+}
+
+// Clickear un resultado carga su detalle con el mismo buscador de código de arriba,
+// para no duplicar la lógica de armado de stock por sucursal/depósito.
+function stockSeleccionarProducto(codigo) {
+  document.getElementById('stockInputCodigo').value = codigo;
+  document.getElementById('stockInputTalle').value = '';
+  document.getElementById('stockInputColor').value = '';
+  stockBuscarProducto(codigo, '', '');
+}
+
+function stockLimpiarCatalogo() {
+  document.getElementById('stockInputNombre').value = '';
+  document.getElementById('stockInputMarca').value = '';
+  document.getElementById('stockInputRubro').value = '';
+  document.getElementById('stockInputSubrubro').value = '';
+  if (stockCatalogoAbortController) stockCatalogoAbortController.abort();
+  stockCatalogoSeq++;
+  document.getElementById('stockResultados').replaceChildren();
+}
+
+// Sugerencias de autocompletar para marca/rubro/subrubro -- catálogo completo (no
+// filtrado por período ni actividad), mismo endpoint y mismo criterio que usa
+// croma-analisis-main para sus <datalist> de filtro. Se pide una sola vez y se cachea:
+// el catálogo cambia con muy poca frecuencia.
+async function stockCargarCatalogoSugerencias() {
+  if (stockCatalogo || stockCatalogoCargando) return;
+  stockCatalogoCargando = true;
+  try {
+    var resp = await fetch(STOCK_API_URL + '/analisis/catalogo');
+    var data = await resp.json();
+    if (!resp.ok || !data.ok) throw new Error(data.error || ('HTTP ' + resp.status));
+    stockCatalogo = data;
+    stockPoblarDatalist('stockMarcaLista', data.marcas);
+    stockPoblarDatalist('stockRubroLista', data.rubros);
+    stockPoblarDatalist('stockSubrubroLista', data.subrubros);
+  } catch (err) {
+    // Degradación silenciosa: sin catálogo no hay autocompletar, pero la búsqueda
+    // en sí sigue funcionando tipeando el valor exacto a mano.
+  } finally {
+    stockCatalogoCargando = false;
+  }
+}
+
+function stockPoblarDatalist(id, valores) {
+  var dl = document.getElementById(id);
+  if (!dl || !valores) return;
+  dl.replaceChildren();
+  valores.forEach(function(v) { dl.appendChild(elCrear('option', { attrs: { value: v } })); });
+}
+
 function iniciarVistaStock() {
   if (sesionRol !== 'admin' && sesionRol !== 'encargado') return; // defensa en profundidad, ver initNav()
   if (!stockUltimaAccion) stockRenderEstado('inicial');
+  stockCargarCatalogoSugerencias();
 }
 
 // ── UTILS ──
