@@ -1612,8 +1612,13 @@ var todosLosPedidos = [];
 var vistaActual = 'hoy';
 var entradasData = {}; // { sucursal: [ {id, nombre, precio, fecha, obs} ] }
 var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04N6VzJktRa3xvvI_7t0Zq3l6LcMY-rW2pgcKjuj9Xwp/exec';
-// API de Croma Horarios — se usa solo para traer fotos de perfil de los empleados
+// API de Croma Horarios — se usa solo para traer fotos de perfil de los empleados.
+// Ya no se llama directo (ver HORARIOS_BACKEND_URL); queda documentada por si hace
+// falta un rollback rápido al proxy GAS.
 var HORARIOS_API_URL = 'https://script.google.com/macros/s/AKfycbzEwxqe32k8lzi0_8sj1zAjj7Fd9mT5viE79jRxQsFWWl_MSnEGYspH8tDBOPWicTEF/exec';
+// croma-backend — endpoints Sheets-API directos (perfiles/horarios de Croma Horarios,
+// sin pasar por GAS). Requieren el mismo JWT de sesión del panel.
+var HORARIOS_BACKEND_URL = 'https://api.croma-app.com.ar';
 // croma-api — stock real desde Sysneo (solo lectura). Requiere HTTPS antes de producción
 // (ver BRIEF-croma-api-sql.md) — mixed content bloquea fetch HTTP desde panel.croma-app.com.ar.
 var STOCK_API_URL = 'https://stock-api.croma-app.com.ar';
@@ -1650,6 +1655,13 @@ function getUserPanel() {
 function clearTokenPanel() {
   sessionStorage.removeItem('croma_token');
   localStorage.removeItem('croma_token');
+}
+
+// Fetch autenticado contra los endpoints Sheets-API de croma-backend (JWT del panel).
+function fetchHorariosSheets(path) {
+  return fetch(HORARIOS_BACKEND_URL + path, {
+    headers: { 'Authorization': 'Bearer ' + getTokenPanel() }
+  }).then(function(r) { return r.json(); });
 }
 
 var sesionRol      = null;
@@ -2162,8 +2174,7 @@ function actualizarSemanaLabel() {
 async function obtenerPerfilesFotos() {
   if (perfilesFotosCache !== null) return perfilesFotosCache;
   try {
-    var resp = await fetch(HORARIOS_API_URL + '?accion=perfiles');
-    var json = await resp.json();
+    var json = await fetchHorariosSheets('/api/perfiles-sheets');
     perfilesFotosCache = (json.ok && json.empleados) ? json.empleados : [];
   } catch(e) {
     perfilesFotosCache = [];
@@ -2270,7 +2281,7 @@ async function cargarEnVivo() {
 
   try {
     var resultados = await Promise.all([
-      fetch(HORARIOS_API_URL + '?accion=horarios').then(function(r) { return r.json(); }),
+      fetchHorariosSheets('/api/horarios-sheets'),
       obtenerPerfilesFotos()
     ]);
     var json = resultados[0];
