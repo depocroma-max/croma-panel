@@ -7,6 +7,7 @@ var SHEET_ID         = '1sk1e9YHCGDV86xyNBGAbTrZ2zCEsnUyPF3nT6HAA5vo';
 var SHEET_ID_JORNADA = '1xEV_SoGcezbS1KTWsFfXMETiiP87gkImC47XuEC_U7U';
 var HOJA_PEDIDOS     = 'Pedidos';
 var HOJA_ESTADOS     = 'Estados';
+var HOJA_USUARIOS_PEDIDOS = 'UsuariosPedidos';
 
 // ------------------------------------------------------------
 // ROUTER — maneja páginas HTML y llamadas API desde GitHub Pages
@@ -23,8 +24,22 @@ function doGet(e) {
   }
   if (accion === 'actualizarEstado') {
     return jsonResponse(actualizarEstado(
-      params.id, params.cod, params.talle, params.estado, params.obsExtra || ''
+      params.id, params.cod, params.talle, params.estado, params.obsExtra || '', params.responsable || ''
     ));
+  }
+  if (accion === 'obtenerUsuariosPedidos') {
+    return jsonResponse(obtenerUsuariosPedidos());
+  }
+  if (accion === 'guardarUsuarioPedido') {
+    try {
+      var datosUsuario = JSON.parse(params.datos || '{}');
+      return jsonResponse(guardarUsuarioPedido(datosUsuario));
+    } catch(err) {
+      return jsonResponse({ ok: false, error: 'JSON inválido: ' + err.message });
+    }
+  }
+  if (accion === 'eliminarUsuarioPedido') {
+    return jsonResponse(eliminarUsuarioPedido(params.id || ''));
   }
   if (accion === 'obtenerCajas') {
     return jsonResponse(obtenerCajas(params.fecha || ''));
@@ -220,7 +235,7 @@ function obtenerPedidos(dias) {
       var dataEstados = hojaEstados.getDataRange().getValues();
       for (var e = 1; e < dataEstados.length; e++) {
         var key = dataEstados[e][0] + '|' + dataEstados[e][1] + '|' + dataEstados[e][2];
-        mapaEstados[key] = { estado: dataEstados[e][3] || 'SinVer', obsExtra: dataEstados[e][5] || '' };
+        mapaEstados[key] = { estado: dataEstados[e][3] || 'SinVer', obsExtra: dataEstados[e][5] || '', responsable: dataEstados[e][6] || '' };
       }
     }
 
@@ -253,24 +268,26 @@ function obtenerPedidos(dias) {
       } catch(ex) {}
 
       var key = fila[0] + '|' + fila[7] + '|' + fila[8];
-      var estadoObj = mapaEstados[key] || { estado: 'SinVer', obsExtra: '' };
-      var estado   = estadoObj.estado;
-      var obsExtra = estadoObj.obsExtra;
+      var estadoObj   = mapaEstados[key] || { estado: 'SinVer', obsExtra: '', responsable: '' };
+      var estado      = estadoObj.estado;
+      var obsExtra    = estadoObj.obsExtra;
+      var responsable = estadoObj.responsable;
 
       pedidos.push({
-        id:        fila[0],
-        hora:      horaStr,
-        fecha:     fechaFila,
-        sucursal:  fila[3],
-        encargado: fila[4],
-        tipo:      fila[5],
-        cod:       fila[7],
-        talle:     fila[8],
-        color:     fila[9],
-        cantidad:  fila[10],
-        obs:       fila[11] || '',
-        estado:    estado,
-        obsExtra:  obsExtra || ''
+        id:          fila[0],
+        hora:        horaStr,
+        fecha:       fechaFila,
+        sucursal:    fila[3],
+        encargado:   fila[4],
+        tipo:        fila[5],
+        cod:         fila[7],
+        talle:       fila[8],
+        color:       fila[9],
+        cantidad:    fila[10],
+        obs:         fila[11] || '',
+        estado:      estado,
+        obsExtra:    obsExtra || '',
+        responsable: responsable || ''
       });
     }
 
@@ -284,13 +301,13 @@ function obtenerPedidos(dias) {
 // ------------------------------------------------------------
 // ACTUALIZAR ESTADO — llamado desde el Panel
 // ------------------------------------------------------------
-function actualizarEstado(id, cod, talle, nuevoEstado, obsExtra) {
+function actualizarEstado(id, cod, talle, nuevoEstado, obsExtra, responsable) {
   try {
     var ss = SpreadsheetApp.openById(SHEET_ID);
     var hoja = obtenerOCrearHoja(ss, HOJA_ESTADOS);
 
     if (hoja.getLastRow() === 0) {
-      hoja.appendRow(['ID', 'COD', 'Talle', 'Estado', 'Timestamp', 'ObsExtra']);
+      hoja.appendRow(['ID', 'COD', 'Talle', 'Estado', 'Timestamp', 'ObsExtra', 'Responsable']);
       hoja.setFrozenRows(1);
     }
 
@@ -303,18 +320,110 @@ function actualizarEstado(id, cod, talle, nuevoEstado, obsExtra) {
       if (filaKey === key) {
         hoja.getRange(i + 1, 4).setValue(nuevoEstado);
         hoja.getRange(i + 1, 5).setValue(new Date());
-        if (obsExtra) hoja.getRange(i + 1, 6).setValue(obsExtra);
+        hoja.getRange(i + 1, 6).setValue(obsExtra || '');
+        hoja.getRange(i + 1, 7).setValue(responsable || '');
         encontrado = true;
         break;
       }
     }
 
     if (!encontrado) {
-      hoja.appendRow([id, cod, talle, nuevoEstado, new Date(), obsExtra || '']);
+      hoja.appendRow([id, cod, talle, nuevoEstado, new Date(), obsExtra || '', responsable || '']);
     }
 
     return { ok: true };
   } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+// ------------------------------------------------------------
+// USUARIOS DE PEDIDOS — personas que rotan/gestionan pedidos
+// Hoja: UsuariosPedidos  →  ID | NOMBRE | TIMESTAMP
+// ------------------------------------------------------------
+function asegurarHojaUsuariosPedidos(ss) {
+  var hoja = ss.getSheetByName(HOJA_USUARIOS_PEDIDOS);
+  if (!hoja) {
+    hoja = ss.insertSheet(HOJA_USUARIOS_PEDIDOS);
+    hoja.appendRow(['ID', 'NOMBRE', 'TIMESTAMP']);
+    hoja.getRange(1, 1, 1, 3).setFontWeight('bold').setBackground('#0d0d0d').setFontColor('#ffffff');
+    hoja.setFrozenRows(1);
+  }
+  return hoja;
+}
+
+function obtenerUsuariosPedidos() {
+  try {
+    var ss   = SpreadsheetApp.openById(SHEET_ID);
+    var hoja = ss.getSheetByName(HOJA_USUARIOS_PEDIDOS);
+    if (!hoja || hoja.getLastRow() <= 1) return { ok: true, usuarios: [] };
+
+    var datos = hoja.getDataRange().getValues();
+    var usuarios = [];
+    for (var i = 1; i < datos.length; i++) {
+      var id     = String(datos[i][0] || '').trim();
+      var nombre = String(datos[i][1] || '').trim();
+      if (!id || !nombre) continue;
+      usuarios.push({ id: id, nombre: nombre });
+    }
+    usuarios.sort(function(a, b){ return a.nombre.localeCompare(b.nombre); });
+
+    return { ok: true, usuarios: usuarios };
+  } catch(err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+// ?accion=guardarUsuarioPedido&datos={id?,nombre}
+// Sin id → crea nuevo. Con id → renombra el existente.
+function guardarUsuarioPedido(datos) {
+  try {
+    var ss   = SpreadsheetApp.openById(SHEET_ID);
+    var hoja = asegurarHojaUsuariosPedidos(ss);
+
+    var id     = String(datos.id     || '').trim();
+    var nombre = String(datos.nombre || '').trim();
+    if (!nombre) return { ok: false, error: 'Falta el nombre' };
+
+    if (id) {
+      var filas = hoja.getDataRange().getValues();
+      for (var i = 1; i < filas.length; i++) {
+        if (String(filas[i][0]).trim() === id) {
+          hoja.getRange(i + 1, 2).setValue(nombre);
+          hoja.getRange(i + 1, 3).setValue(new Date());
+          return { ok: true, id: id };
+        }
+      }
+    }
+
+    var nuevoId = 'USR-' + new Date().getTime();
+    hoja.appendRow([nuevoId, nombre, new Date()]);
+    return { ok: true, id: nuevoId };
+
+  } catch(err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+function eliminarUsuarioPedido(id) {
+  try {
+    if (!id) return { ok: false, error: 'Falta id' };
+
+    var ss   = SpreadsheetApp.openById(SHEET_ID);
+    var hoja = ss.getSheetByName(HOJA_USUARIOS_PEDIDOS);
+    if (!hoja || hoja.getLastRow() <= 1) return { ok: false, error: 'Hoja no encontrada' };
+
+    var filas = hoja.getDataRange().getValues();
+    for (var i = filas.length - 1; i >= 1; i--) {
+      if (String(filas[i][0]).trim() === id) {
+        hoja.deleteRow(i + 1);
+        return { ok: true };
+      }
+    }
+
+    return { ok: false, error: 'Usuario no encontrado' };
+
+  } catch(err) {
     return { ok: false, error: err.message };
   }
 }

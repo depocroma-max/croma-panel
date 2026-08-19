@@ -166,6 +166,8 @@ td { padding: 10px 14px; vertical-align: middle; }
 .ped-search-wrap:focus-within { border-color: var(--croma-red); box-shadow: 0 0 0 3px rgba(232,37,26,.12); background: var(--white); }
 .ped-search-wrap svg { color: #94a3b8; flex-shrink: 0; }
 .ped-search-wrap input { border: none; background: none; font-family: var(--font-body); font-size: 13px; color: #0d0d0d; outline: none; width: 100%; }
+.ped-btn-usuarios { height: 36px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-body); font-size: 13px; font-weight: 600; border: 1px solid var(--gray-200); border-radius: var(--radius-md); background: var(--gray-50); color: var(--gray-800); cursor: pointer; white-space: nowrap; transition: background var(--transition-fast); }
+.ped-btn-usuarios:hover { background: var(--gray-100); }
 .ped-estado-pills { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .ped-estado-pill { height: 30px; padding: 0 12px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1.5px solid transparent; transition: all .15s; white-space: nowrap; }
 .ped-estado-pill.todos     { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
@@ -286,6 +288,20 @@ td { padding: 10px 14px; vertical-align: middle; }
 .modal-sol-box label { font-size: 11px; font-weight: 600; color: var(--gray-600); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
 .modal-sol-box textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-md); font-family: var(--font-body); font-size: 13px; resize: vertical; min-height: 70px; color: var(--black); }
 .modal-sol-box textarea:focus { outline: none; border-color: var(--croma-red); box-shadow: 0 0 0 3px rgba(232,37,26,.12); }
+.modal-responsable-select { width: 100%; padding: 9px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-md); font-family: var(--font-body); font-size: 13px; color: var(--black); background: #fff; }
+.modal-responsable-select:focus { outline: none; border-color: var(--croma-red); box-shadow: 0 0 0 3px rgba(232,37,26,.12); }
+.modal-obs-label-resp { font-size: 11px; color: var(--gray-600); font-weight: 600; margin-top: 4px; display: block; }
+.usr-ped-hint { font-size: 12px; color: var(--gray-600); margin-bottom: 1rem; line-height: 1.5; }
+.usr-ped-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; }
+.usr-ped-item { display: flex; align-items: center; gap: 8px; border: 1px solid var(--gray-200); border-radius: var(--radius-md); padding: 8px 10px; }
+.usr-ped-item input { flex: 1; border: none; background: none; font-family: var(--font-body); font-size: 13px; color: var(--black); outline: none; padding: 4px 2px; }
+.usr-ped-item input:focus { background: var(--gray-50); border-radius: 4px; }
+.usr-ped-item-btn { background: none; border: none; cursor: pointer; color: var(--gray-400); padding: 4px; display: flex; border-radius: 4px; }
+.usr-ped-item-btn:hover { color: var(--croma-red); background: var(--gray-50); }
+.usr-ped-vacio { font-size: 12px; color: var(--gray-400); font-style: italic; padding: .5rem 0; }
+.usr-ped-nuevo { display: flex; gap: 8px; border-top: 1px solid var(--gray-100); padding-top: 1rem; }
+.usr-ped-nuevo input { flex: 1; height: 36px; padding: 0 10px; border: 1px solid var(--gray-200); border-radius: var(--radius-md); font-family: var(--font-body); font-size: 13px; }
+.usr-ped-nuevo input:focus { outline: none; border-color: var(--croma-red); box-shadow: 0 0 0 3px rgba(232,37,26,.12); }
 .modal-actions { display: flex; gap: 8px; padding: 1rem 1.25rem; border-top: 1px solid var(--gray-100); flex-wrap: wrap; }
 .modal-btn { padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; border: 1px solid; cursor: pointer; font-family: var(--font-body); transition: all .12s; }
 .modal-btn.sol     { background: #16a34a; border-color: #16a34a; color: #fff; }
@@ -1233,6 +1249,13 @@ tbody tr:hover { background: var(--gray-50); }
               <input type="text" id="filtroCod" placeholder="COD, talle, color..." oninput="renderPanel()">
             </div>
           </div>
+          <div class="ped-filtro-grupo">
+            <span class="ped-filtro-label">&nbsp;</span>
+            <button class="ped-btn-usuarios" onclick="abrirModalUsuariosPedidos()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Usuarios de pedidos
+            </button>
+          </div>
         </div>
 
         <!-- PANEL PEDIDOS -->
@@ -1463,11 +1486,35 @@ tbody tr:hover { background: var(--gray-50); }
         <div class="modal-obs-box" id="modalObsSol"></div>
       </div>
       <div class="modal-sol-box" id="modalSolBox">
-        <label>Anotación</label>
+        <label>¿Quién lo hizo?</label>
+        <select id="modalResponsable" class="modal-responsable-select">
+          <option value="">— Elegir —</option>
+        </select>
+        <label style="margin-top:10px">Anotación</label>
         <textarea id="modalSolObs" placeholder="Ej: Roté COD 76229 desde 01 PASEO..."></textarea>
       </div>
     </div>
     <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<!-- MODAL USUARIOS DE PEDIDOS -->
+<div class="modal-overlay" id="modalUsuariosOverlay" onclick="cerrarModalUsuariosOverlay(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <span class="modal-cod">Usuarios de pedidos</span>
+      </div>
+      <button class="modal-close" onclick="cerrarModalUsuariosPedidos()" aria-label="Cerrar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p class="usr-ped-hint">Las personas que rotan o gestionan pedidos. Al marcar un pedido se puede elegir quién lo hizo.</p>
+      <div id="usrPedLista" class="usr-ped-lista"></div>
+      <div class="usr-ped-nuevo">
+        <input type="text" id="usrPedNombreInput" placeholder="Nombre nuevo..." maxlength="40">
+        <button class="modal-btn sol" onclick="crearUsuarioPedido()">Agregar</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1614,6 +1661,7 @@ tbody tr:hover { background: var(--gray-50); }
 <script>
 var SUCURSALES = ['01 PASEO','05 WAVE','09 CIPO SAN MARTIN','10 PERITO MORENO','12 CENTENARIO','14 ROCA','DEPO'];
 var todosLosPedidos = [];
+var usuariosPedidos = [];
 var vistaActual = 'hoy';
 var entradasData = {}; // { sucursal: [ {id, nombre, precio, fecha, obs} ] }
 var API_URL = 'https://script.google.com/macros/s/AKfycbx480OFDOoBWvIYY3dY5-yp04N6VzJktRa3xvvI_7t0Zq3l6LcMY-rW2pgcKjuj9Xwp/exec';
@@ -3164,6 +3212,7 @@ async function cargarDatos(silencioso) {
       actualizarStats();
       renderPanel();
       mostrarUltimaActualizacion();
+      if (!usuariosPedidos.length) cargarUsuariosPedidos();
     } else if (silencioso) {
       toast('No se pudo actualizar pedidos', 'error');
     } else {
@@ -3375,11 +3424,12 @@ function abrirModal(idx) {
   document.getElementById('modalEncargado').textContent= p.encargado;
   document.getElementById('modalObs').textContent      = p.obs || 'Sin observación';
   document.getElementById('modalSolObs').value         = p.obsExtra || '';
+  poblarSelectResponsable(p.responsable || '');
   // Mostrar observación de resolución si existe
   var obsSolWrap = document.getElementById('modalObsSolWrap');
   var obsSolEl   = document.getElementById('modalObsSol');
   if (p.obsExtra && p.obsExtra.trim()) {
-    obsSolEl.textContent = p.obsExtra;
+    obsSolEl.textContent = p.obsExtra + (p.responsable ? ' — ' + p.responsable : '');
     obsSolWrap.style.display = '';
   } else {
     obsSolWrap.style.display = 'none';
@@ -3409,28 +3459,51 @@ function modalAccionBtn(btn) {
   modalAccion(btn.getAttribute("data-estado"));
 }
 
+// Reabrir (volver a SinVer) no exige nota/responsable — el resto de las
+// acciones sí, para no perder de quién fue la rotación/gestión del pedido.
 function modalAccion(nuevoEstado) {
   var obs = document.getElementById('modalSolObs').value.trim();
-  ejecutarCambioEstado(nuevoEstado, obs);
+  var responsable = document.getElementById('modalResponsable').value;
+  if (nuevoEstado !== 'SinVer' && !validarNotaYResponsable(obs, responsable)) return;
+  ejecutarCambioEstado(nuevoEstado, obs, false, responsable);
 }
 
 function guardarAnotacion() {
   var p = todosLosPedidos[modalIdx];
   if (!p) return;
   var obs = document.getElementById('modalSolObs').value.trim();
-  ejecutarCambioEstado(p.estado, obs, true);
+  var responsable = document.getElementById('modalResponsable').value;
+  if (!validarNotaYResponsable(obs, responsable)) return;
+  ejecutarCambioEstado(p.estado, obs, true, responsable);
 }
 
-async function ejecutarCambioEstado(nuevoEstado, obsExtra, soloNota) {
+function validarNotaYResponsable(obs, responsable) {
+  if (!obs) {
+    toast('⚠ Falta escribir una anotación', 'error');
+    document.getElementById('modalSolObs').focus();
+    return false;
+  }
+  if (!responsable) {
+    toast('⚠ Falta elegir quién lo hizo', 'error');
+    document.getElementById('modalResponsable').focus();
+    return false;
+  }
+  return true;
+}
+
+async function ejecutarCambioEstado(nuevoEstado, obsExtra, soloNota, responsable) {
   var idx = modalIdx; // guardar índice antes de cerrar el modal
   var p = todosLosPedidos[idx];
   if (!p) return;
-  var estadoAnterior = p.estado; // guardar para revertir si falla
+  var estadoAnterior      = p.estado; // guardar para revertir si falla
+  var obsExtraAnterior    = p.obsExtra;
+  var responsableAnterior = p.responsable;
   cerrarModal();
 
   // UI optimista — actualizar pantalla inmediatamente sin esperar servidor
   todosLosPedidos[idx].estado = nuevoEstado;
   todosLosPedidos[idx].obsExtra = obsExtra || '';
+  todosLosPedidos[idx].responsable = responsable || '';
   actualizarStats();
   renderPanel();
   if (soloNota) {
@@ -3443,16 +3516,19 @@ async function ejecutarCambioEstado(nuevoEstado, obsExtra, soloNota) {
   // Guardar en servidor en segundo plano
   try {
     var url = API_URL + '?accion=actualizarEstado' +
-      '&id='      + encodeURIComponent(p.id) +
-      '&cod='     + encodeURIComponent(p.cod) +
-      '&talle='   + encodeURIComponent(p.talle || '') +
-      '&estado='  + encodeURIComponent(nuevoEstado) +
-      '&obsExtra='+ encodeURIComponent(obsExtra || '');
+      '&id='          + encodeURIComponent(p.id) +
+      '&cod='         + encodeURIComponent(p.cod) +
+      '&talle='       + encodeURIComponent(p.talle || '') +
+      '&estado='      + encodeURIComponent(nuevoEstado) +
+      '&obsExtra='    + encodeURIComponent(obsExtra || '') +
+      '&responsable=' + encodeURIComponent(responsable || '');
     var resp = await fetch(url);
     var data = await resp.json();
     if (!data.ok) {
       // Revertir si el servidor falló
       todosLosPedidos[idx].estado = estadoAnterior;
+      todosLosPedidos[idx].obsExtra = obsExtraAnterior;
+      todosLosPedidos[idx].responsable = responsableAnterior;
       actualizarStats();
       renderPanel();
       toast('⚠ Error al guardar: ' + (data.error || 'desconocido'), 'error');
@@ -3460,6 +3536,8 @@ async function ejecutarCambioEstado(nuevoEstado, obsExtra, soloNota) {
   } catch(e) {
     // Revertir si no hubo conexión
     todosLosPedidos[idx].estado = estadoAnterior;
+    todosLosPedidos[idx].obsExtra = obsExtraAnterior;
+    todosLosPedidos[idx].responsable = responsableAnterior;
     actualizarStats();
     renderPanel();
     toast('⚠ Sin conexión — cambio revertido', 'error');
@@ -3473,6 +3551,134 @@ function cerrarModal() {
 
 function cerrarModalOverlay(e) {
   if (e.target === document.getElementById('modalOverlay')) cerrarModal();
+}
+
+// ── USUARIOS DE PEDIDOS (quién rota/gestiona) ──
+function poblarSelectResponsable(valorActual) {
+  var sel = document.getElementById('modalResponsable');
+  sel.innerHTML = '<option value="">— Elegir —</option>' +
+    usuariosPedidos.map(function(u) {
+      return '<option value="' + escapeAttr(u.nombre) + '">' + escapeHtml(u.nombre) + '</option>';
+    }).join('');
+  sel.value = valorActual || '';
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escapeAttr(s) {
+  return escapeHtml(s).replace(/"/g,'&quot;');
+}
+
+async function cargarUsuariosPedidos() {
+  try {
+    var resp = await fetch(API_URL + '?accion=obtenerUsuariosPedidos');
+    var data = await resp.json();
+    if (data.ok) usuariosPedidos = data.usuarios || [];
+  } catch(e) { /* si falla, el select queda con lo que ya había */ }
+}
+
+function abrirModalUsuariosPedidos() {
+  renderUsuariosPedidosLista();
+  document.getElementById('modalUsuariosOverlay').classList.add('open');
+}
+function cerrarModalUsuariosPedidos() {
+  document.getElementById('modalUsuariosOverlay').classList.remove('open');
+}
+function cerrarModalUsuariosOverlay(e) {
+  if (e.target === document.getElementById('modalUsuariosOverlay')) cerrarModalUsuariosPedidos();
+}
+
+function renderUsuariosPedidosLista() {
+  var cont = document.getElementById('usrPedLista');
+  if (!usuariosPedidos.length) {
+    cont.innerHTML = '<div class="usr-ped-vacio">Todavía no hay nadie cargado.</div>';
+    return;
+  }
+  cont.innerHTML = '';
+  usuariosPedidos.forEach(function(u) {
+    var item = document.createElement('div');
+    item.className = 'usr-ped-item';
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.value = u.nombre;
+    input.maxLength = 40;
+    input.addEventListener('change', function() {
+      var nuevoNombre = input.value.trim();
+      if (!nuevoNombre) { input.value = u.nombre; return; }
+      guardarUsuarioPedidoNombre(u.id, nuevoNombre);
+    });
+
+    var btnDel = document.createElement('button');
+    btnDel.className = 'usr-ped-item-btn';
+    btnDel.title = 'Eliminar';
+    btnDel.innerHTML = icon('trash', 'ic-xs');
+    btnDel.addEventListener('click', function() { eliminarUsuarioPedidoConfirm(u.id, u.nombre); });
+
+    item.appendChild(input);
+    item.appendChild(btnDel);
+    cont.appendChild(item);
+  });
+}
+
+async function crearUsuarioPedido() {
+  var input = document.getElementById('usrPedNombreInput');
+  var nombre = input.value.trim();
+  if (!nombre) return;
+  try {
+    var url = API_URL + '?accion=guardarUsuarioPedido&datos=' + encodeURIComponent(JSON.stringify({ nombre: nombre }));
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (data.ok) {
+      usuariosPedidos.push({ id: data.id, nombre: nombre });
+      usuariosPedidos.sort(function(a,b){ return a.nombre.localeCompare(b.nombre); });
+      input.value = '';
+      renderUsuariosPedidosLista();
+      toast('✓ Usuario agregado', 'success');
+    } else {
+      toast('⚠ ' + (data.error || 'No se pudo agregar'), 'error');
+    }
+  } catch(e) {
+    toast('⚠ Sin conexión', 'error');
+  }
+}
+
+async function guardarUsuarioPedidoNombre(id, nombre) {
+  try {
+    var url = API_URL + '?accion=guardarUsuarioPedido&datos=' + encodeURIComponent(JSON.stringify({ id: id, nombre: nombre }));
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (data.ok) {
+      var u = usuariosPedidos.find(function(x){ return x.id === id; });
+      if (u) u.nombre = nombre;
+      toast('✓ Guardado', 'success');
+    } else {
+      toast('⚠ ' + (data.error || 'No se pudo guardar'), 'error');
+      renderUsuariosPedidosLista();
+    }
+  } catch(e) {
+    toast('⚠ Sin conexión', 'error');
+    renderUsuariosPedidosLista();
+  }
+}
+
+async function eliminarUsuarioPedidoConfirm(id, nombre) {
+  if (!confirm('¿Eliminar a "' + nombre + '" de la lista de usuarios de pedidos?')) return;
+  try {
+    var url = API_URL + '?accion=eliminarUsuarioPedido&id=' + encodeURIComponent(id);
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (data.ok) {
+      usuariosPedidos = usuariosPedidos.filter(function(u){ return u.id !== id; });
+      renderUsuariosPedidosLista();
+      toast('✓ Eliminado', 'success');
+    } else {
+      toast('⚠ ' + (data.error || 'No se pudo eliminar'), 'error');
+    }
+  } catch(e) {
+    toast('⚠ Sin conexión', 'error');
+  }
 }
 
 function buildTablaHTML(lista) {
