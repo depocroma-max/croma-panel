@@ -282,8 +282,7 @@ td { padding: 10px 14px; vertical-align: middle; }
 .modal-field span { font-size: 14px; color: var(--black); font-weight: 500; }
 .modal-obs-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-400); margin-bottom: 6px; display: block; }
 .modal-obs-box { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-md); padding: .875rem; margin-bottom: 1.25rem; font-size: 13px; color: var(--gray-600); font-style: italic; line-height: 1.5; }
-.modal-sol-box { display: none; border-top: 1px solid var(--gray-100); padding-top: 1rem; margin-top: .25rem; }
-.modal-sol-box.show { display: block; }
+.modal-sol-box { display: block; border-top: 1px solid var(--gray-100); padding-top: 1rem; margin-top: .25rem; }
 .modal-sol-box label { font-size: 11px; font-weight: 600; color: var(--gray-600); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
 .modal-sol-box textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-md); font-family: var(--font-body); font-size: 13px; resize: vertical; min-height: 70px; color: var(--black); }
 .modal-sol-box textarea:focus { outline: none; border-color: var(--croma-red); box-shadow: 0 0 0 3px rgba(232,37,26,.12); }
@@ -296,6 +295,8 @@ td { padding: 10px 14px; vertical-align: middle; }
 .modal-btn.rev     { background: #dc2626; border-color: #dc2626; color: #fff; }
 .modal-btn.rev:hover { background: #b91c1c; }
 .modal-btn.reabrir { background: transparent; border-color: var(--gray-200); color: var(--gray-600); }
+.modal-btn.nota    { background: transparent; border-color: var(--gray-300); color: var(--gray-700); }
+.modal-btn.nota:hover { background: var(--gray-50); }
 .modal-btn.cancelar{ background: transparent; border-color: var(--gray-200); color: var(--gray-600); margin-left: auto; }
 .modal-btn.cancelar:hover,.modal-btn.reabrir:hover { background: var(--gray-50); }
 .modal-caja-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
@@ -470,6 +471,9 @@ td { padding: 10px 14px; vertical-align: middle; }
 .stock-detalle-total   { font-size: 13px; color: var(--gray-600); }
 .stock-detalle-total b { color: var(--black); font-size: 16px; }
 .stock-detalle-precio  { font-family: var(--font-display); font-size: 22px; letter-spacing: .5px; color: var(--accent); margin-bottom: 1rem; }
+
+.stock-detalle-cols { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; align-items: start; }
+@media (max-width: 720px) { .stock-detalle-cols { grid-template-columns: 1fr; } }
 
 .stock-grupo-label { display: flex; align-items: center; gap: 10px; margin: 1.1rem 0 .6rem; }
 .stock-grupo-label:first-child { margin-top: 0; }
@@ -1458,7 +1462,7 @@ tbody tr:hover { background: var(--gray-50); }
         <div class="modal-obs-box" id="modalObsSol"></div>
       </div>
       <div class="modal-sol-box" id="modalSolBox">
-        <label>Observación al solucionar</label>
+        <label>Anotación</label>
         <textarea id="modalSolObs" placeholder="Ej: Roté COD 76229 desde 01 PASEO..."></textarea>
       </div>
     </div>
@@ -3369,8 +3373,7 @@ function abrirModal(idx) {
   document.getElementById('modalCantidad').textContent = p.cantidad;
   document.getElementById('modalEncargado').textContent= p.encargado;
   document.getElementById('modalObs').textContent      = p.obs || 'Sin observación';
-  document.getElementById('modalSolObs').value         = '';
-  document.getElementById('modalSolBox').classList.remove('show');
+  document.getElementById('modalSolObs').value         = p.obsExtra || '';
   // Mostrar observación de resolución si existe
   var obsSolWrap = document.getElementById('modalObsSolWrap');
   var obsSolEl   = document.getElementById('modalObsSol');
@@ -3389,10 +3392,12 @@ function abrirModal(idx) {
       '<button class="modal-btn sol"  data-estado="Solucionado" onclick="modalAccionBtn(this)">' + icon('check','ic-xs') + ' Solucionado</button>' +
       '<button class="modal-btn proc" data-estado="EnProceso"   onclick="modalAccionBtn(this)">' + icon('clock','ic-xs') + ' En proceso</button>' +
       '<button class="modal-btn rev"  data-estado="Revisar"      onclick="modalAccionBtn(this)">' + icon('alertTriangle','ic-xs') + ' Revisar</button>' +
+      '<button class="modal-btn nota" onclick="guardarAnotacion()">' + icon('save','ic-xs') + ' Guardar nota</button>' +
       '<button class="modal-btn cancelar" onclick="cerrarModal()">Cancelar</button>';
   } else {
     actions.innerHTML =
       '<button class="modal-btn reabrir" data-estado="SinVer"    onclick="modalAccionBtn(this)">' + icon('arrowLeft','ic-xs') + ' Reabrir</button>' +
+      '<button class="modal-btn nota" onclick="guardarAnotacion()">' + icon('save','ic-xs') + ' Guardar nota</button>' +
       '<button class="modal-btn cancelar" onclick="cerrarModal()">Cancelar</button>';
   }
 
@@ -3404,27 +3409,18 @@ function modalAccionBtn(btn) {
 }
 
 function modalAccion(nuevoEstado) {
-  if (nuevoEstado === 'Solucionado') {
-    // Mostrar campo de observación antes de confirmar
-    var solBox = document.getElementById('modalSolBox');
-    if (!solBox.classList.contains('show')) {
-      solBox.classList.add('show');
-      // Cambiar botón a "Confirmar"
-      var btn = document.querySelector('.modal-btn.sol');
-      if (btn) { btn.innerHTML = icon('check','ic-xs') + ' Confirmar'; btn.removeAttribute('data-estado'); btn.onclick = confirmarSolucionado; }
-      document.getElementById('modalSolObs').focus();
-      return;
-    }
-  }
-  ejecutarCambioEstado(nuevoEstado, '');
-}
-
-function confirmarSolucionado() {
   var obs = document.getElementById('modalSolObs').value.trim();
-  ejecutarCambioEstado('Solucionado', obs);
+  ejecutarCambioEstado(nuevoEstado, obs);
 }
 
-async function ejecutarCambioEstado(nuevoEstado, obsExtra) {
+function guardarAnotacion() {
+  var p = todosLosPedidos[modalIdx];
+  if (!p) return;
+  var obs = document.getElementById('modalSolObs').value.trim();
+  ejecutarCambioEstado(p.estado, obs, true);
+}
+
+async function ejecutarCambioEstado(nuevoEstado, obsExtra, soloNota) {
   var idx = modalIdx; // guardar índice antes de cerrar el modal
   var p = todosLosPedidos[idx];
   if (!p) return;
@@ -3433,11 +3429,15 @@ async function ejecutarCambioEstado(nuevoEstado, obsExtra) {
 
   // UI optimista — actualizar pantalla inmediatamente sin esperar servidor
   todosLosPedidos[idx].estado = nuevoEstado;
-  if (obsExtra) todosLosPedidos[idx].obsExtra = obsExtra;
+  todosLosPedidos[idx].obsExtra = obsExtra || '';
   actualizarStats();
   renderPanel();
-  var labels = { SinVer:'Sin ver', EnProceso:'En proceso', Revisar:'Revisar', Solucionado:'Solucionado' };
-  toast('✓ ' + (labels[nuevoEstado] || nuevoEstado), 'success');
+  if (soloNota) {
+    toast('✓ Anotación guardada', 'success');
+  } else {
+    var labels = { SinVer:'Sin ver', EnProceso:'En proceso', Revisar:'Revisar', Solucionado:'Solucionado' };
+    toast('✓ ' + (labels[nuevoEstado] || nuevoEstado), 'success');
+  }
 
   // Guardar en servidor en segundo plano
   try {
@@ -4337,8 +4337,15 @@ function stockRenderProducto(prodData, filasCrudas, talle, color) {
   var gruposSucursal = grupos.filter(function(g){ return !g.clas.esDeposito; });
   var gruposDeposito = grupos.filter(function(g){ return g.clas.esDeposito; });
 
-  stockRenderGrupoLocales(cont, 'Sucursales', gruposSucursal, ordenTalle);
-  stockRenderGrupoLocales(cont, 'Depósito', gruposDeposito, ordenTalle);
+  var cols = elCrear('div', { className: 'stock-detalle-cols' });
+  var colSucursales = elCrear('div', { className: 'stock-detalle-col' });
+  var colDepositos = elCrear('div', { className: 'stock-detalle-col' });
+  cols.appendChild(colSucursales);
+  cols.appendChild(colDepositos);
+  cont.appendChild(cols);
+
+  stockRenderGrupoLocales(colSucursales, 'Sucursales', gruposSucursal, ordenTalle);
+  stockRenderGrupoLocales(colDepositos, 'Depósito', gruposDeposito, ordenTalle);
 }
 
 // Busca el producto por codigo exacto (/productos/:codigo, para nombre y precio) y su
