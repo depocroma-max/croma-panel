@@ -2016,7 +2016,7 @@ function cerrarSesion() {
   if (drawerOverlay) drawerOverlay.addEventListener('click', cerrarDrawer);
 
   setInterval(function(){
-    if (vistaActual === 'envivo') renderEnVivoPanel();
+    if (vistaActual === 'envivo') { if (ENVIVO_NODE) renderEnVivoPanelNode(); else renderEnVivoPanel(); }
     else if (vistaActual !== 'horarios') cargarDatos(true);
   }, 2 * 60 * 1000);
   setInterval(function(){ if (vistaActual === 'envivo') cargarEnVivo(); }, 5 * 60 * 1000);
