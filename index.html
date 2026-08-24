@@ -1742,6 +1742,28 @@ function fetchHorariosSemanalesNode(path, opciones) {
   }).then(function(r) { return r.json().then(function(data) { return { status: r.status, data: data }; }); });
 }
 
+// Fase 3C — Rollback temporal para "En vivo":
+//   true  = /api/envivo-hoy (HORARIOS + FICHADAS, estado ya calculado por
+//           croma-backend — el frontend solo renderiza, nunca recalcula)
+//   false = legacy /api/horarios-sheets -> DATOS GENERALES ->
+//           estadoEnVivoPanel() (cálculo en el navegador)
+// Cambiar SOLO esta constante alterna entre los dos caminos completos
+// (lectura Y cálculo). Sin fallback automático Node->legacy ante error:
+// ver cargarEnVivo() — mostrar error, nunca mezclar fuentes en silencio.
+var ENVIVO_NODE = true;
+
+// Wrapper dedicado para /api/envivo-hoy — a propósito SEPARADO de
+// fetchHorariosSheets() (esa sigue siendo solo para /api/horarios-sheets,
+// que alimenta el camino legacy de DATOS GENERALES, y /api/perfiles-sheets)
+// y de fetchHorariosSemanalesNode() (mezclar semánticamente "En vivo" con
+// "Horario semanal" en el mismo wrapper sería confuso, aunque el mecanismo
+// interno — mismo host, mismo JWT — sea idéntico). Solo GET, sin body.
+function fetchEnVivoNode() {
+  return fetch(HORARIOS_BACKEND_URL + '/api/envivo-hoy', {
+    headers: { 'Authorization': 'Bearer ' + getTokenPanel() }
+  }).then(function(r) { return r.json().then(function(data) { return { status: r.status, data: data }; }); });
+}
+
 var sesionRol      = null;
 var sesionSucursal = null;
 
@@ -2362,9 +2384,46 @@ function envivoAvatarHTML(nombre, suc, estadoDot) {
   return '<div class="envivo-emp-avatar" style="background:' + suc.colorLight + ';color:' + suc.color + '">' + inic + dot + '</div>';
 }
 
+// Fase 3C — estado del camino Node (ENVIVO_NODE=true). El array ya viene
+// con el estado CALCULADO por croma-backend (services/envivo.js) — acá
+// nunca se reinterpreta con Date() ni con estadoEnVivoPanel().
+var envivoDataNode = null; // array `data` de /api/envivo-hoy, o null si falló
+var envivoMetaNode = null; // `meta` de la misma respuesta (fecha/semana/generadoEn/tolerancia)
+var envivoErrorNode = null; // mensaje a mostrar cuando ENVIVO_NODE falla (nunca cae a legacy)
+
 async function cargarEnVivo() {
   var cont = document.getElementById('envivoContainer');
   cont.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>';
+
+  if (ENVIVO_NODE) {
+    envivoErrorNode = null;
+    try {
+      var resultadosNode = await Promise.all([fetchEnVivoNode(), obtenerPerfilesFotos()]);
+      var resNode = resultadosNode[0];
+      if (resNode.status === 200 && resNode.data && resNode.data.ok) {
+        envivoDataNode = resNode.data.data;
+        envivoMetaNode = resNode.data.meta;
+      } else if (resNode.status === 401) {
+        // Mismo criterio que el resto del panel ante sesión inválida —
+        // no se inventa un flujo de login paralelo acá.
+        envivoDataNode = null;
+        envivoErrorNode = 'Tu sesión venció. Volvé a iniciar sesión.';
+      } else if (resNode.status === 403) {
+        envivoDataNode = null;
+        envivoErrorNode = 'No tenés acceso a En vivo.';
+      } else {
+        envivoDataNode = null;
+        envivoErrorNode = (resNode.data && resNode.data.error) || 'No se pudo cargar En vivo.';
+      }
+    } catch (e) {
+      // Error de red/timeout — NUNCA cae a /api/horarios-sheets en
+      // automático. El único rollback es ENVIVO_NODE=false (manual).
+      envivoDataNode = null;
+      envivoErrorNode = 'No se pudo cargar En vivo. Reintentá en unos segundos.';
+    }
+    renderEnVivoPanelNode();
+    return;
+  }
 
   try {
     var resultados = await Promise.all([
@@ -2489,6 +2548,127 @@ function renderEnVivoPanel() {
   cont.innerHTML = html || '<div class="envivo-vacia-msg">Sin sucursales</div>';
 
   if (bar) {
+    var hh = String(ahora.getHours()).padStart(2, '0');
+    var mm = String(ahora.getMinutes()).padStart(2, '0');
+    bar.innerHTML =
+      '<span class="envivo-bar-dia">' + DIAS_FULL_ENVIVO[ahora.getDay()] + ' ' + ahora.getDate() + ' ' + MESES_ES_ENVIVO[ahora.getMonth()].toLowerCase() + '</span>' +
+      '<span class="envivo-bar-hora">actualizado <b>' + hh + ':' + mm + '</b></span>' +
+      '<span class="envivo-bar-total"><span class="envivo-live-dot"></span>EN VIVO · <b>' + totalPresentes + '</b>&nbsp;trabajando</span>';
+  }
+}
+
+// Fase 3C — render del camino Node (ENVIVO_NODE=true). Reusa el mismo DOM
+// (#envivoContainer/#envivoBar) y las mismas clases CSS que
+// renderEnVivoPanel() (legacy) para minimizar diferencia visual — NO es un
+// rediseño, es la misma pantalla alimentada por otra fuente. A propósito
+// NUNCA llama a estadoEnVivoPanel() ni recalcula nada con `new Date()`
+// salvo la hora de "actualizado HH:MM" de la barra superior, que es
+// puramente cosmética (cuándo se refrescó la pantalla), nunca usada para
+// decidir un estado — la autoridad de estado es 100% `item.estado`/
+// `item.puntualidad`, ya calculados por croma-backend.
+function renderEnVivoPanelNode() {
+  var cont = document.getElementById('envivoContainer');
+  var bar  = document.getElementById('envivoBar');
+
+  if (envivoDataNode === null) {
+    cont.innerHTML = '<div class="envivo-vacia-msg">' + (envivoErrorNode || 'Error al cargar los datos en vivo') + '</div>';
+    return;
+  }
+
+  // Sucursal.nombre (ENVIVO_SUCURSALES) y item.sucursal ya usan el mismo
+  // formato canónico ("01 PASEO") — a diferencia del camino legacy, acá NO
+  // hace falta ningún NOMBRE_A_ID (esa tabla era específica de DATOS
+  // GENERALES, que este camino no toca).
+  var sucursalesVer = ENVIVO_SUCURSALES.slice();
+  if (sesionRol === 'encargado' && sesionSucursal) {
+    sucursalesVer.sort(function(a, b) {
+      return (b.nombre === sesionSucursal ? 1 : 0) - (a.nombre === sesionSucursal ? 1 : 0);
+    });
+  }
+
+  var totalPresentes = 0;
+  var html = '';
+  sucursalesVer.forEach(function(suc) {
+    var items = envivoDataNode.filter(function(r) { return r.sucursal === suc.nombre; });
+    var presentes  = items.filter(function(r) { return r.estado === 'PRESENTE'; });
+    var pausados   = items.filter(function(r) { return r.estado === 'PAUSA'; });
+    var atrasados  = items.filter(function(r) { return r.estado === 'ATRASO'; });
+    var proximos   = items.filter(function(r) { return r.estado === 'PROXIMO'; });
+    var terminados = items.filter(function(r) { return r.estado === 'FINALIZADO'; });
+    totalPresentes += presentes.length;
+
+    var hayDatos = items.length > 0;
+
+    html += '<div class="envivo-card ' + (presentes.length ? 'activa' : 'vacia') + '" style="--card-suc:' + suc.color + '">';
+    html += '<div class="envivo-card-head">';
+    html += '<span class="envivo-card-pin" style="color:' + suc.color + '">' + icon('mapPin', 'icon-16') + '</span>';
+    html += '<span class="envivo-card-suc">' + suc.nombre + '</span>';
+    html += '<span class="envivo-card-count ' + (presentes.length ? '' : 'cero') + '"><b>' + presentes.length + '</b><span>en turno</span></span>';
+    html += '</div>';
+
+    if (presentes.length) {
+      html += '<div class="envivo-presentes">';
+      presentes.forEach(function(item) {
+        var meta = 'Ingreso ' + (item.real ? item.real.entrada : '?') + ' - Sale ' + (item.real ? item.real.salida : '?');
+        if (item.puntualidad && item.puntualidad.estado === 'LLEGO_TARDE') {
+          meta += ' · llegó ' + item.puntualidad.minutos + ' min tarde';
+        }
+        if (item.plan && item.plan.estado === 'SIN_HORARIO') {
+          meta += ' · sin horario cargado';
+        }
+        if (item.inconsistencias && item.inconsistencias.length) {
+          meta += ' · ⚠ revisar horario';
+        }
+        html += '<div class="envivo-emp">' +
+          envivoAvatarHTML(item.empleado, suc, 'presente') +
+          '<div class="envivo-emp-info">' +
+          '<span class="envivo-emp-nombre">' + envivoNombreCorto(item.empleado) + '</span>' +
+          '<span class="envivo-emp-meta">' + meta + '</span>' +
+          '</div></div>';
+      });
+      html += '</div>';
+    } else if (hayDatos) {
+      html += '<div class="envivo-vacia-msg">Nadie en turno ahora</div>';
+    } else {
+      html += '<div class="envivo-vacia-msg">Sin registros hoy</div>';
+    }
+
+    if (pausados.length || atrasados.length || proximos.length || terminados.length) {
+      html += '<div class="envivo-card-foot">';
+      pausados.forEach(function(item) {
+        var vuelve = item.proximo ? item.proximo.entrada : '?';
+        html += '<div class="envivo-foot-line">' + icon('pause', 'icon-14') + ' <b>' + envivoNombreCorto(item.empleado) + '</b> en pausa · vuelve ' + vuelve + '</div>';
+      });
+      atrasados.forEach(function(item) {
+        var minutos = item.puntualidad ? item.puntualidad.minutos : '?';
+        var esVuelta = item.puntualidad && item.puntualidad.estado === 'ATRASO_DE_VUELTA';
+        var bloque = (item.plan && item.plan.bloqueActualIndex != null && item.plan.bloques[item.plan.bloqueActualIndex]) ? item.plan.bloques[item.plan.bloqueActualIndex].entrada : '?';
+        html += '<div class="envivo-foot-line">' + icon('alertTriangle', 'icon-14') + ' <b>' + envivoNombreCorto(item.empleado) + '</b> ' +
+          (esVuelta ? 'atrasado de vuelta · debía volver ' : 'atrasado · debía entrar ') + bloque + ' · ' + minutos + ' min</div>';
+      });
+      proximos.forEach(function(item) {
+        var entra = item.proximo ? item.proximo.entrada : '?';
+        html += '<div class="envivo-foot-line">' + icon('clock', 'icon-14') + ' <b>' + envivoNombreCorto(item.empleado) + '</b> próximo · entra ' + entra + '</div>';
+      });
+      terminados.forEach(function(item) {
+        var salida = item.real ? item.real.salida : '?';
+        var extra = (item.plan && item.plan.estado === 'SIN_HORARIO') ? ' (sin horario cargado)' : '';
+        html += '<div class="envivo-foot-line fin">' + icon('check', 'icon-12') + '<b>' + envivoNombreCorto(item.empleado) + '</b> terminó ' + salida + extra + '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+  });
+
+  cont.innerHTML = html || '<div class="envivo-vacia-msg">Sin sucursales</div>';
+
+  if (bar) {
+    // Cosmético únicamente (día mostrado + hora de refresco de pantalla) —
+    // NUNCA se usa para decidir ningún estado, ver comentario de cabecera
+    // de esta función. Mismo formato que el camino legacy para no generar
+    // diferencia visual.
+    var ahora = new Date();
     var hh = String(ahora.getHours()).padStart(2, '0');
     var mm = String(ahora.getMinutes()).padStart(2, '0');
     bar.innerHTML =
