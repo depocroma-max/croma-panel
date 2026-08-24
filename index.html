@@ -1717,6 +1717,31 @@ function fetchHorariosSheets(path) {
   }).then(function(r) { return r.json(); });
 }
 
+// Fase 2B — Rollback temporal para "Horario semanal":
+//   false = GAS legacy (accion=obtenerHorarios / accion=guardarHorario)
+//   true  = Node + Sheets API (/api/horarios-semanales, croma-backend)
+// Cambiar SOLO esta constante alterna entre los dos caminos — no hace
+// falta tocar nada más de cargarHorarios()/guardarHorario(). GAS
+// (code.js) sigue intacto, es el rollback inmediato ante cualquier
+// problema con el camino Node.
+var HORARIOS_SEMANALES_NODE = true;
+
+// Wrapper dedicado para /api/horarios-semanales (GET+PUT) — a propósito
+// SEPARADO de fetchHorariosSheets(): esa función es solo GET y la usan
+// /api/horarios-sheets (DATOS GENERALES/En Vivo legacy) y
+// /api/perfiles-sheets, que no forman parte de esta migración y no deben
+// tocarse. Mismo host/JWT que el resto de croma-backend.
+function fetchHorariosSemanalesNode(path, opciones) {
+  opciones = opciones || {};
+  var headers = { 'Authorization': 'Bearer ' + getTokenPanel() };
+  if (opciones.method === 'PUT') headers['Content-Type'] = 'application/json';
+  return fetch(HORARIOS_BACKEND_URL + path, {
+    method: opciones.method || 'GET',
+    headers: headers,
+    body: opciones.body ? JSON.stringify(opciones.body) : undefined,
+  }).then(function(r) { return r.json().then(function(data) { return { status: r.status, data: data }; }); });
+}
+
 var sesionRol      = null;
 var sesionSucursal = null;
 
@@ -2490,10 +2515,23 @@ async function cargarHorarios() {
     dom.getDate() + ' de ' + meses[dom.getMonth()] + ' de ' + dom.getFullYear();
 
   try {
-    var url = API_URL + '?accion=obtenerHorarios&semana=' + encodeURIComponent(semanaId);
-    var resultados = await Promise.all([fetch(url), obtenerPerfilesFotos()]);
-    var data = await resultados[0].json();
-    horariosData = data.ok ? (data.horarios || {}) : {};
+    if (HORARIOS_SEMANALES_NODE) {
+      // Fase 2B: GET /api/horarios-semanales (croma-backend -> Sheets API),
+      // en paralelo a obtenerPerfilesFotos() como ya hacía el camino GAS.
+      // Mismo shape de respuesta que accion=obtenerHorarios — no hace
+      // falta ninguna transformación adicional acá.
+      var resultadosNode = await Promise.all([
+        fetchHorariosSemanalesNode('/api/horarios-semanales?semana=' + encodeURIComponent(semanaId)),
+        obtenerPerfilesFotos(),
+      ]);
+      var dataNode = resultadosNode[0].data;
+      horariosData = dataNode && dataNode.ok ? (dataNode.horarios || {}) : {};
+    } else {
+      var url = API_URL + '?accion=obtenerHorarios&semana=' + encodeURIComponent(semanaId);
+      var resultados = await Promise.all([fetch(url), obtenerPerfilesFotos()]);
+      var data = await resultados[0].json();
+      horariosData = data.ok ? (data.horarios || {}) : {};
+    }
   } catch(e) {
     horariosData = {};
   }
@@ -3070,12 +3108,48 @@ async function guardarHorario() {
     return row;
   });
 
-  var semanaId = getSemanaId(semanaOffset);
+  var semanaId  = getSemanaId(semanaOffset);
+  var encargado = sesionSucursal || 'ADMIN';
+
+  if (HORARIOS_SEMANALES_NODE) {
+    // Fase 2B: PUT /api/horarios-semanales. Mismo payload funcional que
+    // guardarHorario() (GAS), sin el campo `accion` (eso era propio del
+    // wrapper de query string de Apps Script, PUT no lo necesita).
+    var payloadNode = { semana: semanaId, sucursal: sucursalEditando, encargado: encargado, filas: filas };
+    try {
+      var resNode = await fetchHorariosSemanalesNode('/api/horarios-semanales', { method: 'PUT', body: payloadNode });
+      if (resNode.status === 200 && resNode.data && resNode.data.ok) {
+        toast('✓ Horario guardado correctamente', 'success');
+        cerrarModalHorario();
+        cargarHorarios();
+      } else if (resNode.status === 409) {
+        // Conflicto de superposición cross-sucursal — comportamiento nuevo
+        // (Fase 2A/2B). Mensaje claro, sin JSON crudo. No se reintenta ni
+        // se resuelve automáticamente: el encargado tiene que corregirlo.
+        status.textContent = '⚠ ' + mensajeConflictoHorario(resNode.data.conflicto);
+        btn.disabled = false;
+      } else {
+        // Cualquier otro error de Node (400/401/502/timeout/offline): se
+        // muestra el error y se corta acá. A propósito NO cae a GAS como
+        // fallback automático — el flag HORARIOS_SEMANALES_NODE es el
+        // único mecanismo de rollback (ver comentario junto al flag). Un
+        // fallback silencioso Node->GAS podría terminar escribiendo dos
+        // veces si el PUT de Node en realidad sí llegó a guardar.
+        status.textContent = '⚠ Error: ' + ((resNode.data && resNode.data.error) || 'No se pudo guardar');
+        btn.disabled = false;
+      }
+    } catch (e) {
+      status.textContent = '⚠ Error de conexión';
+      btn.disabled = false;
+    }
+    return;
+  }
+
   var payload = {
     accion:    'guardarHorario',
     sucursal:  sucursalEditando,
     semana:    semanaId,
-    encargado: sesionSucursal || 'ADMIN',
+    encargado: encargado,
     filas:     filas
   };
 
@@ -3096,6 +3170,17 @@ async function guardarHorario() {
     status.textContent = '⚠ Error de conexión';
     btn.disabled = false;
   }
+}
+
+// Arma el mensaje legible del 409 de superposición (ver PUT
+// /api/horarios-semanales, Fase 2A) — nunca se muestra el JSON crudo.
+var DIAS_FULL_HORARIO = { lun: 'lunes', mar: 'martes', mie: 'miércoles', jue: 'jueves', vie: 'viernes', sab: 'sábado', dom: 'domingo' };
+function mensajeConflictoHorario(c) {
+  if (!c) return 'No se pudo guardar: hay un horario superpuesto.';
+  var dia = DIAS_FULL_HORARIO[c.dia] || c.dia;
+  return 'No se pudo guardar. ' + c.empleado + ' ya tiene un horario en ' + c.sucursalExistente +
+    ' el ' + dia + ' de ' + c.horarioExistente.replace('-', ' a ') +
+    ', que se superpone con el horario que intentás cargar (' + c.horarioNuevo.replace('-', ' a ') + ').';
 }
 
 async function compartirHorario(sucIdSafe) {
