@@ -2292,14 +2292,18 @@ function proxyFotoUrl(url) {
 }
 
 // Empareja "34 MATI TERUEL" (panel) contra el nombre completo cargado en Croma Horarios
-function buscarFotoEmpleado(nombreEmpleado) {
-  if (!perfilesFotosCache || !perfilesFotosCache.length) return '';
+function buscarPerfilEmpleado(nombreEmpleado) {
+  if (!perfilesFotosCache || !perfilesFotosCache.length) return null;
   var palabras = String(nombreEmpleado).replace(/^\d+\s+/, '').toUpperCase().split(' ').filter(function(w){ return w.length > 1; });
-  if (!palabras.length) return '';
-  var perfil = perfilesFotosCache.find(function(p) {
+  if (!palabras.length) return null;
+  return perfilesFotosCache.find(function(p) {
     var pn = String(p.nombre || '').toUpperCase();
     return palabras.every(function(w){ return pn.indexOf(w) >= 0; });
-  });
+  }) || null;
+}
+
+function buscarFotoEmpleado(nombreEmpleado) {
+  var perfil = buscarPerfilEmpleado(nombreEmpleado);
   return proxyFotoUrl(perfil && perfil.foto_url);
 }
 
@@ -2372,7 +2376,12 @@ function estadoEnVivoPanel(bloquesRaw, nowMin) {
   return { estado: 'fin', salida: ultimo.finStr };
 }
 
-function envivoNombreCorto(nombre) { return String(nombre || '').replace(/^\d+\s+/, ''); }
+function envivoNombreCorto(nombre) {
+  var limpio = String(nombre || '').replace(/^\d+\s+/, '');
+  var perfil = buscarPerfilEmpleado(nombre);
+  if (perfil && perfil.apodo) return perfil.apodo;
+  return limpio.split(' ')[0] || limpio;
+}
 
 function envivoAvatarHTML(nombre, suc, estadoDot) {
   var foto = buscarFotoEmpleado(nombre);
