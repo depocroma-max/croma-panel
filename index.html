@@ -2235,6 +2235,15 @@ async function obtenerPerfilesFotos() {
   return perfilesFotosCache;
 }
 
+// drive.google.com/thumbnail no manda Access-Control-Allow-Origin: html2canvas
+// no puede leerlo para exportar el canvas (copiar/descargar imagen del Horario
+// Semanal queda en blanco con error de CORS). Lo pasamos por nuestro propio
+// proxy (mismo bytes, con CORS habilitado) — no afecta la vista normal.
+function proxyFotoUrl(url) {
+  var m = url && String(url).match(/drive\.google\.com\/thumbnail\?id=([^&]+)/);
+  return m ? (HORARIOS_BACKEND_URL + '/api/imagen-proxy?id=' + m[1]) : url;
+}
+
 // Empareja "34 MATI TERUEL" (panel) contra el nombre completo cargado en Croma Horarios
 function buscarFotoEmpleado(nombreEmpleado) {
   if (!perfilesFotosCache || !perfilesFotosCache.length) return '';
@@ -2244,7 +2253,7 @@ function buscarFotoEmpleado(nombreEmpleado) {
     var pn = String(p.nombre || '').toUpperCase();
     return palabras.every(function(w){ return pn.indexOf(w) >= 0; });
   });
-  return (perfil && perfil.foto_url) || '';
+  return proxyFotoUrl(perfil && perfil.foto_url);
 }
 
 // Clasifica un turno por tipo: Corrido (un solo bloque), Cortado (dos bloques
@@ -2603,7 +2612,7 @@ function renderContenidoLocal() {
       var inic  = iniciales(emp.empleado);
       var nombreLimpio = emp.empleado.replace(/^\d+\s+/, '');
       html += '<tr><td><div class="hor-emp-cell">';
-      html += '<div class="hor-avatar">' + (foto ? '<img src="' + foto + '" alt="" onerror="this.parentElement.textContent=\'' + inic + '\'">' : inic) + '</div>';
+      html += '<div class="hor-avatar">' + (foto ? '<img src="' + foto + '" alt="" crossorigin="anonymous" onerror="this.parentElement.textContent=\'' + inic + '\'">' : inic) + '</div>';
       html += '<span>' + nombreLimpio + '</span>';
       html += '</div></td>';
       DIAS_KEY.forEach(function(dk) {
