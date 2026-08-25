@@ -1208,7 +1208,7 @@ tbody tr:hover { background: var(--gray-50); }
     <div class="ped-layout" id="pedLayout">
       <aside class="ped-sidebar">
         <div class="ped-sidebar-search">
-          <input type="text" id="pedSidebarBuscar" placeholder="Buscar local..." oninput="filtrarSidebarLocalesPedidos()" />
+          <input type="text" id="pedSidebarBuscar" placeholder="Buscar local..." aria-label="Buscar local" oninput="filtrarSidebarLocalesPedidos()" />
         </div>
         <div class="ped-sidebar-list" id="pedSidebarList"></div>
       </aside>
@@ -1246,7 +1246,7 @@ tbody tr:hover { background: var(--gray-50); }
             <span class="ped-filtro-label">Buscar</span>
             <div class="ped-search-wrap">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" id="filtroCod" placeholder="COD, talle, color..." oninput="renderPanel()">
+              <input type="text" id="filtroCod" placeholder="COD, talle, color..." aria-label="Buscar por código, talle o color" oninput="renderPanel()">
             </div>
           </div>
           <div class="ped-filtro-grupo">
@@ -1269,7 +1269,7 @@ tbody tr:hover { background: var(--gray-50); }
       <div class="cajas-header">
         <span class="cajas-title">Cierre de locales</span>
         <div class="date-picker-wrap">
-          <input type="date" id="cajasfecha" onchange="cargarCajas()">
+          <input type="date" id="cajasfecha" aria-label="Fecha de cierre" onchange="cargarCajas()">
           <button class="btn-date" onclick="irHoyCajas()">Hoy</button>
         </div>
       </div>
@@ -1308,7 +1308,7 @@ tbody tr:hover { background: var(--gray-50); }
           <div class="ent-subtitle">Entradas informadas por cada sucursal</div>
         </div>
         <div class="ent-search-wrap">
-          <input class="ent-search" type="text" id="entSearch" placeholder="Buscar entrada o evento..." oninput="filtrarEntradas()">
+          <input class="ent-search" type="text" id="entSearch" placeholder="Buscar entrada o evento..." aria-label="Buscar entrada o evento" oninput="filtrarEntradas()">
         </div>
       </div>
       <!-- KPIs -->
@@ -1370,7 +1370,7 @@ tbody tr:hover { background: var(--gray-50); }
       <div class="hor-layout">
         <aside class="hor-sidebar">
           <div class="hor-sidebar-search">
-            <input type="text" id="horSidebarBuscar" placeholder="Buscar local..." oninput="filtrarSidebarLocales()" />
+            <input type="text" id="horSidebarBuscar" placeholder="Buscar local..." aria-label="Buscar local" oninput="filtrarSidebarLocales()" />
           </div>
           <div class="hor-sidebar-list" id="horSidebarList"></div>
         </aside>
@@ -1486,11 +1486,11 @@ tbody tr:hover { background: var(--gray-50); }
         <div class="modal-obs-box" id="modalObsSol"></div>
       </div>
       <div class="modal-sol-box" id="modalSolBox">
-        <label>¿Quién lo hizo?</label>
+        <label for="modalResponsable">¿Quién lo hizo?</label>
         <select id="modalResponsable" class="modal-responsable-select">
           <option value="">— Elegir —</option>
         </select>
-        <label style="margin-top:10px">Anotación</label>
+        <label for="modalSolObs" style="margin-top:10px">Anotación</label>
         <textarea id="modalSolObs" placeholder="Ej: Roté COD 76229 desde 01 PASEO..."></textarea>
       </div>
     </div>
@@ -1511,7 +1511,7 @@ tbody tr:hover { background: var(--gray-50); }
       <p class="usr-ped-hint">Las personas que rotan o gestionan pedidos. Al marcar un pedido se puede elegir quién lo hizo.</p>
       <div id="usrPedLista" class="usr-ped-lista"></div>
       <div class="usr-ped-nuevo">
-        <input type="text" id="usrPedNombreInput" placeholder="Nombre nuevo..." maxlength="40">
+        <input type="text" id="usrPedNombreInput" placeholder="Nombre nuevo..." aria-label="Nombre nuevo de usuario" maxlength="40">
         <button class="modal-btn sol" onclick="crearUsuarioPedido()">Agregar</button>
       </div>
     </div>
@@ -1592,7 +1592,7 @@ tbody tr:hover { background: var(--gray-50); }
       <input type="hidden" id="meId">
       <div class="entrada-form-grid">
         <div class="entrada-form-field entrada-form-full" id="meSucursalWrap">
-          <label>Sucursal *</label>
+          <label for="meSucursal">Sucursal *</label>
           <select id="meSucursal">
             <option value="">— Elegir sucursal —</option>
             <option>01 PASEO</option><option>05 WAVE</option>
@@ -1601,19 +1601,19 @@ tbody tr:hover { background: var(--gray-50); }
           </select>
         </div>
         <div class="entrada-form-field entrada-form-full">
-          <label>Nombre del evento / entrada *</label>
+          <label for="meNombre">Nombre del evento / entrada *</label>
           <input type="text" id="meNombre" placeholder="Ej: La Renga — Sábado 15 jun">
         </div>
         <div class="entrada-form-field">
-          <label>Precio *</label>
+          <label for="mePrecio">Precio *</label>
           <input type="number" id="mePrecio" placeholder="0" min="0" step="0.01">
         </div>
         <div class="entrada-form-field">
-          <label>Fecha del evento</label>
+          <label for="meFecha">Fecha del evento</label>
           <input type="date" id="meFecha">
         </div>
         <div class="entrada-form-field entrada-form-full">
-          <label>Observaciones</label>
+          <label for="meObs">Observaciones</label>
           <textarea id="meObs" rows="2" placeholder="Info adicional, condiciones, etc."></textarea>
         </div>
         <div class="entrada-form-field entrada-form-full" style="flex-direction:row;align-items:center;gap:10px;padding:10px 12px;background:#fff7f7;border:1px solid #fecaca;border-radius:10px;">
@@ -2963,7 +2963,7 @@ function buildSelectorHTML() {
   html += '</div>';
   // Input manual (se muestra solo si elige "manual")
   html += '<div id="externoManualWrap" style="display:none;padding:.5rem 1.25rem .75rem;border-bottom:1px solid var(--gray-100);background:#fffbeb;gap:8px;flex-wrap:wrap">';
-  html += '<input type="text" id="externoInput" placeholder="Escribir nombre completo..." style="flex:1;height:34px;padding:0 10px;font-family:var(--font-body);font-size:13px;border:1px solid #fcd34d;border-radius:var(--radius-sm)">';
+  html += '<input type="text" id="externoInput" placeholder="Escribir nombre completo..." aria-label="Nombre completo" style="flex:1;height:34px;padding:0 10px;font-family:var(--font-body);font-size:13px;border:1px solid #fcd34d;border-radius:var(--radius-sm)">';
   html += '<button class="btn-agregar-emp" onclick="agregarExternoManual()" style="background:#d97706">+ Agregar</button>';
   html += '</div>';
 
@@ -3029,16 +3029,16 @@ function buildFilaEmpleado(emp, dias) {
     var dC = turno.tipo === 'corrido' ? 'flex' : 'none';
     var dP = turno.tipo === 'cortado' ? 'flex' : 'none';
     html += '<div id="' + idPref + '_corrido" style="display:' + dC + ';flex-direction:column;gap:2px">';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h1" value="' + (turno.h1||'') + '" onchange="onHoraChange(\'' + emp.id + '\',\'' + dk + '\')">';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h1" aria-label="Hora de entrada" value="' + (turno.h1||'') + '" onchange="onHoraChange(\'' + emp.id + '\',\'' + dk + '\')">';
     html += '<div class="hora-separador">↓</div>';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h2" value="' + (turno.h2||'') + '" onchange="onHoraChange(\'' + emp.id + '\',\'' + dk + '\')">';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h2" aria-label="Hora de salida" value="' + (turno.h2||'') + '" onchange="onHoraChange(\'' + emp.id + '\',\'' + dk + '\')">';
     html += '</div>';
     html += '<div id="' + idPref + '_cortado" style="display:' + dP + ';flex-direction:column;gap:2px">';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h1p" value="' + (turno.h1||'') + '">';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h2p" value="' + (turno.h2||'') + '">';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h1p" aria-label="Entrada, primer bloque" value="' + (turno.h1||'') + '">';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h2p" aria-label="Salida, primer bloque" value="' + (turno.h2||'') + '">';
     html += '<div class="hora-separador" style="font-size:9px">2° bloque</div>';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h3p" value="' + (turno.h3||'') + '">';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h4p" value="' + (turno.h4||'') + '">';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h3p" aria-label="Entrada, segundo bloque" value="' + (turno.h3||'') + '">';
+    html += '<input class="hora-input" type="time" id="' + idPref + '_h4p" aria-label="Salida, segundo bloque" value="' + (turno.h4||'') + '">';
     html += '</div>';
     html += '</div>';
   });
