@@ -590,6 +590,14 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-cell-cortado    { background: #fef3c7; color: #b45309; }
 .hor-cell-libre    { background: var(--gray-100); color: var(--gray-400); font-weight: 500; }
 
+/* Modo edición inline (Fase 1) — celdas clickeables de la misma .hor-table,
+   sin componentes nuevos: mismos tokens que el resto del Design System. */
+.hor-cell-clickable            { cursor: pointer; }
+.hor-cell-clickable:hover .hor-cell { box-shadow: inset 0 0 0 1px var(--black); }
+.hor-cell-clickable.hor-celda-activa .hor-cell { box-shadow: inset 0 0 0 2px var(--croma-red); }
+.hor-editando-tag  { font-size: 11px; color: var(--black); background: var(--gray-100); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+.hor-edicion-hint  { font-size: 12px; color: var(--gray-400); padding: 0 0 .85rem; }
+
 @media (max-width: 900px) {
   .hor-layout      { flex-direction: column; }
   .hor-sidebar     { width: 100%; position: static; }
@@ -2688,6 +2696,7 @@ function renderEnVivoPanelNode() {
 }
 
 async function cargarHorarios() {
+  confirmarSalidaEdicionHorario(); // Fase 1 — recargar (semana, refresh, tab) sale de edición inline si había una en curso
   var grid = document.getElementById('horariosGrid');
   grid.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando horarios...</p></div>';
 
@@ -2756,6 +2765,7 @@ function filtrarSidebarLocales() {
 }
 
 function seleccionarLocalHorario(suc) {
+  confirmarSalidaEdicionHorario(); // Fase 1 — cambiar de sucursal en el sidebar sale de edición inline si había una en curso
   horarioSucActiva = suc;
   renderSidebarLocales();
   renderContenidoLocal();
@@ -2796,18 +2806,29 @@ function renderContenidoLocal() {
   var cargado   = empleados.length > 0;
   var sucKey    = suc.split(' ')[0];
   var sucIdSafe = suc.replace(/\s+/g, '_');
+  // Fase 1 — modo edición inline: activo solo si esta sucursal es la que
+  // se está editando (otra sucursal del sidebar sigue en modo vista).
+  var editando  = (modoHorario === 'edicion' && sucursalEditando === suc);
+  var puedeEditar = sesionRol === 'admin' || sesionRol === 'horarios' || sesionRol === 'operador' || (sesionRol === 'encargado' && sesionSucursal === suc);
 
   var html = '<div class="hor-panel" id="suc_' + sucIdSafe + '">';
   html += '<div class="hor-panel-head">';
   html += '<div class="hor-panel-titulo"><span style="color:var(--suc-' + sucKey + ')">' + icon('mapPin', 'ic-xs') + '</span><span>' + suc + '</span></div>';
-  html += cargado ? '<span class="hor-ok-tag">' + icon('check','ic-xs') + ' Horario cargado</span>' : '<span class="hor-pendiente-tag">' + icon('clock','ic-xs') + ' Pendiente</span>';
+  if (editando) {
+    html += '<span class="hor-editando-tag">✎ Editando horario</span>';
+  } else {
+    html += cargado ? '<span class="hor-ok-tag">' + icon('check','ic-xs') + ' Horario cargado</span>' : '<span class="hor-pendiente-tag">' + icon('clock','ic-xs') + ' Pendiente</span>';
+  }
   html += '<div class="hor-panel-actions">';
 
-  if (sesionRol === 'admin' || sesionRol === 'horarios' || sesionRol === 'operador' || (sesionRol === 'encargado' && sesionSucursal === suc)) {
-    html += '<button class="btn-editar-hor" onclick="abrirModalCarga(\'' + suc + '\')">' + (cargado ? '✎ Editar' : '+ Cargar') + '</button>';
+  if (editando) {
+    html += '<button class="btn-editar-hor" onclick="cancelarEdicionHorario()">Cancelar</button>';
+    html += '<button class="btn-guardar-hor" id="btnGuardarHorarioInline" disabled title="Guardado disponible en la próxima fase">' + icon('save','ic-xs') + ' Guardar horario</button>';
+  } else if (puedeEditar) {
+    html += '<button class="btn-editar-hor" onclick="entrarModoEdicionHorario(\'' + suc + '\')">' + (cargado ? '✎ Editar' : '+ Cargar') + '</button>';
   }
 
-  if (cargado) {
+  if (!editando && cargado) {
     html += '<button class="btn-compartir" onclick="compartirHorario(\'' + sucIdSafe + '\')" title="Copiar imagen">';
     html += '<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor;flex-shrink:0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>';
     html += ' Compartir imagen</button>';
@@ -2825,7 +2846,21 @@ function renderContenidoLocal() {
   html += leyendaItemHorario('libre',      'Libre',       'Sin turno');
   html += '</div>';
 
-  if (cargado) {
+  if (editando) {
+    html += '<div class="hor-edicion-hint">';
+    if (celdaHorarioActiva) {
+      var nombreCelda = celdaHorarioActiva.empleado.replace(/^\d+\s+/, '');
+      var diaIdx = DIAS_KEY.indexOf(celdaHorarioActiva.dia);
+      html += 'Seleccionaste <b>' + escapeHtml(nombreCelda) + '</b> · ' + DIAS_LABEL[diaIdx] + ' — el editor de turno llega en la próxima fase.';
+    } else {
+      html += 'Modo edición: hacé click en un día para seleccionarlo.';
+    }
+    html += '</div>';
+  }
+
+  var hayFilas = editando ? Object.keys(horariosEditando).length > 0 : cargado;
+
+  if (hayFilas) {
     html += '<div class="hor-table-wrap"><table class="hor-table">';
     html += '<thead><tr><th>Empleado</th>';
     dias.forEach(function(d, i) {
@@ -2834,7 +2869,15 @@ function renderContenidoLocal() {
     });
     html += '</tr></thead><tbody>';
 
-    empleados.forEach(function(emp) {
+    // En modo edición se recorre horariosEditando (el borrador) en vez de
+    // `empleados` (horariosData crudo) — mismo set de empleados, ya que el
+    // borrador se armó 1 a 1 desde acá al entrar en modo edición
+    // (entrarModoEdicionHorario), pero es la fuente que Fase 2 va a mutar.
+    var filasRender = editando
+      ? Object.keys(horariosEditando).map(function(nombre){ return { empleado: nombre }; })
+      : empleados;
+
+    filasRender.forEach(function(emp) {
       var foto  = buscarFotoEmpleado(emp.empleado);
       var inic  = iniciales(emp.empleado);
       var nombreLimpio = emp.empleado.replace(/^\d+\s+/, '');
@@ -2843,21 +2886,48 @@ function renderContenidoLocal() {
       html += '<span>' + nombreLimpio + '</span>';
       html += '</div></td>';
       DIAS_KEY.forEach(function(dk) {
-        var val   = emp[dk] || '';
+        var val;
+        if (editando) {
+          var turno = (horariosEditando[emp.empleado] && horariosEditando[emp.empleado][dk]) || { tipo:'libre', h1:'', h2:'', h3:'', h4:'' };
+          val = turnoToString(turno);
+        } else {
+          val = emp[dk] || '';
+        }
         var clase = clasificarTurnoColor(val);
         var texto = (!val || val === 'LIBRE') ? 'Libre' : val.replace('|', '<br>');
-        html += '<td><span class="hor-cell hor-cell-' + clase + '">' + texto + '</span></td>';
+        if (editando) {
+          var activa = celdaHorarioActiva && celdaHorarioActiva.empleado === emp.empleado && celdaHorarioActiva.dia === dk;
+          html += '<td class="hor-cell-clickable' + (activa ? ' hor-celda-activa' : '') + '" data-empleado="' + escapeAttr(emp.empleado) + '" data-dia="' + dk + '">';
+          html += '<span class="hor-cell hor-cell-' + clase + '">' + texto + '</span></td>';
+        } else {
+          html += '<td><span class="hor-cell hor-cell-' + clase + '">' + texto + '</span></td>';
+        }
       });
       html += '</tr>';
     });
 
     html += '</tbody></table></div>';
   } else {
-    html += '<div class="caja-sin-cierre-msg" style="padding:1.5rem">Sin horario cargado para esta semana</div>';
+    var msgVacio = editando
+      ? 'No hay empleados cargados en esta sucursal para esta semana. (Agregar empleados: próxima fase.)'
+      : 'Sin horario cargado para esta semana';
+    html += '<div class="caja-sin-cierre-msg" style="padding:1.5rem">' + msgVacio + '</div>';
   }
   html += '</div>';
 
   grid.innerHTML = html;
+
+  // Delegación por atributos data-* en vez de onclick inline (convención
+  // del proyecto para contenido dinámico con nombres de empleado, que
+  // pueden traer caracteres que complican escapar comillas en un
+  // onclick="...").
+  if (editando) {
+    grid.querySelectorAll('.hor-cell-clickable').forEach(function(td) {
+      td.addEventListener('click', function() {
+        abrirEditorCelda(td.getAttribute('data-empleado'), td.getAttribute('data-dia'));
+      });
+    });
+  }
 }
 
 // ── MODAL CARGA ENCARGADO ──
@@ -2866,6 +2936,71 @@ var sucursalEditando  = null;
 var empleadosLista    = []; // todos los del local (con número): ["34 MATI TERUEL", ...]
 var empleadosAgregados= []; // los que el encargado eligió
 var todosEmpleados    = []; // todos los de todas las sucursales para esta semana: [{id, nombre, externo}]
+
+// ── HORARIO SEMANAL — modo edición inline (Fase 1) ──
+// Reutiliza a propósito el mismo horariosEditando/sucursalEditando de
+// arriba (en vez de crear una segunda fuente de verdad): el botón "Editar"
+// ya no abre el modal por defecto (ver entrarModoEdicionHorario más abajo),
+// así que el modo inline y el modal legacy nunca corren al mismo tiempo.
+// El modal (abrirModalCarga y todo lo que sigue) queda intacto como
+// fallback — no se toca ni se llama desde acá.
+var modoHorario         = 'vista'; // 'vista' | 'edicion'
+var horarioTieneCambios = false;   // dirty state — todavía no lo pone en true nadie (eso es Fase 2, cuando el editor de celda exista de verdad)
+var celdaHorarioActiva  = null;    // { empleado, dia } | null — selección estructural; el editor compacto es Fase 2
+
+// Arma el borrador desde horariosData[suc] (ya cargado en memoria por
+// cargarHorarios(), sin request nuevo) reusando parsearTurno() — mismo
+// parseo que ya usaba el modal para precargar horariosEditando.
+// horariosData NUNCA se toca acá.
+function entrarModoEdicionHorario(suc) {
+  sucursalEditando = suc;
+  horariosEditando = {};
+  (horariosData[suc] || []).forEach(function(emp) {
+    horariosEditando[emp.empleado] = {};
+    DIAS_KEY.forEach(function(dk) {
+      horariosEditando[emp.empleado][dk] = parsearTurno(emp[dk] || '');
+    });
+  });
+  modoHorario         = 'edicion';
+  horarioTieneCambios = false;
+  celdaHorarioActiva  = null;
+  renderContenidoLocal();
+}
+
+// Descarta el borrador y vuelve a modo vista. Nunca dispara un request —
+// horariosData (lo último traído por GET) queda intacto.
+function salirModoEdicionHorario() {
+  modoHorario         = 'vista';
+  sucursalEditando    = null;
+  horariosEditando    = {};
+  horarioTieneCambios = false;
+  celdaHorarioActiva  = null;
+  renderContenidoLocal();
+}
+
+function cancelarEdicionHorario() {
+  salirModoEdicionHorario();
+}
+
+// Punto único de control de navegación mientras hay edición inline en
+// curso (cambiar de sucursal, cambiar de semana, refrescar) — ver Fase 1
+// §9. A propósito NO implementa todavía un confirm(): si hay una edición
+// en curso, la descarta para no dejar un borrador de otra sucursal/semana
+// mostrado por error (eso sí sería un bug de esta fase, no solo UX). Fases
+// siguientes, cuando horarioTieneCambios empiece a valer true de verdad,
+// agregan la confirmación ACÁ — no dispersarla en cada función que navega.
+function confirmarSalidaEdicionHorario() {
+  if (modoHorario === 'edicion') salirModoEdicionHorario();
+  return true;
+}
+
+// Handler estructural del click en celda (Fase 1): identifica empleado+día
+// y marca la celda activa. El editor compacto real (selector de tipo,
+// inputs de hora, presets) se implementa en Fase 2.
+function abrirEditorCelda(empleado, dia) {
+  celdaHorarioActiva = { empleado: empleado, dia: dia };
+  renderContenidoLocal();
+}
 
 async function abrirModalCarga(suc) {
   sucursalEditando  = suc;
