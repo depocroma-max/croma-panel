@@ -2881,14 +2881,26 @@ async function abrirModalCarga(suc) {
   body.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando empleados...</p></div>';
   document.getElementById('modalHorarioOverlay').classList.add('open');
 
-  // Obtener empleados del local y todos los empleados en paralelo
+  // Obtener empleados del local y todos los empleados en paralelo.
+  // Mismo flag de rollback que el resto de "Horario semanal" — ver
+  // HORARIOS_SEMANALES_NODE: true = Node (/api/horarios-semanales/empleados,
+  // croma-backend), false = GAS legacy (accion=obtenerEmpleados).
   try {
-    var urlEmp  = API_URL + '?accion=obtenerEmpleados&sucursal=' + encodeURIComponent(suc);
-    var urlTodos = API_URL + '?accion=obtenerTodosEmpleados';
-    var [respEmp, respTodos] = await Promise.all([fetch(urlEmp), fetch(urlTodos)]);
-    var [dataEmp, dataTodos] = await Promise.all([respEmp.json(), respTodos.json()]);
-    empleadosLista  = (dataEmp.ok  && dataEmp.empleados)  ? dataEmp.empleados  : [];
-    todosEmpleados  = (dataTodos.ok && dataTodos.empleados) ? dataTodos.empleados : [];
+    if (HORARIOS_SEMANALES_NODE) {
+      var [resEmp, resTodos] = await Promise.all([
+        fetchHorariosSemanalesNode('/api/horarios-semanales/empleados?sucursal=' + encodeURIComponent(suc)),
+        fetchHorariosSemanalesNode('/api/horarios-semanales/empleados/todos'),
+      ]);
+      empleadosLista = (resEmp.status === 200 && resEmp.data.ok) ? resEmp.data.empleados : [];
+      todosEmpleados = (resTodos.status === 200 && resTodos.data.ok) ? resTodos.data.empleados : [];
+    } else {
+      var urlEmp  = API_URL + '?accion=obtenerEmpleados&sucursal=' + encodeURIComponent(suc);
+      var urlTodos = API_URL + '?accion=obtenerTodosEmpleados';
+      var [respEmp, respTodos] = await Promise.all([fetch(urlEmp), fetch(urlTodos)]);
+      var [dataEmp, dataTodos] = await Promise.all([respEmp.json(), respTodos.json()]);
+      empleadosLista  = (dataEmp.ok  && dataEmp.empleados)  ? dataEmp.empleados  : [];
+      todosEmpleados  = (dataTodos.ok && dataTodos.empleados) ? dataTodos.empleados : [];
+    }
   } catch(e) {
     empleadosLista = [];
     todosEmpleados = [];
