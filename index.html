@@ -597,6 +597,38 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-cell-clickable.hor-celda-activa .hor-cell { box-shadow: inset 0 0 0 2px var(--croma-red); }
 .hor-editando-tag  { font-size: 11px; color: var(--black); background: var(--gray-100); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
 .hor-edicion-hint  { font-size: 12px; color: var(--gray-400); padding: 0 0 .85rem; }
+.hor-cambios-tag   { font-size: 11px; color: var(--gray-600); display: inline-flex; align-items: center; }
+
+/* Editor compacto de celda (Fase 2) — panel próximo a la grilla, NO el
+   modal grande. Mismos tokens (radios, sombras, colores) que el resto del
+   Design System; reusa .hora-input y .chip-turno tal cual ya estaban
+   estilados para el modal legacy. */
+.hor-celda-editor      { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 1rem 1.1rem; margin: 0 1.25rem 1.1rem; max-width: 420px; }
+.hor-celda-editor-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: .85rem; }
+.hor-celda-editor-emp  { font-weight: 700; font-size: 14px; color: var(--black); }
+.hor-celda-editor-dia  { font-size: 12px; color: var(--gray-400); margin-top: 1px; }
+.hor-celda-editor-listo{ padding: 6px 14px; font-size: 12px; font-weight: 600; border: 1px solid var(--black); border-radius: var(--radius-sm); background: var(--black); color: var(--white); cursor: pointer; flex-shrink: 0; }
+.hor-celda-editor-listo:hover { background: #222; }
+.hor-celda-editor-tipos{ display: flex; gap: 6px; margin-bottom: .85rem; }
+.hor-celda-tipo-btn    { flex: 1; padding: 7px 0; font-family: var(--font-body); font-size: 12px; font-weight: 600; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); color: var(--gray-600); cursor: pointer; transition: all .12s; }
+.hor-celda-tipo-btn.activo { background: var(--black); border-color: var(--black); color: var(--white); }
+.hor-celda-editor-horas{ display: flex; gap: 10px; margin-bottom: .6rem; }
+.hor-celda-editor-horas label { flex: 1; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--gray-400); display: flex; flex-direction: column; gap: 3px; }
+.hor-celda-bloque      { margin-bottom: .85rem; }
+.hor-celda-bloque-label{ font-size: 11px; font-weight: 700; color: var(--gray-600); margin-bottom: .4rem; }
+.hor-celda-editor-presets { display: flex; flex-wrap: wrap; gap: 5px; }
+.hor-celda-libre-msg   { font-size: 13px; color: var(--gray-400); padding: .5rem 0 .25rem; }
+
+@media (max-width: 700px) {
+  /* Mismo patrón visual que .modal-box en este breakpoint (bottom sheet) —
+     ver regla equivalente más abajo en este archivo. */
+  .hor-celda-editor {
+    position: fixed; left: 0; right: 0; bottom: 0; margin: 0; max-width: 100%;
+    border-radius: 20px 20px 0 0; max-height: 70vh; overflow-y: auto;
+    box-shadow: 0 -8px 24px rgba(0,0,0,.18); z-index: 50;
+    padding: 1.1rem 1.25rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
+  }
+}
 
 @media (max-width: 900px) {
   .hor-layout      { flex-direction: column; }
@@ -1815,14 +1847,33 @@ function getDiasLunes(offset) {
   return dias;
 }
 
-var TURNOS_RAPIDOS = [
-  { label: 'M 9-13',    tipo: 'corrido', h1: '09:00', h2: '13:00', clase: 'manana'  },
-  { label: 'M 9:30-13:30', tipo: 'corrido', h1: '09:30', h2: '13:30', clase: 'manana'  },
-  { label: 'T 16:30-20:30',tipo: 'corrido', h1: '16:30', h2: '20:30', clase: 'tarde'   },
-  { label: 'T 17-21',   tipo: 'corrido', h1: '17:00', h2: '21:00', clase: 'tarde'   },
-  { label: 'C 9-17',    tipo: 'corrido', h1: '09:00', h2: '17:00', clase: 'corrido' },
-  { label: 'C 13-21',   tipo: 'corrido', h1: '13:00', h2: '21:00', clase: 'corrido' }
-];
+// Fase 2 — consolida el TURNOS_RAPIDOS que estaba declarado pero nunca
+// usado (relevamiento previo). Mismos valores que los BLOQUES hardcodeados
+// dentro de aplicarTurnoRapido() (verificado 1 a 1) — no se inventan ni se
+// quitan horarios ofrecidos. Única fuente real, usada por el editor de
+// celda nuevo (buildEditorCeldaHorario/aplicarPresetCelda). El modal
+// legacy (aplicarTurnoRapido, buildFilaEmpleado) sigue con su copia propia
+// hardcodeada, a propósito sin tocar — consolidarlo ahí implicaría
+// reescribir la carga de chips del modal, que ya funciona en producción;
+// prioridad es no romper ese camino (ver Fase 2 §6 del pedido).
+var PRESETS_TURNO = {
+  corrido: [
+    { label: '09:00-13:00', clase: 'manana',  h1: '09:00', h2: '13:00' },
+    { label: '09:30-13:30', clase: 'manana',  h1: '09:30', h2: '13:30' },
+    { label: '16:30-20:30', clase: 'tarde',   h1: '16:30', h2: '20:30' },
+    { label: '17:00-21:00', clase: 'tarde',   h1: '17:00', h2: '21:00' },
+    { label: '09:00-17:00', clase: 'corrido', h1: '09:00', h2: '17:00' },
+    { label: '13:00-21:00', clase: 'corrido', h1: '13:00', h2: '21:00' },
+  ],
+  b1: [ // primer bloque de un turno cortado
+    { label: '09:00-13:00', clase: 'manana', h1: '09:00', h2: '13:00' },
+    { label: '09:30-13:30', clase: 'manana', h1: '09:30', h2: '13:30' },
+  ],
+  b2: [ // segundo bloque de un turno cortado
+    { label: '16:30-20:30', clase: 'tarde', h1: '16:30', h2: '20:30' },
+    { label: '17:00-21:00', clase: 'tarde', h1: '17:00', h2: '21:00' },
+  ],
+};
 var DIAS_LABEL = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 var DIAS_KEY   = ['lun','mar','mie','jue','vie','sab','dom'];
 
@@ -1865,11 +1916,17 @@ function initNav() {
   var stockCatalogoLimpiarBtn = document.getElementById('stockCatalogoLimpiar');
   if (stockCatalogoLimpiarBtn) stockCatalogoLimpiarBtn.addEventListener('click', stockLimpiarCatalogo);
 
-  // Semana nav
+  // Semana nav. Fase 2 §14: el guard tiene que correr ANTES de tocar
+  // semanaOffset/semanaLabel — si se llamara solo adentro de
+  // cargarHorarios(), un "Seguir editando" dejaría la etiqueta ya
+  // apuntando a la semana nueva mientras la grilla sigue mostrando el
+  // borrador de la semana vieja (desincronizado).
   document.getElementById('btnSemanaAnt').addEventListener('click', function(){
+    if (!confirmarSalidaEdicionHorario()) return;
     semanaOffset--; actualizarSemanaLabel(); cargarHorarios();
   });
   document.getElementById('btnSemanaSig').addEventListener('click', function(){
+    if (!confirmarSalidaEdicionHorario()) return;
     semanaOffset++; actualizarSemanaLabel(); cargarHorarios();
   });
 
@@ -2696,7 +2753,10 @@ function renderEnVivoPanelNode() {
 }
 
 async function cargarHorarios() {
-  confirmarSalidaEdicionHorario(); // Fase 1 — recargar (semana, refresh, tab) sale de edición inline si había una en curso
+  // Fase 2 §14/§15: recargar (semana, refresh, tab) respeta el dirty guard
+  // — si el usuario elige "Seguir editando" ante el confirm, se aborta acá
+  // mismo, antes de tocar el grid o pedir datos nuevos.
+  if (!confirmarSalidaEdicionHorario()) return;
   var grid = document.getElementById('horariosGrid');
   grid.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando horarios...</p></div>';
 
@@ -2765,7 +2825,10 @@ function filtrarSidebarLocales() {
 }
 
 function seleccionarLocalHorario(suc) {
-  confirmarSalidaEdicionHorario(); // Fase 1 — cambiar de sucursal en el sidebar sale de edición inline si había una en curso
+  // Fase 2 §14: si el usuario elige "Seguir editando" ante el confirm, se
+  // aborta acá — horarioSucActiva no cambia, el sidebar sigue mostrando la
+  // sucursal que se estaba editando.
+  if (!confirmarSalidaEdicionHorario()) return;
   horarioSucActiva = suc;
   renderSidebarLocales();
   renderContenidoLocal();
@@ -2823,6 +2886,11 @@ function renderContenidoLocal() {
 
   if (editando) {
     html += '<button class="btn-editar-hor" onclick="cancelarEdicionHorario()">Cancelar</button>';
+    // Fase 2 §16/§17: el botón sigue disabled a propósito (sin PUT hasta
+    // Fase 3) — el indicador de "cambios sin guardar" es la señal visual
+    // de que hay algo pendiente, sin ofrecer un botón que parezca guardar
+    // pero no haga nada.
+    if (horarioTieneCambios) html += '<span class="hor-cambios-tag">● Cambios sin guardar</span>';
     html += '<button class="btn-guardar-hor" id="btnGuardarHorarioInline" disabled title="Guardado disponible en la próxima fase">' + icon('save','ic-xs') + ' Guardar horario</button>';
   } else if (puedeEditar) {
     html += '<button class="btn-editar-hor" onclick="entrarModoEdicionHorario(\'' + suc + '\')">' + (cargado ? '✎ Editar' : '+ Cargar') + '</button>';
@@ -2847,15 +2915,18 @@ function renderContenidoLocal() {
   html += '</div>';
 
   if (editando) {
-    html += '<div class="hor-edicion-hint">';
     if (celdaHorarioActiva) {
-      var nombreCelda = celdaHorarioActiva.empleado.replace(/^\d+\s+/, '');
-      var diaIdx = DIAS_KEY.indexOf(celdaHorarioActiva.dia);
-      html += 'Seleccionaste <b>' + escapeHtml(nombreCelda) + '</b> · ' + DIAS_LABEL[diaIdx] + ' — el editor de turno llega en la próxima fase.';
+      // Fase 2 — editor compacto real. Opera directamente sobre el objeto
+      // ya existente en horariosEditando (sin copia intermedia, ver §13
+      // del pedido): si no hay fila para ese empleado+día todavía (no
+      // debería pasar dentro de esta fase, pero defensivo) usa un turno
+      // libre vacío en vez de romper el render.
+      var turnoActivo = (horariosEditando[celdaHorarioActiva.empleado] && horariosEditando[celdaHorarioActiva.empleado][celdaHorarioActiva.dia])
+        || { tipo: 'libre', h1: '', h2: '', h3: '', h4: '' };
+      html += buildEditorCeldaHorario(celdaHorarioActiva.empleado, celdaHorarioActiva.dia, turnoActivo);
     } else {
-      html += 'Modo edición: hacé click en un día para seleccionarlo.';
+      html += '<div class="hor-edicion-hint">Modo edición: hacé click en un día para seleccionarlo.</div>';
     }
-    html += '</div>';
   }
 
   var hayFilas = editando ? Object.keys(horariosEditando).length > 0 : cargado;
@@ -2885,7 +2956,7 @@ function renderContenidoLocal() {
       html += '<div class="hor-avatar">' + (foto ? '<img src="' + foto + '" alt="" crossorigin="anonymous" onerror="this.parentElement.textContent=\'' + inic + '\'">' : inic) + '</div>';
       html += '<span>' + nombreLimpio + '</span>';
       html += '</div></td>';
-      DIAS_KEY.forEach(function(dk) {
+      DIAS_KEY.forEach(function(dk, i) {
         var val;
         if (editando) {
           var turno = (horariosEditando[emp.empleado] && horariosEditando[emp.empleado][dk]) || { tipo:'libre', h1:'', h2:'', h3:'', h4:'' };
@@ -2897,7 +2968,12 @@ function renderContenidoLocal() {
         var texto = (!val || val === 'LIBRE') ? 'Libre' : val.replace('|', '<br>');
         if (editando) {
           var activa = celdaHorarioActiva && celdaHorarioActiva.empleado === emp.empleado && celdaHorarioActiva.dia === dk;
-          html += '<td class="hor-cell-clickable' + (activa ? ' hor-celda-activa' : '') + '" data-empleado="' + escapeAttr(emp.empleado) + '" data-dia="' + dk + '">';
+          // tabindex+role+keydown (ver wiring más abajo): las celdas no son
+          // <button>, así que sin esto quedarían fuera del tab order —
+          // mínimo de accesibilidad pedido en Fase 2 §20, no una auditoría
+          // completa.
+          html += '<td class="hor-cell-clickable' + (activa ? ' hor-celda-activa' : '') + '" data-empleado="' + escapeAttr(emp.empleado) + '" data-dia="' + dk + '"'
+            + ' tabindex="0" role="button" aria-label="Editar turno de ' + escapeAttr(nombreLimpio) + ' el ' + DIAS_LABEL[i] + '">';
           html += '<span class="hor-cell hor-cell-' + clase + '">' + texto + '</span></td>';
         } else {
           html += '<td><span class="hor-cell hor-cell-' + clase + '">' + texto + '</span></td>';
@@ -2925,6 +3001,14 @@ function renderContenidoLocal() {
     grid.querySelectorAll('.hor-cell-clickable').forEach(function(td) {
       td.addEventListener('click', function() {
         abrirEditorCelda(td.getAttribute('data-empleado'), td.getAttribute('data-dia'));
+      });
+      // Enter/Espacio — la celda tiene tabindex+role="button" (ver arriba)
+      // pero no es un <button> nativo, así que el teclado no la activa sola.
+      td.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault();
+          abrirEditorCelda(td.getAttribute('data-empleado'), td.getAttribute('data-dia'));
+        }
       });
     });
   }
@@ -2978,29 +3062,179 @@ function salirModoEdicionHorario() {
   renderContenidoLocal();
 }
 
+// El botón "Cancelar" siempre significa "salir de edición inline" — ahora
+// que el borrador puede tener cambios reales (Fase 2), pasa por el mismo
+// punto único de control que cargarHorarios()/seleccionarLocalHorario()
+// en vez de descartar directo (evita tener el guard duplicado acá).
 function cancelarEdicionHorario() {
-  salirModoEdicionHorario();
+  confirmarSalidaEdicionHorario();
 }
 
 // Punto único de control de navegación mientras hay edición inline en
-// curso (cambiar de sucursal, cambiar de semana, refrescar) — ver Fase 1
-// §9. A propósito NO implementa todavía un confirm(): si hay una edición
-// en curso, la descarta para no dejar un borrador de otra sucursal/semana
-// mostrado por error (eso sí sería un bug de esta fase, no solo UX). Fases
-// siguientes, cuando horarioTieneCambios empiece a valer true de verdad,
-// agregan la confirmación ACÁ — no dispersarla en cada función que navega.
+// curso (Cancelar, cambiar de sucursal, cambiar de semana, refrescar) —
+// ver Fase 1 §9 y Fase 2 §14/§15. Sin cambios pendientes, sale directo. Con
+// cambios, pregunta antes de descartar — nunca escribe backend en ningún
+// caso. Devuelve true si quedó en modo vista (se puede continuar con la
+// navegación que llamó), false si el usuario eligió seguir editando (quien
+// llamó debe abortar su propia operación).
+//
+// Usa window.confirm() a propósito: no hay un componente de confirmación
+// propio en este proyecto (el toast() existente es una notificación, no
+// una decisión de dos opciones) y confirm() YA es el patrón establecido acá
+// para "acción destructiva, ¿estás seguro?" (ver eliminarUsuarioPedidoNombre
+// y eliminarEntrada) — reusar ese patrón es más consistente que inventar un
+// modal nuevo solo para esto.
 function confirmarSalidaEdicionHorario() {
-  if (modoHorario === 'edicion') salirModoEdicionHorario();
+  if (modoHorario !== 'edicion') return true;
+  if (!horarioTieneCambios) {
+    salirModoEdicionHorario();
+    return true;
+  }
+  var descartar = confirm('Tenés cambios sin guardar en el horario de ' + sucursalEditando + '.\n\n¿Querés descartarlos?');
+  if (!descartar) return false; // "Seguir editando" — el borrador queda intacto, no se toca nada
+  salirModoEdicionHorario();
   return true;
 }
 
-// Handler estructural del click en celda (Fase 1): identifica empleado+día
-// y marca la celda activa. El editor compacto real (selector de tipo,
-// inputs de hora, presets) se implementa en Fase 2.
+// Handler del click/Enter/Espacio en celda: identifica empleado+día y
+// marca la celda activa. Abrir/cambiar de celda es selección — nunca marca
+// horarioTieneCambios por sí solo (eso solo lo hacen las mutaciones reales
+// de abajo: cambiarTipoCeldaActiva/actualizarHoraCeldaActiva/aplicarPresetCelda).
 function abrirEditorCelda(empleado, dia) {
   celdaHorarioActiva = { empleado: empleado, dia: dia };
   renderContenidoLocal();
 }
+
+// Cierra el editor compacto sin salir del modo edición semanal (Fase 2
+// §12) — los cambios ya aplicados quedan en horariosEditando tal cual.
+function cerrarEditorCelda() {
+  celdaHorarioActiva = null;
+  renderContenidoLocal();
+}
+
+// Cambia el tipo del turno activo. Misma semántica que onTipoChange() del
+// modal legacy: NUNCA limpia h1-h4 al cambiar de tipo (ver Fase 2 §7) — los
+// valores de hora quedan tal cual en el objeto y turnoToString() decide qué
+// mostrar según el tipo vigente; si el usuario vuelve a un tipo anterior,
+// las horas que había cargado antes reaparecen tal como las dejó.
+function cambiarTipoCeldaActiva(nuevoTipo) {
+  var turno = horariosEditando[celdaHorarioActiva.empleado][celdaHorarioActiva.dia];
+  if (turno.tipo !== nuevoTipo) horarioTieneCambios = true;
+  turno.tipo = nuevoTipo;
+  renderContenidoLocal();
+}
+
+// Actualiza un campo de hora (h1..h4) del turno activo. Se llama desde
+// onchange (no oninput) de los <input type="time">, mismo criterio que
+// onHoraChange() del modal legacy — evita re-renderizar en cada tecla.
+function actualizarHoraCeldaActiva(campo, valor) {
+  horariosEditando[celdaHorarioActiva.empleado][celdaHorarioActiva.dia][campo] = valor;
+  horarioTieneCambios = true;
+  renderContenidoLocal();
+}
+
+// Aplica un preset de PRESETS_TURNO al turno activo. `bloque` es
+// 'corrido' | 'b1' | 'b2', mismo significado que el parámetro `bloque` de
+// aplicarTurnoRapido() (0/1/2) del modal legacy: 'corrido' fuerza
+// tipo=corrido y pisa h1/h2; 'b1'/'b2' fuerzan tipo=cortado y pisan
+// h1/h2 o h3/h4 respectivamente, sin tocar el otro bloque.
+function aplicarPresetCelda(bloque, idx) {
+  var preset = PRESETS_TURNO[bloque] && PRESETS_TURNO[bloque][idx];
+  if (!preset) return;
+  var turno = horariosEditando[celdaHorarioActiva.empleado][celdaHorarioActiva.dia];
+  if (bloque === 'corrido') {
+    turno.tipo = 'corrido';
+    turno.h1 = preset.h1;
+    turno.h2 = preset.h2;
+  } else if (bloque === 'b1') {
+    turno.tipo = 'cortado';
+    turno.h1 = preset.h1;
+    turno.h2 = preset.h2;
+  } else if (bloque === 'b2') {
+    turno.tipo = 'cortado';
+    turno.h3 = preset.h1;
+    turno.h4 = preset.h2;
+  }
+  horarioTieneCambios = true;
+  renderContenidoLocal();
+}
+
+// Construye el editor compacto de UNA celda (empleado+día+turno) — Fase 2.
+// Reutiliza turnoToString/clasificarTurnoColor indirectamente (la celda que
+// lo dispara ya las usa para pintarse; acá solo se arma el panel de edición
+// en sí) y PRESETS_TURNO (mismos horarios que ya ofrecía aplicarTurnoRapido
+// del modal, ver comentario junto a PRESETS_TURNO). Nombre sugerido por el
+// pedido de Fase 2 §5.
+function buildEditorCeldaHorario(empleado, dia, turno) {
+  var nombreLimpio = empleado.replace(/^\d+\s+/, '');
+  var diaFull = DIAS_FULL_HORARIO[dia] || dia;
+  var diaFullCap = diaFull.charAt(0).toUpperCase() + diaFull.slice(1);
+  var diaIdx = DIAS_KEY.indexOf(dia);
+  var diaFecha = (_horDiasActuales[diaIdx] ? _horDiasActuales[diaIdx].getDate() : '');
+
+  var html = '<div class="hor-celda-editor" id="celdaEditor">';
+  html += '<div class="hor-celda-editor-head">';
+  html += '<div><div class="hor-celda-editor-emp">' + escapeHtml(nombreLimpio) + '</div>';
+  html += '<div class="hor-celda-editor-dia">' + escapeHtml(diaFullCap) + ' ' + diaFecha + '</div></div>';
+  html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarEditorCelda()">Listo</button>';
+  html += '</div>';
+
+  html += '<div class="hor-celda-editor-tipos" role="group" aria-label="Tipo de turno">';
+  [['corrido','Corrido'], ['cortado','Cortado'], ['libre','Libre']].forEach(function(t) {
+    var activo = turno.tipo === t[0];
+    html += '<button type="button" class="hor-celda-tipo-btn' + (activo ? ' activo' : '') + '" onclick="cambiarTipoCeldaActiva(\'' + t[0] + '\')">' + t[1] + '</button>';
+  });
+  html += '</div>';
+
+  if (turno.tipo === 'corrido') {
+    html += '<div class="hor-celda-editor-horas">';
+    html += '<label>Desde<input class="hora-input" type="time" value="' + escapeAttr(turno.h1 || '') + '" onchange="actualizarHoraCeldaActiva(\'h1\', this.value)"></label>';
+    html += '<label>Hasta<input class="hora-input" type="time" value="' + escapeAttr(turno.h2 || '') + '" onchange="actualizarHoraCeldaActiva(\'h2\', this.value)"></label>';
+    html += '</div>';
+    html += '<div class="hor-celda-editor-presets">';
+    PRESETS_TURNO.corrido.forEach(function(p, i) {
+      html += '<button type="button" class="chip-turno ' + p.clase + '" onclick="aplicarPresetCelda(\'corrido\',' + i + ')">' + p.label + '</button>';
+    });
+    html += '</div>';
+  } else if (turno.tipo === 'cortado') {
+    html += '<div class="hor-celda-bloque"><div class="hor-celda-bloque-label">Primer bloque</div>';
+    html += '<div class="hor-celda-editor-horas">';
+    html += '<label>Desde<input class="hora-input" type="time" value="' + escapeAttr(turno.h1 || '') + '" onchange="actualizarHoraCeldaActiva(\'h1\', this.value)"></label>';
+    html += '<label>Hasta<input class="hora-input" type="time" value="' + escapeAttr(turno.h2 || '') + '" onchange="actualizarHoraCeldaActiva(\'h2\', this.value)"></label>';
+    html += '</div>';
+    html += '<div class="hor-celda-editor-presets">';
+    PRESETS_TURNO.b1.forEach(function(p, i) {
+      html += '<button type="button" class="chip-turno ' + p.clase + '" onclick="aplicarPresetCelda(\'b1\',' + i + ')">' + p.label + '</button>';
+    });
+    html += '</div></div>';
+
+    html += '<div class="hor-celda-bloque"><div class="hor-celda-bloque-label">Segundo bloque</div>';
+    html += '<div class="hor-celda-editor-horas">';
+    html += '<label>Desde<input class="hora-input" type="time" value="' + escapeAttr(turno.h3 || '') + '" onchange="actualizarHoraCeldaActiva(\'h3\', this.value)"></label>';
+    html += '<label>Hasta<input class="hora-input" type="time" value="' + escapeAttr(turno.h4 || '') + '" onchange="actualizarHoraCeldaActiva(\'h4\', this.value)"></label>';
+    html += '</div>';
+    html += '<div class="hor-celda-editor-presets">';
+    PRESETS_TURNO.b2.forEach(function(p, i) {
+      html += '<button type="button" class="chip-turno ' + p.clase + '" onclick="aplicarPresetCelda(\'b2\',' + i + ')">' + p.label + '</button>';
+    });
+    html += '</div></div>';
+  } else {
+    html += '<div class="hor-celda-libre-msg">Día libre</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// Esc cierra el editor de celda sin salir del modo edición semanal —
+// registrado UNA sola vez a nivel documento (no dentro de
+// renderContenidoLocal, que corre en cada interacción) para no acumular
+// listeners duplicados en cada re-render.
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && modoHorario === 'edicion' && celdaHorarioActiva) {
+    cerrarEditorCelda();
+  }
+});
 
 async function abrirModalCarga(suc) {
   sucursalEditando  = suc;
