@@ -666,27 +666,14 @@ td { padding: 10px 14px; vertical-align: middle; }
   .hor-sidebar-list{ max-height: 220px; }
 }
 
-/* Panel carga encargado */
-.carga-panel     { background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
-.carga-panel-head{ display: flex; align-items: center; gap: 10px; padding: 1rem 1.25rem; background: var(--black); }
-.carga-panel-suc { font-family: var(--font-display); font-size: 18px; letter-spacing: 2px; color: var(--white); }
-.carga-panel-sub { font-size: 12px; color: var(--gray-400); margin-left: auto; }
-.carga-body      { padding: 1.25rem; }
-.carga-empleado  { border: 1px solid #e8e8e4; border-radius: 14px; margin-bottom: 1rem; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
-.carga-emp-header{ display: flex; align-items: center; justify-content: space-between; padding: .75rem 1.1rem; background: #fafaf8; border-bottom: 1px solid #efefec; }
-.carga-emp-nombre{ font-weight: 700; font-size: 14px; color: var(--black); letter-spacing: .1px; }
-.carga-dias-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; padding: 1.1rem 1rem; }
-.carga-dia       { display: flex; flex-direction: column; gap: 5px; }
-.carga-dia-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gray-600); text-align: center; margin-bottom: 3px; }
-.carga-dia-label small { display: block; font-size: 12px; font-weight: 600; color: var(--black); margin-top: 1px; }
-.carga-dia-label.weekend { color: var(--accent); }
-.carga-dia-label.weekend small { color: var(--accent); }
-.tipo-turno-sel  { width: 100%; padding: 5px 6px; font-family: var(--font-body); font-size: 11px; border: 1px solid var(--gray-200); border-radius: 8px; background: var(--white); color: var(--black); cursor: pointer; }
-.tipo-turno-sel:focus { outline: none; border-color: var(--black); }
-.hora-input      { width: 100%; height: 30px; padding: 0 6px; font-family: var(--font-body); font-size: 11px; border: 1px solid var(--gray-200); border-radius: 8px; background: var(--white); color: var(--black); text-align: center; }
-.hora-input:focus{ outline: none; border-color: var(--black); box-shadow: 0 0 0 2px rgba(13,13,13,.06); }
-.hora-separador  { text-align: center; font-size: 10px; color: var(--gray-400); }
-.carga-actions   { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 1rem 1.25rem; border-top: 1px solid var(--gray-100); background: var(--gray-50); }
+/* Fase 5 — CSS exclusivo del modal legacy de Horario semanal (retirado):
+   .carga-panel*, .carga-body, .carga-empleado, .carga-dias-grid, .carga-dia*,
+   .tipo-turno-sel, .hora-separador, .carga-actions, .turnos-rapidos,
+   .chips-*, .emp-selector-*, .emp-externo-toggle, .carga-emp-header/-nombre/
+   -num, .emp-lista-vacia — sin call-sites reales, eliminado. Lo que sigue
+   usando el editor inline (.btn-guardar-hor, .hor-pendiente-tag/.hor-ok-tag,
+   .semana-info-bar, .hora-input, .btn-compartir, .chip-turno + variantes de
+   color, .btn-agregar-emp, .carga-emp-externo, .btn-quitar-emp) se conserva.
 .btn-guardar-hor { display:inline-flex; align-items:center; gap:6px; padding: 10px 22px; background: var(--accent); color: var(--white); border: none; border-radius: 10px; font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s, box-shadow .15s; box-shadow: 0 3px 10px rgba(232,37,26,.28); }
 .btn-guardar-hor:hover { background: #d01f15; }
 .btn-guardar-hor:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
@@ -697,42 +684,25 @@ td { padding: 10px 14px; vertical-align: middle; }
 .semana-info-bar { display: flex; align-items: center; gap: 10px; padding: .7rem 1rem; background: var(--gray-50); border: 1px solid var(--gray-100); border-radius: var(--radius-md); margin-bottom: 1.25rem; font-size: 12px; color: var(--gray-600); flex-wrap: wrap; }
 .semana-info-bar strong { color: var(--black); }
 
-@media (max-width: 700px) {
-  .carga-dias-grid { grid-template-columns: repeat(4, 1fr); }
-}
+.hora-input      { width: 100%; height: 30px; padding: 0 6px; font-family: var(--font-body); font-size: 11px; border: 1px solid var(--gray-200); border-radius: 8px; background: var(--white); color: var(--black); text-align: center; }
+.hora-input:focus{ outline: none; border-color: var(--black); box-shadow: 0 0 0 2px rgba(13,13,13,.06); }
 /* ── COMPARTIR HORARIO ── */
 .btn-compartir { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; font-size:11px; font-weight:600; border:1px solid #25D366; border-radius:var(--radius-sm); background:var(--white); cursor:pointer; color:#25D366; transition:all .15s; margin-left:6px; }
 .btn-compartir:hover { background:#25D366; color:var(--white); }
 .btn-compartir svg { width:13px; height:13px; fill:currentColor; }
-.captura-loading { opacity:.5; pointer-events:none; }
-/* ── TURNOS RÁPIDOS ── */
-.turnos-rapidos { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+/* ── TURNOS RÁPIDOS (chips de preset, PRESETS_TURNO) ── */
 .chip-turno { padding: 2px 6px; border-radius: 20px; font-size: 9px; font-weight: 700; border: 1px solid; cursor: pointer; white-space: nowrap; transition: all .12s; line-height: 1.6; }
 .chip-turno:hover { opacity: .75; transform: scale(1.05); }
 .chip-turno.manana  { background: #fef9c3; color: #854d0e; border-color: #fde047; }
 .chip-turno.tarde   { background: #fce7f3; color: #9d174d; border-color: #f9a8d4; }
 .chip-turno.corrido { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
 
-/* ── SELECTOR EMPLEADOS ── */
-.emp-selector-wrap { padding: 1rem 1.25rem; border-bottom: 1px solid var(--gray-100); background: var(--white); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.emp-selector-inner { position: relative; flex: 1; min-width: 200px; display: flex; align-items: center; }
-.emp-selector-icon { position: absolute; left: 11px; color: var(--accent); pointer-events: none; font-size: 15px; }
-.emp-selector-wrap select { width: 100%; height: 40px; padding: 0 10px 0 34px; font-family: var(--font-body); font-size: 13px; border: 1.5px solid #e2e8f0; border-radius: 10px; background: #fafaf8; color: var(--black); cursor: pointer; appearance: auto; }
-.emp-selector-wrap select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(232,37,26,.08); }
-.emp-selector-wrap input { flex: 1; min-width: 160px; height: 40px; padding: 0 10px; font-family: var(--font-body); font-size: 13px; border: 1.5px solid #e2e8f0; border-radius: 10px; background: #fafaf8; color: var(--black); }
-.emp-selector-wrap input:focus { outline: none; border-color: var(--accent); }
+/* ── GESTIÓN DE EMPLEADOS (editor inline, Fase 4A/4B) ── */
 .btn-agregar-emp { height: 40px; padding: 0 18px; background: var(--accent); color: var(--white); border: none; border-radius: 10px; font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s, box-shadow .15s; box-shadow: 0 2px 8px rgba(232,37,26,.25); }
 .btn-agregar-emp:hover { background: #d01f15; }
-.emp-externo-toggle { display: inline-flex; align-items: center; gap: 4px; height: 40px; padding: 0 16px; font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--black); background: var(--white); border: 1.5px solid #e2e8f0; border-radius: 10px; cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s, color .15s; }
-.emp-externo-toggle:hover { background: var(--gray-50); border-color: #cbd5e1; }
-.emp-externo-toggle.active { background: var(--black); border-color: var(--black); color: var(--white); }
-.carga-emp-header { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1.1rem; background: #fafaf8; border-bottom: 1px solid #efefec; }
-.carga-emp-nombre { font-weight: 700; font-size: 14px; color: var(--black); }
-.carga-emp-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-size: 11px; font-weight: 700; color: var(--white); background: var(--accent); margin-right: 8px; flex-shrink: 0; }
 .carga-emp-externo { font-size: 10px; font-weight: 700; color: #92400e; background: #fef3c7; padding: 1px 6px; border-radius: 20px; margin-left: 6px; }
 .btn-quitar-emp { background: none; border: none; color: var(--gray-400); cursor: pointer; font-size: 18px; line-height: 1; padding: 4px 6px; border-radius: 6px; transition: all .15s; }
 .btn-quitar-emp:hover { color: var(--accent); background: #fee2e2; }
-.emp-lista-vacia { text-align: center; padding: 2.5rem; color: var(--gray-400); font-size: 13px; }
 
 
 /* ─────────────────────────────────────────────
@@ -902,7 +872,7 @@ tbody tr:hover { background: var(--gray-50); }
 .obs-cell { max-width: 160px; }
 
 .cajas-title, .horarios-title { font-size: 20px; }
-.caja-card, .hor-panel, .carga-panel {
+.caja-card, .hor-panel {
   border-radius: var(--radius-lg);
   border-color: var(--gray-100);
   box-shadow: var(--shadow-sm);
@@ -1625,30 +1595,6 @@ tbody tr:hover { background: var(--gray-50); }
   </div>
 </div>
 
-<div class="modal-overlay" id="modalHorarioOverlay" onclick="cerrarModalHorarioOverlay(event)">
-  <div class="modal-box" style="max-width:980px;width:97vw">
-    <div class="modal-header" style="padding:1.1rem 1.5rem;border-bottom:1px solid #efefec;">
-      <div class="modal-header-left" style="display:flex;align-items:center;gap:12px;">
-        <div style="width:36px;height:36px;background:#fee2e2;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#e8251a;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg></div>
-        <div>
-          <div style="font-weight:700;font-size:16px;color:var(--black);letter-spacing:.2px" id="mhSucursal"></div>
-          <div style="font-size:11px;color:var(--gray-400);margin-top:1px" id="mhSemanaInfo"></div>
-        </div>
-      </div>
-      <button class="modal-close" onclick="cerrarModalHorario()" aria-label="Cerrar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
-    </div>
-    <div class="modal-body" style="padding:0;max-height:80vh;overflow-y:auto">
-      <div class="carga-body" id="mhBody">
-        <!-- Empleados se renderizan acá -->
-      </div>
-    </div>
-    <div class="modal-actions" style="background:var(--gray-50)">
-      <span id="mhStatus" style="font-size:12px;color:var(--gray-400)"></span>
-      <button class="btn-guardar-hor" id="btnGuardarHorario" onclick="guardarHorario()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg> Guardar horario</button>
-      <button class="modal-btn cancelar" onclick="cerrarModalHorario()">Cancelar</button>
-    </div>
-  </div>
-</div>
 <!-- MODAL ENTRADA -->
 <div class="modal-overlay" id="modalEntradaOverlay" onclick="cerrarModalEntradaOverlay(event)">
   <div class="modal-box" style="max-width:480px">
@@ -1787,13 +1733,15 @@ function fetchHorariosSheets(path) {
   }).then(function(r) { return r.json(); });
 }
 
-// Fase 2B — Rollback temporal para "Horario semanal":
-//   false = GAS legacy (accion=obtenerHorarios / accion=guardarHorario)
+// Fase 2B — Rollback temporal para la LECTURA de "Horario semanal":
+//   false = GAS legacy (accion=obtenerHorarios)
 //   true  = Node + Sheets API (/api/horarios-semanales, croma-backend)
-// Cambiar SOLO esta constante alterna entre los dos caminos — no hace
-// falta tocar nada más de cargarHorarios()/guardarHorario(). GAS
-// (code.js) sigue intacto, es el rollback inmediato ante cualquier
-// problema con el camino Node.
+// Cambiar SOLO esta constante alterna el camino de lectura dentro de
+// cargarHorarios() — GAS (code.js) sigue intacto como rollback inmediato
+// ante cualquier problema con el camino Node. El GUARDADO ya no tiene
+// bifurcación: guardarHorarioInline()/enviarPutHorarioSemanal() siempre
+// usan el PUT de Node (el modal legacy, que sí tenía un fallback a GAS
+// para guardar, se retiró en Fase 5 una vez confirmado el reemplazo).
 var HORARIOS_SEMANALES_NODE = true;
 
 // Wrapper dedicado para /api/horarios-semanales (GET+PUT) — a propósito
@@ -1879,13 +1827,10 @@ function getDiasLunes(offset) {
 
 // Fase 2 — consolida el TURNOS_RAPIDOS que estaba declarado pero nunca
 // usado (relevamiento previo). Mismos valores que los BLOQUES hardcodeados
-// dentro de aplicarTurnoRapido() (verificado 1 a 1) — no se inventan ni se
-// quitan horarios ofrecidos. Única fuente real, usada por el editor de
-// celda nuevo (buildEditorCeldaHorario/aplicarPresetCelda). El modal
-// legacy (aplicarTurnoRapido, buildFilaEmpleado) sigue con su copia propia
-// hardcodeada, a propósito sin tocar — consolidarlo ahí implicaría
-// reescribir la carga de chips del modal, que ya funciona en producción;
-// prioridad es no romper ese camino (ver Fase 2 §6 del pedido).
+// que tenía aplicarTurnoRapido() del modal legacy (verificado 1 a 1 antes
+// de retirarlo en Fase 5) — no se inventan ni se quitan horarios
+// ofrecidos. Única fuente de presets del módulo, usada por el editor de
+// celda (buildEditorCeldaHorario/aplicarPresetCelda).
 var PRESETS_TURNO = {
   corrido: [
     { label: '09:00-13:00', clase: 'manana',  h1: '09:00', h2: '13:00' },
@@ -2400,6 +2345,21 @@ function buscarPerfilEmpleado(nombreEmpleado) {
 function buscarFotoEmpleado(nombreEmpleado) {
   var perfil = buscarPerfilEmpleado(nombreEmpleado);
   return proxyFotoUrl(perfil && perfil.foto_url);
+}
+
+// Fase 5 — nombre visible en Horario semanal: prioriza APODO (columna
+// APODO de la hoja EMPLEADOS, ya cacheada en perfilesFotosCache junto a las
+// fotos — mismo mecanismo que ya usa envivoNombreCorto() para "En Vivo",
+// solo que ahí el fallback es la primera palabra y acá el fallback es el
+// nombre completo sin legajo, que es lo que Horario semanal ya mostraba).
+// Es solo presentación: identidad/keys de horariosEditando, horariosData y
+// el payload de guardado siguen usando `nombreEmpleado` tal cual, nunca el
+// apodo — ver construirFilasHorario().
+function nombreVisibleEmpleado(nombreEmpleado) {
+  var nombreLimpio = String(nombreEmpleado || '').replace(/^\d+\s+/, '');
+  var perfil = buscarPerfilEmpleado(nombreEmpleado);
+  var apodo  = (perfil && perfil.apodo) ? String(perfil.apodo).trim() : '';
+  return apodo || nombreLimpio;
 }
 
 // Clasifica un turno por tipo: Corrido (un solo bloque), Cortado (dos bloques
@@ -3013,15 +2973,15 @@ function renderContenidoLocal() {
     filasRender.forEach(function(emp) {
       var foto  = buscarFotoEmpleado(emp.empleado);
       var inic  = iniciales(emp.empleado);
-      var nombreLimpio = emp.empleado.replace(/^\d+\s+/, '');
+      var nombreVisible = nombreVisibleEmpleado(emp.empleado);
       html += '<tr><td><div class="hor-emp-cell">';
       html += '<div class="hor-avatar">' + (foto ? '<img src="' + foto + '" alt="" crossorigin="anonymous" onerror="this.parentElement.textContent=\'' + inic + '\'">' : inic) + '</div>';
-      html += '<span>' + nombreLimpio + '</span>';
+      html += '<span>' + escapeHtml(nombreVisible) + '</span>';
       // Fase 4A §12: mismo badge que ya usaba el modal legacy, sin crear
       // una segunda clasificación de fila.
       if (editando && emp.externo) html += '<span class="carga-emp-externo">EXTERNO</span>';
       if (editando) {
-        html += '<button type="button" class="btn-quitar-emp" data-acciones-emp="' + escapeAttr(emp.empleado) + '" title="Acciones de ' + escapeAttr(nombreLimpio) + '" aria-label="Acciones de ' + escapeAttr(nombreLimpio) + '">' + icon('moreHorizontal','ic-xs') + '</button>';
+        html += '<button type="button" class="btn-quitar-emp" data-acciones-emp="' + escapeAttr(emp.empleado) + '" title="Acciones de ' + escapeAttr(nombreVisible) + '" aria-label="Acciones de ' + escapeAttr(nombreVisible) + '">' + icon('moreHorizontal','ic-xs') + '</button>';
       }
       html += '</div></td>';
       DIAS_KEY.forEach(function(dk, i) {
@@ -3041,7 +3001,7 @@ function renderContenidoLocal() {
           // mínimo de accesibilidad pedido en Fase 2 §20, no una auditoría
           // completa.
           html += '<td class="hor-cell-clickable' + (activa ? ' hor-celda-activa' : '') + '" data-empleado="' + escapeAttr(emp.empleado) + '" data-dia="' + dk + '"'
-            + ' tabindex="0" role="button" aria-label="Editar turno de ' + escapeAttr(nombreLimpio) + ' el ' + DIAS_LABEL[i] + '">';
+            + ' tabindex="0" role="button" aria-label="Editar turno de ' + escapeAttr(nombreVisible) + ' el ' + DIAS_LABEL[i] + '">';
           html += '<span class="hor-cell hor-cell-' + clase + '">' + texto + '</span>';
           // Fase 4B §54: acceso rápido mouse/touch a Libre/Copiar día sin
           // abrir el editor de celda completo. tabindex="-1" a propósito
@@ -3151,20 +3111,21 @@ function renderContenidoLocal() {
   }
 }
 
-// ── MODAL CARGA ENCARGADO ──
+// ── HORARIO SEMANAL — estado compartido ──
+// El modal legacy que originalmente declaraba estas variables se retiró en
+// Fase 5 (reemplazado por completo por el editor inline) — quedan acá
+// porque el editor inline las sigue usando tal cual.
 var horariosEditando  = {}; // { empleado: { lun: {tipo,h1,h2,h3,h4}, ... } }
 var sucursalEditando  = null;
 var empleadosLista    = []; // todos los del local (con número): ["34 MATI TERUEL", ...]
-var empleadosAgregados= []; // los que el encargado eligió
-var todosEmpleados    = []; // todos los de todas las sucursales para esta semana: [{id, nombre, externo}]
+var todosEmpleados    = []; // todos los de todas las sucursales para esta semana: [{nombre, sucursal}]
 
 // ── HORARIO SEMANAL — modo edición inline (Fase 1) ──
 // Reutiliza a propósito el mismo horariosEditando/sucursalEditando de
-// arriba (en vez de crear una segunda fuente de verdad): el botón "Editar"
-// ya no abre el modal por defecto (ver entrarModoEdicionHorario más abajo),
-// así que el modo inline y el modal legacy nunca corren al mismo tiempo.
-// El modal (abrirModalCarga y todo lo que sigue) queda intacto como
-// fallback — no se toca ni se llama desde acá.
+// arriba (en vez de crear una segunda fuente de verdad). El modal legacy
+// que originalmente abría "Editar" (abrirModalCarga y todo lo que seguía)
+// se retiró en Fase 5 una vez confirmado que el editor inline ya cubría
+// el 100% de su funcionalidad.
 var modoHorario         = 'vista'; // 'vista' | 'edicion'
 var horarioTieneCambios = false;   // dirty state
 var celdaHorarioActiva  = null;    // { empleado, dia } | null — selección estructural
@@ -3391,7 +3352,7 @@ function aplicarPresetCelda(bloque, idx) {
 // del modal, ver comentario junto a PRESETS_TURNO). Nombre sugerido por el
 // pedido de Fase 2 §5.
 function buildEditorCeldaHorario(empleado, dia, turno) {
-  var nombreLimpio = empleado.replace(/^\d+\s+/, '');
+  var nombreVisible = nombreVisibleEmpleado(empleado);
   var diaFull = DIAS_FULL_HORARIO[dia] || dia;
   var diaFullCap = diaFull.charAt(0).toUpperCase() + diaFull.slice(1);
   var diaIdx = DIAS_KEY.indexOf(dia);
@@ -3399,7 +3360,7 @@ function buildEditorCeldaHorario(empleado, dia, turno) {
 
   var html = '<div class="hor-celda-editor" id="celdaEditor">';
   html += '<div class="hor-celda-editor-head">';
-  html += '<div><div class="hor-celda-editor-emp">' + escapeHtml(nombreLimpio) + '</div>';
+  html += '<div><div class="hor-celda-editor-emp">' + escapeHtml(nombreVisible) + '</div>';
   html += '<div class="hor-celda-editor-dia">' + escapeHtml(diaFullCap) + ' ' + diaFecha + '</div></div>';
   html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarEditorCelda()">Listo</button>';
   html += '</div>';
@@ -3596,8 +3557,7 @@ function quitarEmpleadoInline(nombre) {
     return t && (t.tipo !== 'libre' || t.h1 || t.h2 || t.h3 || t.h4);
   });
   if (tieneDatos) {
-    var nombreLimpio = nombre.replace(/^\d+\s+/, '');
-    if (!confirm('¿Quitar a ' + nombreLimpio + ' de esta semana?')) return;
+    if (!confirm('¿Quitar a ' + nombreVisibleEmpleado(nombre) + ' de esta semana?')) return;
   }
   delete horariosEditando[nombre];
   delete externosInline[nombre];
@@ -3625,8 +3585,14 @@ function buildPanelAgregarEmpleado() {
     } else {
       html += '<div class="hor-agregar-lista">';
       disponibles.forEach(function(n) {
-        var display = n.replace(/^(\d+)\s+/, '#$1 ');
-        html += '<button type="button" class="hor-agregar-item" data-agregar-local="' + escapeAttr(n) + '">' + escapeHtml(display) + '</button>';
+        // Fase 5 §6/§7 — primero APODO (fallback nombre limpio); el nombre
+        // real solo se muestra como secundario cuando hay apodo, para
+        // desambiguar sin volver a mostrar el legajo (ya no aporta nada
+        // útil al encargado — el apodo es lo que reconoce).
+        var visible    = nombreVisibleEmpleado(n);
+        var nombreReal = n.replace(/^\d+\s+/, '');
+        html += '<button type="button" class="hor-agregar-item-externo" data-agregar-local="' + escapeAttr(n) + '">' + escapeHtml(visible)
+          + (visible !== nombreReal ? '<small>' + escapeHtml(nombreReal) + '</small>' : '') + '</button>';
       });
       html += '</div>';
     }
@@ -3655,8 +3621,14 @@ function buildPanelAgregarExterno() {
     if (disponibles.length) {
       html += '<div class="hor-agregar-lista">';
       disponibles.forEach(function(e) {
-        var display = e.nombre.replace(/^(\d+)\s+/, '#$1 ');
-        html += '<button type="button" class="hor-agregar-item-externo" data-agregar-externo="' + escapeAttr(e.nombre) + '">' + escapeHtml(display) + '<small>' + escapeHtml(e.sucursal) + '</small></button>';
+        // Fase 5 §6 — "LAURA / 14 ROCA": apodo (fallback nombre limpio)
+        // como principal, sucursal siempre como secundario (ya lo era, es
+        // el dato que de verdad distingue externos) + nombre real también
+        // si hay apodo, para no perder de vista quién es exactamente.
+        var visible    = nombreVisibleEmpleado(e.nombre);
+        var nombreReal = e.nombre.replace(/^\d+\s+/, '');
+        var secundario = (visible !== nombreReal ? nombreReal + ' · ' : '') + e.sucursal;
+        html += '<button type="button" class="hor-agregar-item-externo" data-agregar-externo="' + escapeAttr(e.nombre) + '">' + escapeHtml(visible) + '<small>' + escapeHtml(secundario) + '</small></button>';
       });
       html += '</div>';
     } else {
@@ -3716,12 +3688,12 @@ function cerrarPanelAccionesCelda() {
 
 function buildPanelAccionesCelda() {
   var empleado = panelAccionesCelda.empleado, dia = panelAccionesCelda.dia;
-  var nombreLimpio = empleado.replace(/^\d+\s+/, '');
+  var nombreVisible = nombreVisibleEmpleado(empleado);
   var diaFull = DIAS_FULL_HORARIO[dia] || dia;
   var diaCap = diaFull.charAt(0).toUpperCase() + diaFull.slice(1);
 
   var html = '<div class="hor-celda-editor" id="panelAccionesCelda">';
-  html += '<div class="hor-celda-editor-head"><div><div class="hor-celda-editor-emp">' + escapeHtml(nombreLimpio) + '</div>';
+  html += '<div class="hor-celda-editor-head"><div><div class="hor-celda-editor-emp">' + escapeHtml(nombreVisible) + '</div>';
   html += '<div class="hor-celda-editor-dia">' + escapeHtml(diaCap) + '</div></div>';
   html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarPanelAccionesCelda()">Cerrar</button></div>';
   html += '<button type="button" class="btn-agregar-emp" style="width:100%;margin-bottom:.85rem" data-marcar-libre-panel="1">Marcar Libre</button>';
@@ -3761,9 +3733,9 @@ function cerrarPanelAccionesEmpleado() {
 
 function buildPanelAccionesEmpleado() {
   var nombre = panelAccionesEmpleado;
-  var nombreLimpio = nombre.replace(/^\d+\s+/, '');
+  var nombreVisible = nombreVisibleEmpleado(nombre);
   var html = '<div class="hor-celda-editor" id="panelAccionesEmpleado">';
-  html += '<div class="hor-celda-editor-head"><div class="hor-celda-editor-emp">' + escapeHtml(nombreLimpio) + '</div>';
+  html += '<div class="hor-celda-editor-head"><div class="hor-celda-editor-emp">' + escapeHtml(nombreVisible) + '</div>';
   html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarPanelAccionesEmpleado()">Cerrar</button></div>';
   var otros = Object.keys(horariosEditando).filter(function(n){ return n !== nombre; });
   if (otros.length) {
@@ -3788,20 +3760,25 @@ function cerrarPanelDuplicarEmpleado() {
 
 function buildPanelDuplicarEmpleado() {
   var origen = panelDuplicarEmpleado;
-  var origenLimpio = origen.replace(/^\d+\s+/, '');
+  var origenVisible = nombreVisibleEmpleado(origen);
   // §12 — nunca origen=destino: se excluye estructuralmente de la lista,
   // no solo con un guard en el handler.
   var destinos = Object.keys(horariosEditando).filter(function(n){ return n !== origen; });
   var html = '<div class="hor-celda-editor" id="panelDuplicarEmpleado">';
-  html += '<div class="hor-celda-editor-head"><div class="hor-celda-editor-emp">Copiar horario de ' + escapeHtml(origenLimpio) + '</div>';
+  html += '<div class="hor-celda-editor-head"><div class="hor-celda-editor-emp">Copiar horario de ' + escapeHtml(origenVisible) + '</div>';
   html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarPanelDuplicarEmpleado()">Cerrar</button></div>';
   if (!destinos.length) {
     html += '<div class="hor-edicion-hint">No hay otro empleado en esta semana para copiar el horario.</div>';
   } else {
     html += '<div class="hor-agregar-lista">';
     destinos.forEach(function(n) {
-      var display = n.replace(/^\d+\s+/, '');
-      html += '<button type="button" class="hor-agregar-item" data-duplicar-destino="' + escapeAttr(n) + '">a ' + escapeHtml(display) + '</button>';
+      // Fase 5 §7 — si hay APODO, el nombre completo se muestra como
+      // secundario (mismo criterio que ya usaba "+ Externo" con la
+      // sucursal): desambigua sin necesidad de mostrarlo siempre.
+      var visible    = nombreVisibleEmpleado(n);
+      var nombreReal = n.replace(/^\d+\s+/, '');
+      html += '<button type="button" class="hor-agregar-item-externo" data-duplicar-destino="' + escapeAttr(n) + '">a ' + escapeHtml(visible)
+        + (visible !== nombreReal ? '<small>' + escapeHtml(nombreReal) + '</small>' : '') + '</button>';
     });
     html += '</div>';
   }
@@ -3817,9 +3794,7 @@ function buildPanelDuplicarEmpleado() {
 function duplicarHorarioEmpleado(origen, destino) {
   if (guardandoHorario || cargandoSemanaAnterior) return;
   if (origen === destino || !horariosEditando[origen] || !horariosEditando[destino]) return; // §12
-  var origenLimpio  = origen.replace(/^\d+\s+/, '');
-  var destinoLimpio = destino.replace(/^\d+\s+/, '');
-  var confirmar = confirm('Esto reemplazará el horario semanal de ' + destinoLimpio + ' con el horario de ' + origenLimpio + '.\n\n¿Continuar?');
+  var confirmar = confirm('Esto reemplazará el horario semanal de ' + nombreVisibleEmpleado(destino) + ' con el horario de ' + nombreVisibleEmpleado(origen) + '.\n\n¿Continuar?');
   if (!confirmar) return;
   DIAS_KEY.forEach(function(dk) {
     horariosEditando[destino][dk] = clonarTurno(horariosEditando[origen][dk]);
@@ -3992,63 +3967,6 @@ async function guardarHorarioInline() {
   renderContenidoLocal();
 }
 
-async function abrirModalCarga(suc) {
-  sucursalEditando  = suc;
-  horariosEditando  = {};
-  empleadosAgregados= [];
-
-  document.getElementById('mhSucursal').textContent = suc;
-  document.getElementById('mhSemanaInfo').textContent = getSemanaStr(semanaOffset);
-  document.getElementById('mhStatus').textContent = '';
-  document.getElementById('btnGuardarHorario').disabled = false;
-
-  var body = document.getElementById('mhBody');
-  body.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando empleados...</p></div>';
-  document.getElementById('modalHorarioOverlay').classList.add('open');
-
-  // Obtener empleados del local y todos los empleados en paralelo.
-  // Mismo flag de rollback que el resto de "Horario semanal" — ver
-  // HORARIOS_SEMANALES_NODE: true = Node (/api/horarios-semanales/empleados,
-  // croma-backend), false = GAS legacy (accion=obtenerEmpleados).
-  try {
-    if (HORARIOS_SEMANALES_NODE) {
-      var [resEmp, resTodos] = await Promise.all([
-        fetchHorariosSemanalesNode('/api/horarios-semanales/empleados?sucursal=' + encodeURIComponent(suc)),
-        fetchHorariosSemanalesNode('/api/horarios-semanales/empleados/todos'),
-      ]);
-      empleadosLista = (resEmp.status === 200 && resEmp.data.ok) ? resEmp.data.empleados : [];
-      todosEmpleados = (resTodos.status === 200 && resTodos.data.ok) ? resTodos.data.empleados : [];
-    } else {
-      var urlEmp  = API_URL + '?accion=obtenerEmpleados&sucursal=' + encodeURIComponent(suc);
-      var urlTodos = API_URL + '?accion=obtenerTodosEmpleados';
-      var [respEmp, respTodos] = await Promise.all([fetch(urlEmp), fetch(urlTodos)]);
-      var [dataEmp, dataTodos] = await Promise.all([respEmp.json(), respTodos.json()]);
-      empleadosLista  = (dataEmp.ok  && dataEmp.empleados)  ? dataEmp.empleados  : [];
-      todosEmpleados  = (dataTodos.ok && dataTodos.empleados) ? dataTodos.empleados : [];
-    }
-  } catch(e) {
-    empleadosLista = [];
-    todosEmpleados = [];
-  }
-
-  // Si hay horario ya cargado para esta semana, pre-cargar los empleados
-  // (saltea filas con el mismo nombre repetidas, por si quedaron duplicadas de antes)
-  if (horariosData[suc] && horariosData[suc].length > 0) {
-    horariosData[suc].forEach(function(emp) {
-      if (empleadosAgregados.find(function(e){ return e.id === emp.empleado; })) return;
-      // Buscar si es del local (viene en empleadosLista) o externo
-      var enLista = empleadosLista.indexOf(emp.empleado) >= 0;
-      empleadosAgregados.push({ id: emp.empleado, nombre: emp.empleado, externo: !enLista });
-      horariosEditando[emp.empleado] = {};
-      DIAS_KEY.forEach(function(dk) {
-        horariosEditando[emp.empleado][dk] = parsearTurno(emp[dk] || '');
-      });
-    });
-  }
-
-  renderFormHorario();
-}
-
 function parsearTurno(val) {
   // Convierte "10:00-19:00" o "09:00-13:00 | 17:00-21:00" o "LIBRE" a objeto
   if (!val || val === 'LIBRE') return { tipo: 'libre', h1: '', h2: '', h3: '', h4: '' };
@@ -4060,324 +3978,6 @@ function parsearTurno(val) {
   }
   var partes2 = val.split('-');
   return { tipo: 'corrido', h1: partes2[0]||'', h2: partes2[1]||'', h3: '', h4: '' };
-}
-
-function buildSelectorHTML() {
-  // Opciones del select: empleados del local que aún no fueron agregados
-  var yaAgregados = empleadosAgregados.map(function(e){ return e.id; });
-  var disponibles = empleadosLista.filter(function(e){ return yaAgregados.indexOf(e) < 0; });
-
-  var html = '<div class="emp-selector-wrap" id="empSelectorWrap">';
-
-  // Select normal (empleados del local)
-  html += '<div class="emp-selector-inner"><span class="emp-selector-icon">' + icon('user','ic-xs') + '</span><select id="empSelect">';
-  html += '<option value="">— Elegir empleado del local —</option>';
-  disponibles.forEach(function(emp) {
-    // emp viene como "34 MATI TERUEL" — mostrar como "#34 MATI TERUEL"
-    var display = emp.replace(/^(\d+)\s+/, '#$1 ');
-    html += '<option value="' + emp + '">' + display + '</option>';
-  });
-  html += '</select></div>';
-
-  html += '<button class="btn-agregar-emp" onclick="agregarEmpleado()">+ Agregar</button>';
-  html += '<span class="emp-externo-toggle" onclick="toggleExternoInput()">+ Externo</span>';
-  html += '</div>';
-
-  // Panel externo (oculto por defecto) — select con todos los empleados + input manual
-  html += '<div id="externoWrap" style="display:none;padding:.75rem 1.25rem;border-bottom:1px solid var(--gray-100);background:#fffbeb;gap:8px;flex-wrap:wrap">';
-  html += '<select id="externoSelect" style="flex:1;min-width:200px;height:34px;padding:0 10px;font-family:var(--font-body);font-size:13px;border:1px solid #fcd34d;border-radius:var(--radius-sm);background:var(--white)">';
-  html += '<option value="">— Elegir de otra sucursal —</option>';
-  var yaAgregadosIds = empleadosAgregados.map(function(e){ return e.id; });
-  todosEmpleados.forEach(function(emp) {
-    if (yaAgregadosIds.indexOf(emp.nombre) >= 0) return; // ya agregado
-    if (empleadosLista.indexOf(emp.nombre) >= 0) return; // es del local
-    var display = emp.nombre.replace(/^(\d+)\s+/, '#$1 ');
-    html += '<option value="' + emp.nombre + '">' + display + ' (' + emp.sucursal + ')</option>';
-  });
-  html += '<option value="__manual__">✏ Escribir nombre manualmente...</option>';
-  html += '</select>';
-  html += '<button class="btn-agregar-emp" onclick="agregarExterno()" style="background:#d97706">+ Agregar</button>';
-  html += '</div>';
-  // Input manual (se muestra solo si elige "manual")
-  html += '<div id="externoManualWrap" style="display:none;padding:.5rem 1.25rem .75rem;border-bottom:1px solid var(--gray-100);background:#fffbeb;gap:8px;flex-wrap:wrap">';
-  html += '<input type="text" id="externoInput" placeholder="Escribir nombre completo..." aria-label="Nombre completo" style="flex:1;height:34px;padding:0 10px;font-family:var(--font-body);font-size:13px;border:1px solid #fcd34d;border-radius:var(--radius-sm)">';
-  html += '<button class="btn-agregar-emp" onclick="agregarExternoManual()" style="background:#d97706">+ Agregar</button>';
-  html += '</div>';
-
-  return html;
-}
-
-function buildFilaEmpleado(emp, dias) {
-  var nombre   = emp.nombre;
-  var idKey    = emp.id.replace(/\s+/g,'_');
-  var turnoObj = horariosEditando[emp.id] || {};
-
-  // Separar número y nombre para el badge
-  var match   = emp.id.match(/^(\d+)\s+(.+)$/);
-  var numBadge = match ? '<span class="carga-emp-num">' + match[1] + '</span>' : '';
-  var nomShow  = match ? match[2] : emp.id;
-
-  var html = '<div class="carga-empleado" id="emp_' + idKey + '">';
-  html += '<div class="carga-emp-header">';
-  html += '<div>' + numBadge + '<span class="carga-emp-nombre">' + nomShow + '</span>';
-  if (emp.externo) html += '<span class="carga-emp-externo">EXTERNO</span>';
-  html += '</div>';
-  html += '<button class="btn-quitar-emp" onclick="quitarEmpleado(\'' + emp.id + '\')" title="Quitar" aria-label="Quitar empleado">' + icon('x','ic-xs') + '</button>';
-  html += '</div>';
-  html += '<div class="carga-dias-grid">';
-
-  DIAS_KEY.forEach(function(dk, i) {
-    var esWeekend = (i === 5 || i === 6);
-    var turno = turnoObj[dk] || { tipo:'libre', h1:'', h2:'', h3:'', h4:'' };
-    var idPref = 'ht_' + idKey + '_' + dk;
-
-    html += '<div class="carga-dia">';
-    html += '<div class="carga-dia-label' + (esWeekend ? ' weekend' : '') + '">' + DIAS_LABEL[i] + '<br><small style="font-weight:400;font-size:9px">' + dias[i].getDate() + '</small></div>';
-    html += '<select class="tipo-turno-sel" id="' + idPref + '_tipo" onchange="onTipoChange(\'' + emp.id + '\',\'' + dk + '\',\'' + idKey + '\')">';
-    html += '<option value="libre"'   + (turno.tipo==='libre'   ? ' selected':'') + '>Libre</option>';
-    html += '<option value="corrido"' + (turno.tipo==='corrido' ? ' selected':'') + '>Corrido</option>';
-    html += '<option value="cortado"' + (turno.tipo==='cortado' ? ' selected':'') + '>Cortado</option>';
-    html += '</select>';
-    // Chips según tipo — contenedor con data-empid y data-dk para que onTipoChange los encuentre
-    var chipsId = 'chips_' + idKey + '_' + dk;
-    var tipoCurrent = turno.tipo || 'libre';
-    html += '<div class="chips-container" id="' + chipsId + '" data-empid="' + emp.id + '" data-dk="' + dk + '">';
-    // Chips corrido
-    html += '<div class="chips-corrido turnos-rapidos" style="display:' + (tipoCurrent === 'corrido' ? 'flex' : 'none') + '">';
-    [['M 9-13','manana',0,0],['M 9:30','manana',0,1],['T 16:30','tarde',0,2],['T 17-21','tarde',0,3],['C 9-17','corrido',0,4],['C 13-21','corrido',0,5]].forEach(function(c){
-      html += '<button class="chip-turno ' + c[1] + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',' + c[2] + ',' + c[3] + ')">' + c[0] + '</button>';
-    });
-    html += '</div>';
-    // Chips cortado bloque 1
-    html += '<div class="chips-cortado-b1 turnos-rapidos" style="display:' + (tipoCurrent === 'cortado' ? 'flex' : 'none') + '">';
-    html += '<span style="font-size:9px;color:var(--gray-400);align-self:center;margin-right:2px">1°</span>';
-    [['9-13','manana',1,0],['9:30-13:30','manana',1,1]].forEach(function(c){
-      html += '<button class="chip-turno ' + c[1] + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',' + c[2] + ',' + c[3] + ')">' + c[0] + '</button>';
-    });
-    html += '</div>';
-    // Chips cortado bloque 2
-    html += '<div class="chips-cortado-b2 turnos-rapidos" style="display:' + (tipoCurrent === 'cortado' ? 'flex' : 'none') + '">';
-    html += '<span style="font-size:9px;color:var(--gray-400);align-self:center;margin-right:2px">2°</span>';
-    [['16:30-20:30','tarde',2,0],['17-21','tarde',2,1]].forEach(function(c){
-      html += '<button class="chip-turno ' + c[1] + '" onclick="aplicarTurnoRapido(\'' + emp.id + '\',\'' + dk + '\',' + c[2] + ',' + c[3] + ')">' + c[0] + '</button>';
-    });
-    html += '</div>';
-    html += '</div>';
-    var dC = turno.tipo === 'corrido' ? 'flex' : 'none';
-    var dP = turno.tipo === 'cortado' ? 'flex' : 'none';
-    html += '<div id="' + idPref + '_corrido" style="display:' + dC + ';flex-direction:column;gap:2px">';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h1" aria-label="Hora de entrada" value="' + (turno.h1||'') + '" onchange="onHoraChange(\'' + emp.id + '\',\'' + dk + '\')">';
-    html += '<div class="hora-separador">↓</div>';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h2" aria-label="Hora de salida" value="' + (turno.h2||'') + '" onchange="onHoraChange(\'' + emp.id + '\',\'' + dk + '\')">';
-    html += '</div>';
-    html += '<div id="' + idPref + '_cortado" style="display:' + dP + ';flex-direction:column;gap:2px">';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h1p" aria-label="Entrada, primer bloque" value="' + (turno.h1||'') + '">';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h2p" aria-label="Salida, primer bloque" value="' + (turno.h2||'') + '">';
-    html += '<div class="hora-separador" style="font-size:9px">2° bloque</div>';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h3p" aria-label="Entrada, segundo bloque" value="' + (turno.h3||'') + '">';
-    html += '<input class="hora-input" type="time" id="' + idPref + '_h4p" aria-label="Salida, segundo bloque" value="' + (turno.h4||'') + '">';
-    html += '</div>';
-    html += '</div>';
-  });
-
-  html += '</div></div>';
-  return html;
-}
-
-function renderFormHorario() {
-  var body = document.getElementById('mhBody');
-  var dias  = getDiasLunes(semanaOffset);
-  var html  = buildSelectorHTML();
-
-  if (empleadosAgregados.length === 0) {
-    html += '<div class="emp-lista-vacia">' + icon('users','ic-xs') + ' Elegí los empleados que trabajan esta semana</div>';
-  } else {
-    empleadosAgregados.forEach(function(emp) {
-      html += buildFilaEmpleado(emp, dias);
-    });
-  }
-
-  body.innerHTML = html;
-}
-
-function agregarEmpleado() {
-  var sel = document.getElementById('empSelect');
-  if (!sel || !sel.value) return;
-  var id = sel.value;
-  if (empleadosAgregados.find(function(e){ return e.id === id; })) return;
-  // Inicializar turnos vacíos
-  horariosEditando[id] = {};
-  DIAS_KEY.forEach(function(dk){ horariosEditando[id][dk] = { tipo:'libre', h1:'', h2:'', h3:'', h4:'' }; });
-  empleadosAgregados.push({ id: id, nombre: id, externo: false });
-  renderFormHorario();
-}
-
-function agregarExterno() {
-  var sel = document.getElementById('externoSelect');
-  if (!sel || !sel.value || sel.value === '__manual__') return;
-  var nombre = sel.value;
-  if (empleadosAgregados.find(function(e){ return e.id === nombre; })) return;
-  horariosEditando[nombre] = {};
-  DIAS_KEY.forEach(function(dk){ horariosEditando[nombre][dk] = { tipo:'libre', h1:'', h2:'', h3:'', h4:'' }; });
-  empleadosAgregados.push({ id: nombre, nombre: nombre, externo: true });
-  renderFormHorario();
-}
-
-function agregarExternoManual() {
-  var input = document.getElementById('externoInput');
-  if (!input || !input.value.trim()) return;
-  var nombre = input.value.trim().toUpperCase();
-  if (empleadosAgregados.find(function(e){ return e.id === nombre; })) return;
-  horariosEditando[nombre] = {};
-  DIAS_KEY.forEach(function(dk){ horariosEditando[nombre][dk] = { tipo:'libre', h1:'', h2:'', h3:'', h4:'' }; });
-  empleadosAgregados.push({ id: nombre, nombre: nombre, externo: true });
-  renderFormHorario();
-}
-
-function quitarEmpleado(id) {
-  empleadosAgregados = empleadosAgregados.filter(function(e){ return e.id !== id; });
-  delete horariosEditando[id];
-  renderFormHorario();
-}
-
-function toggleExternoInput() {
-  var el = document.getElementById('externoWrap');
-  if (!el) return;
-  var visible = el.style.display === 'flex';
-  el.style.display = visible ? 'none' : 'flex';
-  var toggleBtn = document.querySelector('.emp-externo-toggle');
-  if (toggleBtn) toggleBtn.classList.toggle('active', !visible);
-  if (!visible) {
-    // Escuchar cambio en el select para mostrar input manual
-    var sel = document.getElementById('externoSelect');
-    if (sel) sel.onchange = function() {
-      var manual = document.getElementById('externoManualWrap');
-      if (manual) manual.style.display = sel.value === '__manual__' ? 'flex' : 'none';
-    };
-  }
-}
-
-function aplicarTurnoRapido(empId, dk, bloque, idx) {
-  // bloque: 0 = corrido (h1/h2), 1 = 1er bloque cortado (h1/h2), 2 = 2do bloque cortado (h3/h4)
-  var idKey  = empId.replace(/\s+/g, '_');
-  var idPref = 'ht_' + idKey + '_' + dk;
-  var sel    = document.getElementById(idPref + '_tipo');
-  var tipoActual = sel ? sel.value : 'libre';
-
-  var BLOQUES = {
-    corrido: [
-      { h1: '09:00', h2: '13:00' },
-      { h1: '09:30', h2: '13:30' },
-      { h1: '16:30', h2: '20:30' },
-      { h1: '17:00', h2: '21:00' },
-      { h1: '09:00', h2: '17:00' },
-      { h1: '13:00', h2: '21:00' }
-    ],
-    b1: [ // 1er bloque cortado
-      { h1: '09:00', h2: '13:00' },
-      { h1: '09:30', h2: '13:30' }
-    ],
-    b2: [ // 2do bloque cortado
-      { h1: '16:30', h2: '20:30' },
-      { h1: '17:00', h2: '21:00' }
-    ]
-  };
-
-  if (!horariosEditando[empId]) horariosEditando[empId] = {};
-  if (!horariosEditando[empId][dk]) horariosEditando[empId][dk] = { tipo:'libre', h1:'', h2:'', h3:'', h4:'' };
-
-  if (bloque === 0) {
-    // Corrido: fuerza tipo corrido y setea h1/h2
-    var t = BLOQUES.corrido[idx];
-    if (!t) return;
-    if (sel) { sel.value = 'corrido'; onTipoChange(empId, dk); }
-    var h1 = document.getElementById(idPref + '_h1');
-    var h2 = document.getElementById(idPref + '_h2');
-    if (h1) h1.value = t.h1;
-    if (h2) h2.value = t.h2;
-    horariosEditando[empId][dk].tipo = 'corrido';
-    horariosEditando[empId][dk].h1   = t.h1;
-    horariosEditando[empId][dk].h2   = t.h2;
-  } else if (bloque === 1) {
-    // 1er bloque cortado: fuerza cortado, setea h1p/h2p
-    var t = BLOQUES.b1[idx];
-    if (!t) return;
-    if (sel) { sel.value = 'cortado'; onTipoChange(empId, dk); }
-    var h1p = document.getElementById(idPref + '_h1p');
-    var h2p = document.getElementById(idPref + '_h2p');
-    if (h1p) h1p.value = t.h1;
-    if (h2p) h2p.value = t.h2;
-    horariosEditando[empId][dk].tipo = 'cortado';
-    horariosEditando[empId][dk].h1   = t.h1;
-    horariosEditando[empId][dk].h2   = t.h2;
-  } else if (bloque === 2) {
-    // 2do bloque cortado: fuerza cortado, setea h3p/h4p
-    var t = BLOQUES.b2[idx];
-    if (!t) return;
-    if (sel) { sel.value = 'cortado'; onTipoChange(empId, dk); }
-    var h3p = document.getElementById(idPref + '_h3p');
-    var h4p = document.getElementById(idPref + '_h4p');
-    if (h3p) h3p.value = t.h1;
-    if (h4p) h4p.value = t.h2;
-    horariosEditando[empId][dk].tipo = 'cortado';
-    horariosEditando[empId][dk].h3   = t.h1;
-    horariosEditando[empId][dk].h4   = t.h2;
-  }
-
-  // Highlight chip seleccionado en ese grupo
-  var chips = document.querySelectorAll('.chips-' + idKey + '-' + dk + '-b' + bloque + ' .chip-turno');
-  chips.forEach(function(c, i) {
-    c.style.boxShadow  = i === idx ? '0 0 0 2px currentColor' : 'none';
-    c.style.opacity    = i === idx ? '1' : '.75';
-  });
-}
-
-function onTipoChange(nombre, dk, idKey) {
-  idKey = idKey || nombre.replace(/\s+/g,'_');
-  var idPref = 'ht_' + idKey + '_' + dk;
-  var sel    = document.getElementById(idPref + '_tipo');
-  var tipo   = sel ? sel.value : 'libre';
-
-  // Mostrar/ocultar inputs de hora
-  var elC = document.getElementById(idPref + '_corrido');
-  var elP = document.getElementById(idPref + '_cortado');
-  if (elC) elC.style.display = tipo === 'corrido' ? 'flex' : 'none';
-  if (elP) elP.style.display = tipo === 'cortado' ? 'flex' : 'none';
-
-  // Mostrar/ocultar chips
-  var chipsId = 'chips_' + idKey + '_' + dk;
-  var cont = document.getElementById(chipsId);
-  if (cont) {
-    var cc  = cont.querySelector('.chips-corrido');
-    var cb1 = cont.querySelector('.chips-cortado-b1');
-    var cb2 = cont.querySelector('.chips-cortado-b2');
-    if (cc)  cc.style.display  = tipo === 'corrido' ? 'flex' : 'none';
-    if (cb1) cb1.style.display = tipo === 'cortado' ? 'flex' : 'none';
-    if (cb2) cb2.style.display = tipo === 'cortado' ? 'flex' : 'none';
-  }
-
-  if (horariosEditando[nombre] && horariosEditando[nombre][dk])
-    horariosEditando[nombre][dk].tipo = tipo;
-}
-
-function onHoraChange(nombre, dk) {
-  var idPref = 'ht_' + nombre.replace(/\s+/g,'_') + '_' + dk;
-  var tipo   = horariosEditando[nombre][dk].tipo;
-  if (tipo === 'corrido') {
-    var h1 = document.getElementById(idPref + '_h1');
-    var h2 = document.getElementById(idPref + '_h2');
-    horariosEditando[nombre][dk].h1 = h1 ? h1.value : '';
-    horariosEditando[nombre][dk].h2 = h2 ? h2.value : '';
-  } else if (tipo === 'cortado') {
-    var h1p = document.getElementById(idPref + '_h1p');
-    var h2p = document.getElementById(idPref + '_h2p');
-    var h3p = document.getElementById(idPref + '_h3p');
-    var h4p = document.getElementById(idPref + '_h4p');
-    horariosEditando[nombre][dk].h1 = h1p ? h1p.value : '';
-    horariosEditando[nombre][dk].h2 = h2p ? h2p.value : '';
-    horariosEditando[nombre][dk].h3 = h3p ? h3p.value : '';
-    horariosEditando[nombre][dk].h4 = h4p ? h4p.value : '';
-  }
 }
 
 function turnoToString(t) {
@@ -4395,101 +3995,6 @@ function turnoToString(t) {
   return 'LIBRE';
 }
 
-async function guardarHorario() {
-  var btn    = document.getElementById('btnGuardarHorario');
-  var status = document.getElementById('mhStatus');
-  btn.disabled = true;
-  status.textContent = 'Guardando...';
-
-  // Leer valores actuales del DOM antes de guardar
-  empleadosAgregados.forEach(function(emp) {
-    var nombre = emp.id;
-    if (!horariosEditando[nombre]) horariosEditando[nombre] = {};
-    DIAS_KEY.forEach(function(dk) {
-      var idPref = 'ht_' + nombre.replace(/\s+/g,'_') + '_' + dk;
-      var sel = document.getElementById(idPref + '_tipo');
-      if (!sel) return;
-      var tipo = sel.value;
-      if (!horariosEditando[nombre][dk]) horariosEditando[nombre][dk] = { tipo:'libre', h1:'', h2:'', h3:'', h4:'' };
-      horariosEditando[nombre][dk].tipo = tipo;
-      if (tipo === 'corrido') {
-        horariosEditando[nombre][dk].h1 = (document.getElementById(idPref+'_h1')||{}).value || '';
-        horariosEditando[nombre][dk].h2 = (document.getElementById(idPref+'_h2')||{}).value || '';
-      } else if (tipo === 'cortado') {
-        horariosEditando[nombre][dk].h1 = (document.getElementById(idPref+'_h1p')||{}).value || '';
-        horariosEditando[nombre][dk].h2 = (document.getElementById(idPref+'_h2p')||{}).value || '';
-        horariosEditando[nombre][dk].h3 = (document.getElementById(idPref+'_h3p')||{}).value || '';
-        horariosEditando[nombre][dk].h4 = (document.getElementById(idPref+'_h4p')||{}).value || '';
-      }
-    });
-  });
-
-  // Armar payload — Fase 3: extraído a construirFilasHorario(), misma
-  // fuente/serialización que antes, ahora compartida con el editor inline.
-  var filas = construirFilasHorario(empleadosAgregados.map(function(emp){ return emp.id; }));
-
-  var semanaId  = getSemanaId(semanaOffset);
-  var encargado = sesionSucursal || 'ADMIN';
-
-  if (HORARIOS_SEMANALES_NODE) {
-    // Fase 2B: PUT /api/horarios-semanales. Mismo payload funcional que
-    // guardarHorario() (GAS), sin el campo `accion` (eso era propio del
-    // wrapper de query string de Apps Script, PUT no lo necesita).
-    // Fase 3: el envío en sí (fetch + try/catch) se extrajo a
-    // enviarPutHorarioSemanal(), compartida con el editor inline — el
-    // manejo de cada status sigue siendo específico del modal (DOM propio,
-    // btn/status).
-    var payloadNode = { semana: semanaId, sucursal: sucursalEditando, encargado: encargado, filas: filas };
-    var resNode = await enviarPutHorarioSemanal(payloadNode);
-    if (resNode.status === 200 && resNode.data && resNode.data.ok) {
-      toast('✓ Horario guardado correctamente', 'success');
-      cerrarModalHorario();
-      cargarHorarios();
-    } else if (resNode.status === 409) {
-      // Conflicto de superposición cross-sucursal — comportamiento nuevo
-      // (Fase 2A/2B). Mensaje claro, sin JSON crudo. No se reintenta ni
-      // se resuelve automáticamente: el encargado tiene que corregirlo.
-      status.textContent = '⚠ ' + mensajeConflictoHorario(resNode.data.conflicto);
-      btn.disabled = false;
-    } else {
-      // Cualquier otro error de Node (400/401/502/timeout/offline): se
-      // muestra el error y se corta acá. A propósito NO cae a GAS como
-      // fallback automático — el flag HORARIOS_SEMANALES_NODE es el
-      // único mecanismo de rollback (ver comentario junto al flag). Un
-      // fallback silencioso Node->GAS podría terminar escribiendo dos
-      // veces si el PUT de Node en realidad sí llegó a guardar.
-      status.textContent = resNode.errorRed ? '⚠ Error de conexión' : ('⚠ Error: ' + ((resNode.data && resNode.data.error) || 'No se pudo guardar'));
-      btn.disabled = false;
-    }
-    return;
-  }
-
-  var payload = {
-    accion:    'guardarHorario',
-    sucursal:  sucursalEditando,
-    semana:    semanaId,
-    encargado: encargado,
-    filas:     filas
-  };
-
-  try {
-    // Apps Script no soporta preflight CORS con POST+JSON → enviamos como GET con datos serializados
-    var url = API_URL + '?accion=guardarHorario&datos=' + encodeURIComponent(JSON.stringify(payload));
-    var resp = await fetch(url);
-    var data = await resp.json();
-    if (data.ok) {
-      toast('✓ Horario guardado correctamente', 'success');
-      cerrarModalHorario();
-      cargarHorarios();
-    } else {
-      status.textContent = '⚠ Error: ' + (data.error || 'desconocido');
-      btn.disabled = false;
-    }
-  } catch(e) {
-    status.textContent = '⚠ Error de conexión';
-    btn.disabled = false;
-  }
-}
 
 // Arma el mensaje legible del 409 de superposición (ver PUT
 // /api/horarios-semanales, Fase 2A) — nunca se muestra el JSON crudo.
@@ -4497,7 +4002,9 @@ var DIAS_FULL_HORARIO = { lun: 'lunes', mar: 'martes', mie: 'miércoles', jue: '
 function mensajeConflictoHorario(c) {
   if (!c) return 'No se pudo guardar: hay un horario superpuesto.';
   var dia = DIAS_FULL_HORARIO[c.dia] || c.dia;
-  return 'No se pudo guardar. ' + c.empleado + ' ya tiene un horario en ' + c.sucursalExistente +
+  // Fase 5 §6 — solo el nombre mostrado cambia a APODO/fallback; `c` (el
+  // objeto de conflicto que devuelve el backend) no se toca.
+  return 'No se pudo guardar. ' + nombreVisibleEmpleado(c.empleado) + ' ya tiene un horario en ' + c.sucursalExistente +
     ' el ' + dia + ' de ' + c.horarioExistente.replace('-', ' a ') +
     ', que se superpone con el horario que intentás cargar (' + c.horarioNuevo.replace('-', ' a ') + ').';
 }
@@ -4590,14 +4097,6 @@ async function copiarAlPortapapeles(canvas) {
   } catch(e) {
     return false;
   }
-}
-
-function cerrarModalHorario() {
-  document.getElementById('modalHorarioOverlay').classList.remove('open');
-  sucursalEditando = null;
-}
-function cerrarModalHorarioOverlay(e) {
-  if (e.target === document.getElementById('modalHorarioOverlay')) cerrarModalHorario();
 }
 
 // ── API PEDIDOS ──
