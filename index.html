@@ -622,6 +622,18 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-celda-editor-presets { display: flex; flex-wrap: wrap; gap: 5px; }
 .hor-celda-libre-msg   { font-size: 13px; color: var(--gray-400); padding: .5rem 0 .25rem; }
 
+/* Paneles "+ Empleado"/"+ Externo" (Fase 4A) — mismo contenedor
+   .hor-celda-editor de arriba, solo el contenido interno es propio. */
+.hor-agregar-lista     { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; }
+.hor-agregar-item, .hor-agregar-item-externo { text-align: left; padding: 8px 10px; font-family: var(--font-body); font-size: 13px; color: var(--black); background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-sm); cursor: pointer; }
+.hor-agregar-item:hover, .hor-agregar-item-externo:hover { background: var(--gray-50); border-color: var(--gray-200); }
+.hor-agregar-item-externo small { display: block; color: var(--gray-400); font-weight: 400; margin-top: 1px; }
+.hor-agregar-manual    { margin-top: .75rem; padding-top: .75rem; border-top: 1px dashed var(--gray-200); }
+
+/* Botón "quitar" de una fila en modo edición — discreto (ver Fase 4A §13),
+   empujado al final de la celda de empleado. */
+.hor-emp-cell .btn-quitar-emp { margin-left: auto; flex-shrink: 0; }
+
 @media (max-width: 700px) {
   /* Mismo patrón visual que .modal-box en este breakpoint (bottom sheet) —
      ver regla equivalente más abajo en este archivo. */
@@ -2888,6 +2900,10 @@ function renderContenidoLocal() {
   html += '<div class="hor-panel-actions">';
 
   if (editando) {
+    // Fase 4A §25: igual que Cancelar/Guardar, bloqueadas mientras el PUT
+    // está en vuelo.
+    html += '<button class="btn-editar-hor" ' + (guardandoHorario ? 'disabled' : '') + ' onclick="abrirPanelAgregarEmpleado()">+ Empleado</button>';
+    html += '<button class="btn-editar-hor" ' + (guardandoHorario ? 'disabled' : '') + ' onclick="abrirPanelAgregarExterno()">+ Externo</button>';
     // Fase 3 §14: Cancelar queda disabled mientras el PUT está en vuelo —
     // confirmarSalidaEdicionHorario() ya lo bloquearía igual, esto es la
     // señal visual de por qué.
@@ -2929,7 +2945,14 @@ function renderContenidoLocal() {
   }
 
   if (editando) {
-    if (celdaHorarioActiva) {
+    // Fase 4A §22: como mucho UN panel/editor visible a la vez —
+    // panelAgregarAbierto y celdaHorarioActiva son mutuamente excluyentes
+    // por construcción (ver abrirEditorCelda/abrirPanelAgregar*).
+    if (panelAgregarAbierto === 'empleado') {
+      html += buildPanelAgregarEmpleado();
+    } else if (panelAgregarAbierto === 'externo') {
+      html += buildPanelAgregarExterno();
+    } else if (celdaHorarioActiva) {
       // Fase 2 — editor compacto real. Opera directamente sobre el objeto
       // ya existente en horariosEditando (sin copia intermedia, ver §13
       // del pedido): si no hay fila para ese empleado+día todavía (no
@@ -2959,7 +2982,7 @@ function renderContenidoLocal() {
     // borrador se armó 1 a 1 desde acá al entrar en modo edición
     // (entrarModoEdicionHorario), pero es la fuente que Fase 2 va a mutar.
     var filasRender = editando
-      ? Object.keys(horariosEditando).map(function(nombre){ return { empleado: nombre }; })
+      ? Object.keys(horariosEditando).map(function(nombre){ return { empleado: nombre, externo: !!externosInline[nombre] }; })
       : empleados;
 
     filasRender.forEach(function(emp) {
@@ -2969,6 +2992,12 @@ function renderContenidoLocal() {
       html += '<tr><td><div class="hor-emp-cell">';
       html += '<div class="hor-avatar">' + (foto ? '<img src="' + foto + '" alt="" crossorigin="anonymous" onerror="this.parentElement.textContent=\'' + inic + '\'">' : inic) + '</div>';
       html += '<span>' + nombreLimpio + '</span>';
+      // Fase 4A §12: mismo badge que ya usaba el modal legacy, sin crear
+      // una segunda clasificación de fila.
+      if (editando && emp.externo) html += '<span class="carga-emp-externo">EXTERNO</span>';
+      if (editando) {
+        html += '<button type="button" class="btn-quitar-emp" data-quitar="' + escapeAttr(emp.empleado) + '" title="Quitar de esta semana" aria-label="Quitar ' + escapeAttr(nombreLimpio) + ' de esta semana">' + icon('x','ic-xs') + '</button>';
+      }
       html += '</div></td>';
       DIAS_KEY.forEach(function(dk, i) {
         var val;
@@ -2999,7 +3028,7 @@ function renderContenidoLocal() {
     html += '</tbody></table></div>';
   } else {
     var msgVacio = editando
-      ? 'No hay empleados cargados en esta sucursal para esta semana. (Agregar empleados: próxima fase.)'
+      ? 'No hay empleados cargados. Usá "+ Empleado" o "+ Externo" para agregar.'
       : 'Sin horario cargado para esta semana';
     html += '<div class="caja-sin-cierre-msg" style="padding:1.5rem">' + msgVacio + '</div>';
   }
@@ -3025,6 +3054,18 @@ function renderContenidoLocal() {
         }
       });
     });
+    // Fase 4A — mismo criterio data-* + addEventListener que el resto de
+    // esta pantalla (nombres de empleado como dato, no interpolados en un
+    // onclick).
+    grid.querySelectorAll('[data-quitar]').forEach(function(btn) {
+      btn.addEventListener('click', function() { quitarEmpleadoInline(btn.getAttribute('data-quitar')); });
+    });
+    grid.querySelectorAll('[data-agregar-local]').forEach(function(btn) {
+      btn.addEventListener('click', function() { agregarEmpleadoInline(btn.getAttribute('data-agregar-local')); });
+    });
+    grid.querySelectorAll('[data-agregar-externo]').forEach(function(btn) {
+      btn.addEventListener('click', function() { agregarExternoInline(btn.getAttribute('data-agregar-externo')); });
+    });
   }
 }
 
@@ -3049,6 +3090,20 @@ var guardandoHorario    = false;   // Fase 3 — true mientras el PUT está en v
 var horarioConflicto    = null;    // Fase 3 — objeto `conflicto` del último 409, o null
 var horarioErrorGuardado= null;    // Fase 3 — mensaje de error genérico (400/401/5xx/network) del último intento, o null
 
+// Fase 4A — gestión de empleados en el editor inline.
+// horariosEditando (arriba) es la ÚNICA fuente de verdad de "quién integra
+// el borrador" — Object.keys(horariosEditando) ya preserva orden de
+// inserción (garantizado desde ES2015 para claves string), así que agregar
+// al final y quitar del medio mantiene el orden esperado sin una lista
+// paralela (§20/§21 del pedido). empleadosAgregados/empleadosLista/
+// todosEmpleados del modal legacy NO se tocan desde acá — dos flujos
+// completamente separados que reusan solo los mismos endpoints.
+var panelAgregarAbierto = null;  // null | 'empleado' | 'externo' — cuál de los dos paneles está abierto (excluyente con celdaHorarioActiva, ver abrirEditorCelda/abrirPanelAgregar*)
+var externosInline      = {};    // { nombre: true } — SOLO empleados agregados por "+ Externo" en esta sesión de edición; el flag nunca se persiste (§11)
+var rosterCargado        = false; // true una vez que empleadosLista/todosEmpleados están listos para ESTA sucursal en ESTA sesión de edición
+var rosterCargando       = false;
+var rosterError          = null;
+
 // Arma el borrador desde horariosData[suc] (ya cargado en memoria por
 // cargarHorarios(), sin request nuevo) reusando parsearTurno() — mismo
 // parseo que ya usaba el modal para precargar horariosEditando.
@@ -3068,6 +3123,11 @@ function entrarModoEdicionHorario(suc) {
   guardandoHorario    = false;
   horarioConflicto    = null;
   horarioErrorGuardado= null;
+  panelAgregarAbierto = null;
+  externosInline       = {};
+  rosterCargado        = false;
+  rosterCargando       = false;
+  rosterError          = null;
   renderContenidoLocal();
 }
 
@@ -3082,6 +3142,11 @@ function salirModoEdicionHorario() {
   guardandoHorario    = false;
   horarioConflicto    = null;
   horarioErrorGuardado= null;
+  panelAgregarAbierto = null;
+  externosInline       = {};
+  rosterCargado        = false;
+  rosterCargando       = false;
+  rosterError          = null;
   renderContenidoLocal();
 }
 
@@ -3129,6 +3194,7 @@ function confirmarSalidaEdicionHorario() {
 // horarioTieneCambios por sí solo (eso solo lo hacen las mutaciones reales
 // de abajo: cambiarTipoCeldaActiva/actualizarHoraCeldaActiva/aplicarPresetCelda).
 function abrirEditorCelda(empleado, dia) {
+  panelAgregarAbierto = null; // Fase 4A §22 — nunca dos paneles abiertos a la vez
   celdaHorarioActiva = { empleado: empleado, dia: dia };
   renderContenidoLocal();
 }
@@ -3259,10 +3325,203 @@ function buildEditorCeldaHorario(empleado, dia, turno) {
 // renderContenidoLocal, que corre en cada interacción) para no acumular
 // listeners duplicados en cada re-render.
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && modoHorario === 'edicion' && celdaHorarioActiva) {
-    cerrarEditorCelda();
+  if (e.key === 'Escape' && modoHorario === 'edicion') {
+    if (celdaHorarioActiva) cerrarEditorCelda();
+    else if (panelAgregarAbierto) cerrarPanelAgregar();
   }
 });
+
+// ── GESTIÓN DE EMPLEADOS — Fase 4A ──
+// Trae empleadosLista/todosEmpleados para la sucursal en edición, con el
+// mismo par de endpoints que ya usa abrirModalCarga() del modal legacy —
+// nada de esto es un endpoint nuevo. Se llama una sola vez por sesión de
+// edición (rosterCargado la vuelve un no-op en llamadas siguientes) — abrir
+// "+ Empleado" y después "+ Externo" no dispara un segundo round-trip.
+async function asegurarRosterCargado() {
+  if (rosterCargado || rosterCargando) return;
+  rosterCargando = true;
+  rosterError    = null;
+  renderContenidoLocal();
+  try {
+    var [resEmp, resTodos] = await Promise.all([
+      fetchHorariosSemanalesNode('/api/horarios-semanales/empleados?sucursal=' + encodeURIComponent(sucursalEditando)),
+      fetchHorariosSemanalesNode('/api/horarios-semanales/empleados/todos'),
+    ]);
+    if (resEmp.status === 200 && resEmp.data && resEmp.data.ok && resTodos.status === 200 && resTodos.data && resTodos.data.ok) {
+      empleadosLista = resEmp.data.empleados;
+      todosEmpleados = resTodos.data.empleados;
+      rosterCargado  = true;
+    } else {
+      rosterError = 'No se pudo cargar la lista de empleados.';
+    }
+  } catch (e) {
+    // Fase 4A §24: un error acá NUNCA sale de edición, ni toca el
+    // borrador/dirty — es un problema aislado de "no pude traer a quién
+    // ofrecerte para agregar", no del guardado.
+    rosterError = 'No se pudo cargar la lista de empleados.';
+  }
+  rosterCargando = false;
+  renderContenidoLocal();
+}
+
+function abrirPanelAgregarEmpleado() {
+  if (guardandoHorario) return; // Fase 4A §25
+  celdaHorarioActiva  = null; // §22 — excluyente con el editor de celda
+  panelAgregarAbierto = 'empleado';
+  renderContenidoLocal();
+  asegurarRosterCargado();
+}
+
+function abrirPanelAgregarExterno() {
+  if (guardandoHorario) return;
+  celdaHorarioActiva  = null;
+  panelAgregarAbierto = 'externo';
+  renderContenidoLocal();
+  asegurarRosterCargado();
+}
+
+function cerrarPanelAgregar() {
+  panelAgregarAbierto = null;
+  renderContenidoLocal();
+}
+
+function toggleExternoManualInline() {
+  var wrap = document.getElementById('externoManualInlineWrap');
+  if (!wrap) return;
+  wrap.style.display = wrap.style.display === 'flex' ? 'none' : 'flex';
+}
+
+// Agrega un empleado del local al borrador. MISMA inicialización que
+// agregarEmpleado() del modal legacy (§2/§5 del pedido: 7 días en
+// LIBRE, no "?", no vacío) — comportamiento confirmado leyendo el código
+// real antes de escribir esto, no asumido. Guard defensivo contra
+// horariosEditando (la fuente de verdad acá, a diferencia del modal que
+// usa empleadosAgregados) — nunca pisa un horario existente.
+function agregarEmpleadoInline(nombre) {
+  if (!nombre || horariosEditando[nombre]) return;
+  horariosEditando[nombre] = {};
+  DIAS_KEY.forEach(function(dk) { horariosEditando[nombre][dk] = { tipo: 'libre', h1: '', h2: '', h3: '', h4: '' }; });
+  delete externosInline[nombre]; // por si acaso — un agregado "local" nunca es externo
+  horarioTieneCambios = true;
+  panelAgregarAbierto = null;
+  renderContenidoLocal();
+}
+
+// Agrega un externo (de otra sucursal o manual). Misma inicialización que
+// agregarExterno()/agregarExternoManual() del modal legacy. El flag
+// `externo` es SOLO de este objeto en memoria (externosInline) — nunca
+// viaja en el payload del PUT (§11).
+function agregarExternoInline(nombre) {
+  if (!nombre || horariosEditando[nombre]) return;
+  horariosEditando[nombre] = {};
+  DIAS_KEY.forEach(function(dk) { horariosEditando[nombre][dk] = { tipo: 'libre', h1: '', h2: '', h3: '', h4: '' }; });
+  externosInline[nombre] = true;
+  horarioTieneCambios = true;
+  panelAgregarAbierto = null;
+  renderContenidoLocal();
+}
+
+// Externo manual — misma normalización que agregarExternoManual() del
+// modal legacy (trim + mayúsculas), sin inventar una regla nueva de RRHH.
+function agregarExternoManualInline(nombreCrudo) {
+  var nombre = String(nombreCrudo || '').trim().toUpperCase();
+  if (!nombre) return;
+  agregarExternoInline(nombre);
+}
+
+// Quita un empleado del borrador semanal de ESTA sucursal (Fase 4A §14) —
+// nunca toca horariosData, roster, DATOS GENERALES ni backend, solo el
+// borrador local. A diferencia de quitarEmpleado() del modal legacy (que
+// borra directo sin preguntar), acá se agrega una confirmación cuando el
+// empleado tiene algo cargado distinto del default vacío (§15) — el editor
+// inline no tiene un "cerrar sin guardar" tan a mano como cerrar el modal,
+// así que perder por error un horario ya tipeado sería más costoso. Mismo
+// patrón confirm() que ya usa confirmarSalidaEdicionHorario(), sin crear un
+// modal de confirmación nuevo.
+function quitarEmpleadoInline(nombre) {
+  if (guardandoHorario || !horariosEditando[nombre]) return;
+  var tieneDatos = DIAS_KEY.some(function(dk) {
+    var t = horariosEditando[nombre][dk];
+    return t && (t.tipo !== 'libre' || t.h1 || t.h2 || t.h3 || t.h4);
+  });
+  if (tieneDatos) {
+    var nombreLimpio = nombre.replace(/^\d+\s+/, '');
+    if (!confirm('¿Quitar a ' + nombreLimpio + ' de esta semana?')) return;
+  }
+  delete horariosEditando[nombre];
+  delete externosInline[nombre];
+  if (celdaHorarioActiva && celdaHorarioActiva.empleado === nombre) celdaHorarioActiva = null;
+  horarioTieneCambios = true;
+  renderContenidoLocal();
+}
+
+// Construye el panel "+ Empleado" — mismo patrón visual que el editor de
+// celda (.hor-celda-editor: panel compacto en desktop, bottom sheet en
+// mobile vía el mismo breakpoint), sin componente nuevo.
+function buildPanelAgregarEmpleado() {
+  var html = '<div class="hor-celda-editor" id="panelAgregar">';
+  html += '<div class="hor-celda-editor-head"><div class="hor-celda-editor-emp">Agregar empleado</div>';
+  html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarPanelAgregar()">Cerrar</button></div>';
+
+  if (rosterCargando) {
+    html += '<div class="hor-edicion-hint">Cargando empleados…</div>';
+  } else if (rosterError) {
+    html += '<div class="hor-guardado-error">⚠ ' + escapeHtml(rosterError) + '</div>';
+  } else {
+    var disponibles = empleadosLista.filter(function(n) { return !horariosEditando[n]; });
+    if (!disponibles.length) {
+      html += '<div class="hor-edicion-hint">No hay más empleados del local para agregar.</div>';
+    } else {
+      html += '<div class="hor-agregar-lista">';
+      disponibles.forEach(function(n) {
+        var display = n.replace(/^(\d+)\s+/, '#$1 ');
+        html += '<button type="button" class="hor-agregar-item" data-agregar-local="' + escapeAttr(n) + '">' + escapeHtml(display) + '</button>';
+      });
+      html += '</div>';
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+// Construye el panel "+ Externo" — lista de otras sucursales (mismo filtro
+// que buildSelectorHTML() del modal: excluye ya agregados Y excluye a
+// quien sea del local actual, que debe entrar por "+ Empleado") + opción
+// de nombre manual, igual que el modal legacy.
+function buildPanelAgregarExterno() {
+  var html = '<div class="hor-celda-editor" id="panelAgregar">';
+  html += '<div class="hor-celda-editor-head"><div class="hor-celda-editor-emp">Agregar externo</div>';
+  html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarPanelAgregar()">Cerrar</button></div>';
+
+  if (rosterCargando) {
+    html += '<div class="hor-edicion-hint">Cargando empleados…</div>';
+  } else if (rosterError) {
+    html += '<div class="hor-guardado-error">⚠ ' + escapeHtml(rosterError) + '</div>';
+  } else {
+    var disponibles = todosEmpleados.filter(function(e) {
+      return !horariosEditando[e.nombre] && empleadosLista.indexOf(e.nombre) < 0;
+    });
+    if (disponibles.length) {
+      html += '<div class="hor-agregar-lista">';
+      disponibles.forEach(function(e) {
+        var display = e.nombre.replace(/^(\d+)\s+/, '#$1 ');
+        html += '<button type="button" class="hor-agregar-item-externo" data-agregar-externo="' + escapeAttr(e.nombre) + '">' + escapeHtml(display) + '<small>' + escapeHtml(e.sucursal) + '</small></button>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="hor-edicion-hint">No hay empleados de otras sucursales para agregar.</div>';
+    }
+    html += '<div class="hor-agregar-manual">';
+    html += '<button type="button" class="hor-celda-tipo-btn" onclick="toggleExternoManualInline()">✏ Escribir nombre manualmente</button>';
+    html += '<div id="externoManualInlineWrap" class="hor-celda-editor-horas" style="display:none;margin-top:.6rem">';
+    html += '<input type="text" id="externoManualInlineInput" class="hora-input" placeholder="Nombre completo" style="width:auto;flex:1;text-align:left;text-transform:none">';
+    html += '<button type="button" class="btn-agregar-emp" onclick="agregarExternoManualInline(document.getElementById(\'externoManualInlineInput\').value)">Agregar</button>';
+    html += '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
 
 // ── GUARDADO — Fase 3 ──
 // Construye `filas` para el payload de PUT /api/horarios-semanales a partir
@@ -3329,6 +3588,8 @@ async function guardarHorarioInline() {
     horariosEditando    = {};
     horarioTieneCambios = false;
     celdaHorarioActiva  = null;
+    panelAgregarAbierto = null; // Fase 4A
+    externosInline       = {};
     await cargarHorarios();
     return;
   }
