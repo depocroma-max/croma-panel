@@ -592,9 +592,21 @@ td { padding: 10px 14px; vertical-align: middle; }
 
 /* Modo edición inline (Fase 1) — celdas clickeables de la misma .hor-table,
    sin componentes nuevos: mismos tokens que el resto del Design System. */
-.hor-cell-clickable            { cursor: pointer; }
+.hor-cell-clickable            { cursor: pointer; position: relative; }
 .hor-cell-clickable:hover .hor-cell { box-shadow: inset 0 0 0 1px var(--black); }
 .hor-cell-clickable.hor-celda-activa .hor-cell { box-shadow: inset 0 0 0 2px var(--croma-red); }
+/* Fase 4B — acceso rápido "⋯" por celda (mouse/touch, ver notas de
+   accesibilidad en renderContenidoLocal): oculto hasta hover/focus para no
+   ensuciar la grilla, visible siempre en touch (sin hover) vía la media
+   query mobile de abajo. */
+.hor-cell-quick { position: absolute; top: 2px; right: 2px; display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0; border: none; border-radius: 5px; background: rgba(255,255,255,.85); color: var(--gray-400); cursor: pointer; opacity: 0; transition: opacity .12s, background .12s, color .12s; }
+.hor-cell-clickable:hover .hor-cell-quick, .hor-cell-clickable:focus-within .hor-cell-quick { opacity: 1; }
+.hor-cell-quick:hover { background: var(--black); color: var(--white); }
+.hor-copiar-dias      { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-bottom: .3rem; }
+.hor-copiar-dia-check { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--gray-600); cursor: pointer; }
+.hor-celda-aplicar-varios { margin-top: .7rem; padding-top: .7rem; border-top: 1px dashed var(--gray-200); }
+.hor-agregar-item-danger { color: #b91c1c; }
+.hor-agregar-item-danger:hover { background: #fee2e2; border-color: #fecaca; }
 .hor-editando-tag  { font-size: 11px; color: var(--black); background: var(--gray-100); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
 .hor-edicion-hint  { font-size: 12px; color: var(--gray-400); padding: 0 0 .85rem; }
 .hor-cambios-tag   { font-size: 11px; color: var(--gray-600); display: inline-flex; align-items: center; }
@@ -643,6 +655,9 @@ td { padding: 10px 14px; vertical-align: middle; }
     box-shadow: 0 -8px 24px rgba(0,0,0,.18); z-index: 50;
     padding: 1.1rem 1.25rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
   }
+  /* Sin hover en touch: el "⋯" por celda queda siempre visible acá,
+     igual que ya hace el resto de los controles de esta pantalla. */
+  .hor-cell-quick { opacity: 1; }
 }
 
 @media (max-width: 900px) {
@@ -2900,16 +2915,20 @@ function renderContenidoLocal() {
   html += '<div class="hor-panel-actions">';
 
   if (editando) {
-    // Fase 4A §25: igual que Cancelar/Guardar, bloqueadas mientras el PUT
-    // está en vuelo.
-    html += '<button class="btn-editar-hor" ' + (guardandoHorario ? 'disabled' : '') + ' onclick="abrirPanelAgregarEmpleado()">+ Empleado</button>';
-    html += '<button class="btn-editar-hor" ' + (guardandoHorario ? 'disabled' : '') + ' onclick="abrirPanelAgregarExterno()">+ Externo</button>';
+    // Fase 4B §27: bloqueadas mientras hay un PUT o un GET de "semana
+    // anterior" en vuelo — mismo criterio que ya usaba guardandoHorario solo.
+    var bloqueadoPorAccion = guardandoHorario || cargandoSemanaAnterior;
+    html += '<button class="btn-editar-hor" ' + (bloqueadoPorAccion ? 'disabled' : '') + ' onclick="abrirPanelAgregarEmpleado()">+ Empleado</button>';
+    html += '<button class="btn-editar-hor" ' + (bloqueadoPorAccion ? 'disabled' : '') + ' onclick="abrirPanelAgregarExterno()">+ Externo</button>';
+    html += '<button class="btn-editar-hor" ' + (bloqueadoPorAccion ? 'disabled' : '') + ' onclick="copiarSemanaAnteriorInline()">' + (cargandoSemanaAnterior ? 'Copiando…' : 'Copiar semana anterior') + '</button>';
     // Fase 3 §14: Cancelar queda disabled mientras el PUT está en vuelo —
     // confirmarSalidaEdicionHorario() ya lo bloquearía igual, esto es la
     // señal visual de por qué.
-    html += '<button class="btn-editar-hor" ' + (guardandoHorario ? 'disabled' : '') + ' onclick="cancelarEdicionHorario()">Cancelar</button>';
+    html += '<button class="btn-editar-hor" ' + (bloqueadoPorAccion ? 'disabled' : '') + ' onclick="cancelarEdicionHorario()">Cancelar</button>';
     if (guardandoHorario) {
       html += '<button class="btn-guardar-hor" id="btnGuardarHorarioInline" disabled>' + icon('save','ic-xs') + ' Guardando…</button>';
+    } else if (bloqueadoPorAccion) {
+      html += '<button class="btn-guardar-hor" id="btnGuardarHorarioInline" disabled>' + icon('save','ic-xs') + ' Guardar horario</button>';
     } else {
       if (horarioTieneCambios) html += '<span class="hor-cambios-tag">● Cambios sin guardar</span>';
       html += '<button class="btn-guardar-hor" id="btnGuardarHorarioInline"' + (horarioTieneCambios ? '' : ' disabled title="No hay cambios para guardar"') + ' onclick="guardarHorarioInline()">' + icon('save','ic-xs') + ' Guardar horario</button>';
@@ -2945,13 +2964,19 @@ function renderContenidoLocal() {
   }
 
   if (editando) {
-    // Fase 4A §22: como mucho UN panel/editor visible a la vez —
-    // panelAgregarAbierto y celdaHorarioActiva son mutuamente excluyentes
-    // por construcción (ver abrirEditorCelda/abrirPanelAgregar*).
+    // Fase 4A §22 / Fase 4B §26: como mucho UN panel/editor visible a la
+    // vez — todos excluyentes por construcción (ver cerrarTodosLosPaneles()
+    // y cada abrirPanel*/abrirEditorCelda).
     if (panelAgregarAbierto === 'empleado') {
       html += buildPanelAgregarEmpleado();
     } else if (panelAgregarAbierto === 'externo') {
       html += buildPanelAgregarExterno();
+    } else if (panelAccionesEmpleado) {
+      html += buildPanelAccionesEmpleado();
+    } else if (panelDuplicarEmpleado) {
+      html += buildPanelDuplicarEmpleado();
+    } else if (panelAccionesCelda) {
+      html += buildPanelAccionesCelda();
     } else if (celdaHorarioActiva) {
       // Fase 2 — editor compacto real. Opera directamente sobre el objeto
       // ya existente en horariosEditando (sin copia intermedia, ver §13
@@ -2996,7 +3021,7 @@ function renderContenidoLocal() {
       // una segunda clasificación de fila.
       if (editando && emp.externo) html += '<span class="carga-emp-externo">EXTERNO</span>';
       if (editando) {
-        html += '<button type="button" class="btn-quitar-emp" data-quitar="' + escapeAttr(emp.empleado) + '" title="Quitar de esta semana" aria-label="Quitar ' + escapeAttr(nombreLimpio) + ' de esta semana">' + icon('x','ic-xs') + '</button>';
+        html += '<button type="button" class="btn-quitar-emp" data-acciones-emp="' + escapeAttr(emp.empleado) + '" title="Acciones de ' + escapeAttr(nombreLimpio) + '" aria-label="Acciones de ' + escapeAttr(nombreLimpio) + '">' + icon('moreHorizontal','ic-xs') + '</button>';
       }
       html += '</div></td>';
       DIAS_KEY.forEach(function(dk, i) {
@@ -3017,7 +3042,14 @@ function renderContenidoLocal() {
           // completa.
           html += '<td class="hor-cell-clickable' + (activa ? ' hor-celda-activa' : '') + '" data-empleado="' + escapeAttr(emp.empleado) + '" data-dia="' + dk + '"'
             + ' tabindex="0" role="button" aria-label="Editar turno de ' + escapeAttr(nombreLimpio) + ' el ' + DIAS_LABEL[i] + '">';
-          html += '<span class="hor-cell hor-cell-' + clase + '">' + texto + '</span></td>';
+          html += '<span class="hor-cell hor-cell-' + clase + '">' + texto + '</span>';
+          // Fase 4B §54: acceso rápido mouse/touch a Libre/Copiar día sin
+          // abrir el editor de celda completo. tabindex="-1" a propósito
+          // (ver notas de la fase): el flujo por teclado ya llega a las
+          // mismas acciones desde el editor de celda (Fase 2), que sí es
+          // accesible por Enter/Espacio en el <td>.
+          html += '<button type="button" class="hor-cell-quick" tabindex="-1" data-quick-emp="' + escapeAttr(emp.empleado) + '" data-quick-dia="' + dk + '" title="Acciones rápidas" aria-hidden="true">' + icon('moreHorizontal','ic-xs') + '</button>';
+          html += '</td>';
         } else {
           html += '<td><span class="hor-cell hor-cell-' + clase + '">' + texto + '</span></td>';
         }
@@ -3057,14 +3089,64 @@ function renderContenidoLocal() {
     // Fase 4A — mismo criterio data-* + addEventListener que el resto de
     // esta pantalla (nombres de empleado como dato, no interpolados en un
     // onclick).
-    grid.querySelectorAll('[data-quitar]').forEach(function(btn) {
-      btn.addEventListener('click', function() { quitarEmpleadoInline(btn.getAttribute('data-quitar')); });
-    });
     grid.querySelectorAll('[data-agregar-local]').forEach(function(btn) {
       btn.addEventListener('click', function() { agregarEmpleadoInline(btn.getAttribute('data-agregar-local')); });
     });
     grid.querySelectorAll('[data-agregar-externo]').forEach(function(btn) {
       btn.addEventListener('click', function() { agregarExternoInline(btn.getAttribute('data-agregar-externo')); });
+    });
+
+    // ── Fase 4B — acciones rápidas ──
+    grid.querySelectorAll('[data-acciones-emp]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        abrirPanelAccionesEmpleado(btn.getAttribute('data-acciones-emp'));
+      });
+    });
+    grid.querySelectorAll('[data-quick-emp]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        abrirPanelAccionesCelda(btn.getAttribute('data-quick-emp'), btn.getAttribute('data-quick-dia'));
+      });
+    });
+    grid.querySelectorAll('[data-marcar-libre-panel]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!panelAccionesCelda) return;
+        marcarLibreRapido(panelAccionesCelda.empleado, panelAccionesCelda.dia);
+        cerrarPanelAccionesCelda();
+      });
+    });
+    grid.querySelectorAll('[data-aplicar-copiar-dia]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!panelAccionesCelda) return;
+        var emp = panelAccionesCelda.empleado, diaOrigen = panelAccionesCelda.dia;
+        var destinos = [];
+        grid.querySelectorAll('[data-dia-destino]:checked').forEach(function(chk) { destinos.push(chk.getAttribute('data-dia-destino')); });
+        var turnoOrigen = horariosEditando[emp] && horariosEditando[emp][diaOrigen];
+        if (turnoOrigen && destinos.length) aplicarTurnoADias(emp, turnoOrigen, destinos);
+        cerrarPanelAccionesCelda();
+      });
+    });
+    grid.querySelectorAll('[data-aplicar-varios-dias]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!celdaHorarioActiva) return;
+        var emp = celdaHorarioActiva.empleado, diaOrigen = celdaHorarioActiva.dia;
+        var destinos = [];
+        grid.querySelectorAll('[data-dia-aplicar-varios]:checked').forEach(function(chk) { destinos.push(chk.getAttribute('data-dia-aplicar-varios')); });
+        var turnoOrigen = horariosEditando[emp] && horariosEditando[emp][diaOrigen];
+        if (turnoOrigen && destinos.length) { aplicarTurnoADias(emp, turnoOrigen, destinos); renderContenidoLocal(); }
+      });
+    });
+    grid.querySelectorAll('[data-copiar-a-otro]').forEach(function(btn) {
+      btn.addEventListener('click', function() { abrirPanelDuplicarEmpleado(btn.getAttribute('data-copiar-a-otro')); });
+    });
+    grid.querySelectorAll('[data-quitar-desde-panel]').forEach(function(btn) {
+      btn.addEventListener('click', function() { quitarEmpleadoInline(btn.getAttribute('data-quitar-desde-panel')); });
+    });
+    grid.querySelectorAll('[data-duplicar-destino]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        duplicarHorarioEmpleado(panelDuplicarEmpleado, btn.getAttribute('data-duplicar-destino'));
+      });
     });
   }
 }
@@ -3104,19 +3186,38 @@ var rosterCargado        = false; // true una vez que empleadosLista/todosEmplea
 var rosterCargando       = false;
 var rosterError          = null;
 
+// Fase 4B — acciones rápidas. Todos los paneles de abajo son mutuamente
+// excluyentes entre sí Y con celdaHorarioActiva/panelAgregarAbierto — ver
+// cerrarTodosLosPaneles().
+var panelAccionesCelda      = null; // { empleado, dia } | null — quick-menu de una celda (Libre rápido + Copiar día)
+var mostrarAplicarVariosDias= false; // toggle DENTRO del editor de celda (Acción 3) — no es un panel propio
+var panelAccionesEmpleado   = null; // nombre | null — quick-menu de una fila (Copiar horario a otro empleado + Quitar)
+var panelDuplicarEmpleado   = null; // nombre (origen) | null — lista de empleados destino
+var cargandoSemanaAnterior  = false; // true durante el GET de "Copiar semana anterior" — mismo criterio que guardandoHorario para bloquear navegación/acciones
+
+// Arma un borrador { empleado: { lun:{tipo,h1,h2,h3,h4}, ... } } a partir de
+// filas crudas del backend (mismo shape que horariosData[suc] o
+// data.horarios[suc] de cualquier semana) — reusa parsearTurno(). Extraída
+// para que entrarModoEdicionHorario() y copiarSemanaAnteriorInline() (Fase
+// 4B §19) no dupliquen este parseo.
+function construirBorradorDesdeFilas(filas) {
+  var borrador = {};
+  (filas || []).forEach(function(emp) {
+    borrador[emp.empleado] = {};
+    DIAS_KEY.forEach(function(dk) {
+      borrador[emp.empleado][dk] = parsearTurno(emp[dk] || '');
+    });
+  });
+  return borrador;
+}
+
 // Arma el borrador desde horariosData[suc] (ya cargado en memoria por
 // cargarHorarios(), sin request nuevo) reusando parsearTurno() — mismo
 // parseo que ya usaba el modal para precargar horariosEditando.
 // horariosData NUNCA se toca acá.
 function entrarModoEdicionHorario(suc) {
   sucursalEditando = suc;
-  horariosEditando = {};
-  (horariosData[suc] || []).forEach(function(emp) {
-    horariosEditando[emp.empleado] = {};
-    DIAS_KEY.forEach(function(dk) {
-      horariosEditando[emp.empleado][dk] = parsearTurno(emp[dk] || '');
-    });
-  });
+  horariosEditando = construirBorradorDesdeFilas(horariosData[suc]);
   modoHorario         = 'edicion';
   horarioTieneCambios = false;
   celdaHorarioActiva  = null;
@@ -3128,6 +3229,11 @@ function entrarModoEdicionHorario(suc) {
   rosterCargado        = false;
   rosterCargando       = false;
   rosterError          = null;
+  panelAccionesCelda       = null;
+  mostrarAplicarVariosDias = false;
+  panelAccionesEmpleado    = null;
+  panelDuplicarEmpleado    = null;
+  cargandoSemanaAnterior   = false;
   renderContenidoLocal();
 }
 
@@ -3147,7 +3253,24 @@ function salirModoEdicionHorario() {
   rosterCargado        = false;
   rosterCargando       = false;
   rosterError          = null;
+  panelAccionesCelda       = null;
+  mostrarAplicarVariosDias = false;
+  panelAccionesEmpleado    = null;
+  panelDuplicarEmpleado    = null;
+  cargandoSemanaAnterior   = false;
   renderContenidoLocal();
+}
+
+// Punto único que cierra TODO panel/editor contextual abierto (Fase 4B
+// §26) — llamado al abrir cualquier otro panel, para que nunca convivan
+// dos a la vez. No toca modoHorario/horarioEditando/dirty.
+function cerrarTodosLosPaneles() {
+  celdaHorarioActiva       = null;
+  panelAgregarAbierto      = null;
+  panelAccionesCelda       = null;
+  mostrarAplicarVariosDias = false;
+  panelAccionesEmpleado    = null;
+  panelDuplicarEmpleado    = null;
 }
 
 // El botón "Cancelar" siempre significa "salir de edición inline" — ahora
@@ -3178,7 +3301,10 @@ function confirmarSalidaEdicionHorario() {
   // (Cancelar, cambiar sucursal, cambiar semana) puede proceder — ni
   // siquiera preguntando, para no arrancar un segundo guardado ni dejar el
   // borrador en un estado a mitad de camino.
-  if (guardandoHorario) return false;
+  // Fase 4B: mismo criterio, extendido al GET de "Copiar semana anterior"
+  // — es la otra operación async de esta pantalla que puede dejar el
+  // borrador a mitad de camino si se navega mientras está en vuelo.
+  if (guardandoHorario || cargandoSemanaAnterior) return false;
   if (!horarioTieneCambios) {
     salirModoEdicionHorario();
     return true;
@@ -3194,7 +3320,7 @@ function confirmarSalidaEdicionHorario() {
 // horarioTieneCambios por sí solo (eso solo lo hacen las mutaciones reales
 // de abajo: cambiarTipoCeldaActiva/actualizarHoraCeldaActiva/aplicarPresetCelda).
 function abrirEditorCelda(empleado, dia) {
-  panelAgregarAbierto = null; // Fase 4A §22 — nunca dos paneles abiertos a la vez
+  cerrarTodosLosPaneles(); // Fase 4A §22 / Fase 4B §26 — nunca dos paneles abiertos a la vez
   celdaHorarioActiva = { empleado: empleado, dia: dia };
   renderContenidoLocal();
 }
@@ -3203,18 +3329,23 @@ function abrirEditorCelda(empleado, dia) {
 // §12) — los cambios ya aplicados quedan en horariosEditando tal cual.
 function cerrarEditorCelda() {
   celdaHorarioActiva = null;
+  mostrarAplicarVariosDias = false;
   renderContenidoLocal();
 }
 
-// Cambia el tipo del turno activo. Misma semántica que onTipoChange() del
-// modal legacy: NUNCA limpia h1-h4 al cambiar de tipo (ver Fase 2 §7) — los
-// valores de hora quedan tal cual en el objeto y turnoToString() decide qué
-// mostrar según el tipo vigente; si el usuario vuelve a un tipo anterior,
-// las horas que había cargado antes reaparecen tal como las dejó.
-function cambiarTipoCeldaActiva(nuevoTipo) {
-  var turno = horariosEditando[celdaHorarioActiva.empleado][celdaHorarioActiva.dia];
+// Cambia el tipo de UN turno puntual (empleado+día) sin tocar h1-h4 —
+// misma semántica que onTipoChange() del modal legacy (Fase 2 §7). Extraída
+// de cambiarTipoCeldaActiva() para que Libre rápido (Fase 4B §4) reutilice
+// exactamente esta lógica en vez de inventar una limpieza distinta.
+function cambiarTipoTurno(empleado, dia, nuevoTipo) {
+  var turno = horariosEditando[empleado][dia];
   if (turno.tipo !== nuevoTipo) horarioTieneCambios = true;
   turno.tipo = nuevoTipo;
+}
+
+// Cambia el tipo del turno activo del editor de celda.
+function cambiarTipoCeldaActiva(nuevoTipo) {
+  cambiarTipoTurno(celdaHorarioActiva.empleado, celdaHorarioActiva.dia, nuevoTipo);
   renderContenidoLocal();
 }
 
@@ -3316,6 +3447,23 @@ function buildEditorCeldaHorario(empleado, dia, turno) {
     html += '<div class="hor-celda-libre-msg">Día libre</div>';
   }
 
+  // Acción 3 (Fase 4B §7-§9) — "Aplicar a otros días": colapsado por
+  // defecto, no ocupa espacio permanente. Aplicar el turno ACTUAL (el que
+  // se está viendo en este editor) no cierra el editor ni cambia la celda
+  // activa — el usuario puede seguir editando después.
+  html += '<div class="hor-celda-aplicar-varios">';
+  html += '<button type="button" class="hor-celda-tipo-btn" onclick="toggleAplicarVariosDias()">Aplicar a otros días' + (mostrarAplicarVariosDias ? ' ▲' : ' ▼') + '</button>';
+  if (mostrarAplicarVariosDias) {
+    html += '<div class="hor-copiar-dias">';
+    DIAS_KEY.forEach(function(dk, i) {
+      if (dk === dia) return;
+      html += '<label class="hor-copiar-dia-check"><input type="checkbox" data-dia-aplicar-varios="' + dk + '"> ' + DIAS_LABEL[i] + '</label>';
+    });
+    html += '</div>';
+    html += '<button type="button" class="btn-agregar-emp" data-aplicar-varios-dias="1">Aplicar</button>';
+  }
+  html += '</div>';
+
   html += '</div>';
   return html;
 }
@@ -3328,6 +3476,9 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape' && modoHorario === 'edicion') {
     if (celdaHorarioActiva) cerrarEditorCelda();
     else if (panelAgregarAbierto) cerrarPanelAgregar();
+    else if (panelAccionesCelda) cerrarPanelAccionesCelda();
+    else if (panelDuplicarEmpleado) cerrarPanelDuplicarEmpleado();
+    else if (panelAccionesEmpleado) cerrarPanelAccionesEmpleado();
   }
 });
 
@@ -3365,16 +3516,16 @@ async function asegurarRosterCargado() {
 }
 
 function abrirPanelAgregarEmpleado() {
-  if (guardandoHorario) return; // Fase 4A §25
-  celdaHorarioActiva  = null; // §22 — excluyente con el editor de celda
+  if (guardandoHorario || cargandoSemanaAnterior) return; // Fase 4A §25 / Fase 4B §27
+  cerrarTodosLosPaneles();
   panelAgregarAbierto = 'empleado';
   renderContenidoLocal();
   asegurarRosterCargado();
 }
 
 function abrirPanelAgregarExterno() {
-  if (guardandoHorario) return;
-  celdaHorarioActiva  = null;
+  if (guardandoHorario || cargandoSemanaAnterior) return;
+  cerrarTodosLosPaneles();
   panelAgregarAbierto = 'externo';
   renderContenidoLocal();
   asegurarRosterCargado();
@@ -3439,7 +3590,7 @@ function agregarExternoManualInline(nombreCrudo) {
 // patrón confirm() que ya usa confirmarSalidaEdicionHorario(), sin crear un
 // modal de confirmación nuevo.
 function quitarEmpleadoInline(nombre) {
-  if (guardandoHorario || !horariosEditando[nombre]) return;
+  if (guardandoHorario || cargandoSemanaAnterior || !horariosEditando[nombre]) return;
   var tieneDatos = DIAS_KEY.some(function(dk) {
     var t = horariosEditando[nombre][dk];
     return t && (t.tipo !== 'libre' || t.h1 || t.h2 || t.h3 || t.h4);
@@ -3523,6 +3674,220 @@ function buildPanelAgregarExterno() {
   return html;
 }
 
+// ── ACCIONES RÁPIDAS — Fase 4B ──
+// Copia SIEMPRE mediante un objeto nuevo — nunca compartir referencia entre
+// días/empleados (§2 del pedido, obligatorio). Editar un destino después
+// de copiar no debe afectar al origen ni a otros destinos.
+function clonarTurno(turno) {
+  return { tipo: turno.tipo, h1: turno.h1 || '', h2: turno.h2 || '', h3: turno.h3 || '', h4: turno.h4 || '' };
+}
+
+// Aplica una COPIA de `turnoOrigen` a cada día de `diasDestino`, del mismo
+// empleado. Utilidad compartida por Acción 2 (Copiar día, vía el panel de
+// la celda) y Acción 3 (Aplicar a varios días, vía el editor de celda) —
+// misma operación, dos puntos de entrada distintos (§8).
+function aplicarTurnoADias(empleado, turnoOrigen, diasDestino) {
+  if (!horariosEditando[empleado] || !diasDestino || !diasDestino.length) return;
+  diasDestino.forEach(function(dia) { horariosEditando[empleado][dia] = clonarTurno(turnoOrigen); });
+  horarioTieneCambios = true;
+}
+
+// Acción 1 — Libre rápido (§4): marca un día puntual como LIBRE sin abrir
+// el editor completo. Reutiliza cambiarTipoTurno() — misma semántica de
+// "no limpiar h1-h4 al cambiar de tipo" que ya usa el editor compacto, sin
+// inventar una limpieza distinta solo para esta acción.
+function marcarLibreRapido(empleado, dia) {
+  if (guardandoHorario || cargandoSemanaAnterior || !horariosEditando[empleado] || !horariosEditando[empleado][dia]) return;
+  cambiarTipoTurno(empleado, dia, 'libre');
+}
+
+// Panel de acciones de UNA celda (Libre rápido + Copiar día) — se abre
+// desde el ícono "⋯" que aparece al hover/foco de la celda (Fase 4B §4/§5).
+function abrirPanelAccionesCelda(empleado, dia) {
+  if (guardandoHorario || cargandoSemanaAnterior) return;
+  cerrarTodosLosPaneles();
+  panelAccionesCelda = { empleado: empleado, dia: dia };
+  renderContenidoLocal();
+}
+function cerrarPanelAccionesCelda() {
+  panelAccionesCelda = null;
+  renderContenidoLocal();
+}
+
+function buildPanelAccionesCelda() {
+  var empleado = panelAccionesCelda.empleado, dia = panelAccionesCelda.dia;
+  var nombreLimpio = empleado.replace(/^\d+\s+/, '');
+  var diaFull = DIAS_FULL_HORARIO[dia] || dia;
+  var diaCap = diaFull.charAt(0).toUpperCase() + diaFull.slice(1);
+
+  var html = '<div class="hor-celda-editor" id="panelAccionesCelda">';
+  html += '<div class="hor-celda-editor-head"><div><div class="hor-celda-editor-emp">' + escapeHtml(nombreLimpio) + '</div>';
+  html += '<div class="hor-celda-editor-dia">' + escapeHtml(diaCap) + '</div></div>';
+  html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarPanelAccionesCelda()">Cerrar</button></div>';
+  html += '<button type="button" class="btn-agregar-emp" style="width:100%;margin-bottom:.85rem" data-marcar-libre-panel="1">Marcar Libre</button>';
+  html += '<div class="hor-celda-bloque-label">Copiar este día a:</div>';
+  html += '<div class="hor-copiar-dias">';
+  DIAS_KEY.forEach(function(dk, i) {
+    if (dk === dia) return; // §5 — nunca el propio día origen como destino
+    html += '<label class="hor-copiar-dia-check"><input type="checkbox" data-dia-destino="' + dk + '"> ' + DIAS_LABEL[i] + '</label>';
+  });
+  html += '</div>';
+  html += '<button type="button" class="btn-agregar-emp" style="margin-top:.6rem" data-aplicar-copiar-dia="1">Aplicar</button>';
+  html += '</div>';
+  return html;
+}
+
+// Acción 3 — toggle "Aplicar a otros días" DENTRO del editor de celda
+// (§9): no es un panel propio, no cierra el editor, no oculta la sección
+// permanentemente en pantalla.
+function toggleAplicarVariosDias() {
+  mostrarAplicarVariosDias = !mostrarAplicarVariosDias;
+  renderContenidoLocal();
+}
+
+// ── Empleado: menú de acciones (Fase 4B §13) ──
+// Reemplaza la "✕" directa de Fase 4A por un panel "⋯" ahora que hay dos
+// acciones por fila (copiar horario + quitar).
+function abrirPanelAccionesEmpleado(nombre) {
+  if (guardandoHorario || cargandoSemanaAnterior) return;
+  cerrarTodosLosPaneles();
+  panelAccionesEmpleado = nombre;
+  renderContenidoLocal();
+}
+function cerrarPanelAccionesEmpleado() {
+  panelAccionesEmpleado = null;
+  renderContenidoLocal();
+}
+
+function buildPanelAccionesEmpleado() {
+  var nombre = panelAccionesEmpleado;
+  var nombreLimpio = nombre.replace(/^\d+\s+/, '');
+  var html = '<div class="hor-celda-editor" id="panelAccionesEmpleado">';
+  html += '<div class="hor-celda-editor-head"><div class="hor-celda-editor-emp">' + escapeHtml(nombreLimpio) + '</div>';
+  html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarPanelAccionesEmpleado()">Cerrar</button></div>';
+  var otros = Object.keys(horariosEditando).filter(function(n){ return n !== nombre; });
+  if (otros.length) {
+    html += '<button type="button" class="hor-agregar-item" data-copiar-a-otro="1">Copiar horario a otro empleado</button>';
+  }
+  html += '<button type="button" class="hor-agregar-item hor-agregar-item-danger" data-quitar-desde-panel="' + escapeAttr(nombre) + '">Quitar de esta semana</button>';
+  html += '</div>';
+  return html;
+}
+
+// Acción 4 — Duplicar horario entre empleados (§10-§13).
+function abrirPanelDuplicarEmpleado(nombreOrigen) {
+  if (guardandoHorario || cargandoSemanaAnterior || !horariosEditando[nombreOrigen]) return;
+  cerrarTodosLosPaneles();
+  panelDuplicarEmpleado = nombreOrigen;
+  renderContenidoLocal();
+}
+function cerrarPanelDuplicarEmpleado() {
+  panelDuplicarEmpleado = null;
+  renderContenidoLocal();
+}
+
+function buildPanelDuplicarEmpleado() {
+  var origen = panelDuplicarEmpleado;
+  var origenLimpio = origen.replace(/^\d+\s+/, '');
+  // §12 — nunca origen=destino: se excluye estructuralmente de la lista,
+  // no solo con un guard en el handler.
+  var destinos = Object.keys(horariosEditando).filter(function(n){ return n !== origen; });
+  var html = '<div class="hor-celda-editor" id="panelDuplicarEmpleado">';
+  html += '<div class="hor-celda-editor-head"><div class="hor-celda-editor-emp">Copiar horario de ' + escapeHtml(origenLimpio) + '</div>';
+  html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarPanelDuplicarEmpleado()">Cerrar</button></div>';
+  if (!destinos.length) {
+    html += '<div class="hor-edicion-hint">No hay otro empleado en esta semana para copiar el horario.</div>';
+  } else {
+    html += '<div class="hor-agregar-lista">';
+    destinos.forEach(function(n) {
+      var display = n.replace(/^\d+\s+/, '');
+      html += '<button type="button" class="hor-agregar-item" data-duplicar-destino="' + escapeAttr(n) + '">a ' + escapeHtml(display) + '</button>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// Duplica los 7 días de `origen` sobre `destino` — solo el patrón semanal
+// (objetos turno clonados, §2/§12): nunca nombre, roster, flag externo ni
+// ningún otro dato del destino, que quedan exactamente como estaban.
+// Acción destructiva → confirm() obligatorio (§11), mismo patrón ya
+// establecido en este archivo (no se crea un modal nuevo).
+function duplicarHorarioEmpleado(origen, destino) {
+  if (guardandoHorario || cargandoSemanaAnterior) return;
+  if (origen === destino || !horariosEditando[origen] || !horariosEditando[destino]) return; // §12
+  var origenLimpio  = origen.replace(/^\d+\s+/, '');
+  var destinoLimpio = destino.replace(/^\d+\s+/, '');
+  var confirmar = confirm('Esto reemplazará el horario semanal de ' + destinoLimpio + ' con el horario de ' + origenLimpio + '.\n\n¿Continuar?');
+  if (!confirmar) return;
+  DIAS_KEY.forEach(function(dk) {
+    horariosEditando[destino][dk] = clonarTurno(horariosEditando[origen][dk]);
+  });
+  horarioTieneCambios  = true;
+  panelDuplicarEmpleado= null;
+  panelAccionesEmpleado= null;
+  renderContenidoLocal();
+}
+
+// Acción 5 — Copiar semana anterior (§14-§23). Reemplaza el borrador
+// COMPLETO de la sucursal en edición — nunca mergea (§15). Nunca toca
+// semanaOffset/la semana que se está viendo (§17): solo consulta
+// semanaOffset-1 y vuelca el resultado en horariosEditando.
+async function copiarSemanaAnteriorInline() {
+  if (guardandoHorario || cargandoSemanaAnterior) return; // §27
+  var advertencia = horarioTieneCambios
+    ? 'Esto reemplazará el horario que estás editando (tenés cambios sin guardar que se van a perder) por el horario de la semana anterior.\n\n¿Querés continuar?'
+    : 'Esto reemplazará el horario que estás editando por el horario de la semana anterior.\n\n¿Querés continuar?';
+  if (!confirm(advertencia)) return;
+
+  cerrarTodosLosPaneles();
+  horarioErrorGuardado   = null;
+  cargandoSemanaAnterior = true;
+  renderContenidoLocal(); // bloquea el resto de las acciones de inmediato (§27)
+
+  // §20 — necesitamos empleadosLista de ESTA sucursal para recalcular
+  // externo; si el usuario no abrió +Empleado/+Externo todavía en esta
+  // sesión, se carga acá (mismo endpoint, sin duplicar la función).
+  await asegurarRosterCargado();
+
+  var semanaAnteriorId = getSemanaId(semanaOffset - 1);
+  var res = null;
+  try {
+    res = await fetchHorariosSemanalesNode('/api/horarios-semanales?semana=' + encodeURIComponent(semanaAnteriorId));
+  } catch (e) {
+    res = null;
+  }
+  cargandoSemanaAnterior = false;
+
+  if (!res || !(res.status === 200 && res.data && res.data.ok)) {
+    // §22 — error de red o de backend: mensaje, borrador y dirty intactos,
+    // sin salir de edición, sin tocar la semana actual, sin PUT.
+    horarioErrorGuardado = 'No se pudo consultar la semana anterior.';
+    renderContenidoLocal();
+    return;
+  }
+
+  var filasAnteriores = (res.data.horarios && res.data.horarios[sucursalEditando]) || [];
+  if (!filasAnteriores.length) {
+    // §21 — semana anterior vacía: mensaje, NO reemplaza, NO marca dirty.
+    horarioErrorGuardado = 'La sucursal no tiene horarios cargados en la semana anterior.';
+    renderContenidoLocal();
+    return;
+  }
+
+  // §18/§19 — solo la sucursal en edición, mismo parseo que
+  // entrarModoEdicionHorario() vía construirBorradorDesdeFilas().
+  horariosEditando = construirBorradorDesdeFilas(filasAnteriores);
+  externosInline = {};
+  Object.keys(horariosEditando).forEach(function(nombre) {
+    if (empleadosLista.indexOf(nombre) < 0) externosInline[nombre] = true; // §20
+  });
+  horarioTieneCambios = true; // §23
+  toast('Semana anterior copiada al borrador', 'success');
+  renderContenidoLocal();
+}
+
 // ── GUARDADO — Fase 3 ──
 // Construye `filas` para el payload de PUT /api/horarios-semanales a partir
 // de una lista de nombres de empleado + el borrador horariosEditando/
@@ -3590,6 +3955,10 @@ async function guardarHorarioInline() {
     celdaHorarioActiva  = null;
     panelAgregarAbierto = null; // Fase 4A
     externosInline       = {};
+    panelAccionesCelda       = null; // Fase 4B
+    mostrarAplicarVariosDias = false;
+    panelAccionesEmpleado    = null;
+    panelDuplicarEmpleado    = null;
     await cargarHorarios();
     return;
   }
