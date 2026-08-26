@@ -614,6 +614,11 @@ td { padding: 10px 14px; vertical-align: middle; }
    establecidos en este archivo para estados de alerta no destructiva. */
 .hor-guardado-error { font-size: 12px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: var(--radius-md); padding: .6rem .9rem; margin: 0 1.25rem .85rem; }
 
+/* Confirmación de Horario semanal (reemplaza window.confirm() nativo) —
+   mismo .modal-overlay/.modal-box que el resto de la app, ver confirmCroma(). */
+.hor-confirm-box     { max-width: 400px; }
+.hor-confirm-mensaje { padding: 1.25rem; font-size: 13px; line-height: 1.5; color: var(--black); white-space: pre-line; }
+
 /* Editor compacto de celda (Fase 2) — panel próximo a la grilla, NO el
    modal grande. Mismos tokens (radios, sombras, colores) que el resto del
    Design System; reusa .hora-input y .chip-turno tal cual ya estaban
@@ -1595,6 +1600,21 @@ tbody tr:hover { background: var(--gray-50); }
   </div>
 </div>
 
+<!-- MODAL CONFIRMACIÓN (Horario semanal) — reemplaza window.confirm() nativo
+     por el mismo componente .modal-overlay/.modal-box que ya usa el resto de
+     la app, para las 4 confirmaciones de esta pantalla (salir de edición con
+     cambios sin guardar, quitar empleado, duplicar horario, copiar semana
+     anterior). Ver confirmCroma() más abajo. -->
+<div class="modal-overlay" id="horConfirmOverlay">
+  <div class="modal-box hor-confirm-box">
+    <div class="hor-confirm-mensaje" id="horConfirmMensaje"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-btn cancelar" id="horConfirmCancelar">Cancelar</button>
+      <button type="button" class="modal-btn rev" id="horConfirmAceptar">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL ENTRADA -->
 <div class="modal-overlay" id="modalEntradaOverlay" onclick="cerrarModalEntradaOverlay(event)">
   <div class="modal-box" style="max-width:480px">
@@ -1896,12 +1916,12 @@ function initNav() {
   // cargarHorarios(), un "Seguir editando" dejaría la etiqueta ya
   // apuntando a la semana nueva mientras la grilla sigue mostrando el
   // borrador de la semana vieja (desincronizado).
-  document.getElementById('btnSemanaAnt').addEventListener('click', function(){
-    if (!confirmarSalidaEdicionHorario()) return;
+  document.getElementById('btnSemanaAnt').addEventListener('click', async function(){
+    if (!(await confirmarSalidaEdicionHorario())) return;
     semanaOffset--; actualizarSemanaLabel(); cargarHorarios();
   });
-  document.getElementById('btnSemanaSig').addEventListener('click', function(){
-    if (!confirmarSalidaEdicionHorario()) return;
+  document.getElementById('btnSemanaSig').addEventListener('click', async function(){
+    if (!(await confirmarSalidaEdicionHorario())) return;
     semanaOffset++; actualizarSemanaLabel(); cargarHorarios();
   });
 
@@ -2746,7 +2766,7 @@ async function cargarHorarios() {
   // Fase 2 §14/§15: recargar (semana, refresh, tab) respeta el dirty guard
   // — si el usuario elige "Seguir editando" ante el confirm, se aborta acá
   // mismo, antes de tocar el grid o pedir datos nuevos.
-  if (!confirmarSalidaEdicionHorario()) return;
+  if (!(await confirmarSalidaEdicionHorario())) return;
   var grid = document.getElementById('horariosGrid');
   grid.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Cargando horarios...</p></div>';
 
@@ -2814,11 +2834,11 @@ function filtrarSidebarLocales() {
   renderSidebarLocales();
 }
 
-function seleccionarLocalHorario(suc) {
+async function seleccionarLocalHorario(suc) {
   // Fase 2 §14: si el usuario elige "Seguir editando" ante el confirm, se
   // aborta acá — horarioSucActiva no cambia, el sidebar sigue mostrando la
   // sucursal que se estaba editando.
-  if (!confirmarSalidaEdicionHorario()) return;
+  if (!(await confirmarSalidaEdicionHorario())) return;
   horarioSucActiva = suc;
   renderSidebarLocales();
   renderContenidoLocal();
@@ -2972,10 +2992,19 @@ function renderContenidoLocal() {
 
     filasRender.forEach(function(emp) {
       var foto  = buscarFotoEmpleado(emp.empleado);
+      // crossorigin="anonymous" solo si la foto pasó por NUESTRO proxy (fotos
+      // de Drive, que sí manda Access-Control-Allow-Origin — ver
+      // imagen-proxy.js/proxyFotoUrl). Si en la hoja EMPLEADOS alguien cargó
+      // un link directo a otro host (ej. Pinterest) que no manda CORS,
+      // pedirlo como crossorigin hace que el navegador lo bloquee del todo
+      // en vez de simplemente no poder usarlo para "Compartir imagen" — sin
+      // el atributo, la foto se ve igual, solo queda afuera del canvas de
+      // html2canvas (que ya degrada con un mensaje, no rompe la pantalla).
+      var fotoPropia = foto && foto.indexOf(HORARIOS_BACKEND_URL + '/api/imagen-proxy') === 0;
       var inic  = iniciales(emp.empleado);
       var nombreVisible = nombreVisibleEmpleado(emp.empleado);
       html += '<tr><td><div class="hor-emp-cell">';
-      html += '<div class="hor-avatar">' + (foto ? '<img src="' + foto + '" alt="" crossorigin="anonymous" onerror="this.parentElement.textContent=\'' + inic + '\'">' : inic) + '</div>';
+      html += '<div class="hor-avatar">' + (foto ? '<img src="' + foto + '" alt=""' + (fotoPropia ? ' crossorigin="anonymous"' : '') + ' onerror="this.parentElement.textContent=\'' + inic + '\'">' : inic) + '</div>';
       html += '<span>' + escapeHtml(nombreVisible) + '</span>';
       // Fase 4A §12: mismo badge que ya usaba el modal legacy, sin crear
       // una segunda clasificación de fila.
@@ -3238,8 +3267,43 @@ function cerrarTodosLosPaneles() {
 // que el borrador puede tener cambios reales (Fase 2), pasa por el mismo
 // punto único de control que cargarHorarios()/seleccionarLocalHorario()
 // en vez de descartar directo (evita tener el guard duplicado acá).
-function cancelarEdicionHorario() {
-  confirmarSalidaEdicionHorario();
+async function cancelarEdicionHorario() {
+  await confirmarSalidaEdicionHorario();
+}
+
+// Confirmación con el estilo Croma (.modal-overlay/.modal-box, el mismo
+// componente que ya usa el resto de la app) en vez de window.confirm()
+// nativo — reemplaza las 4 confirmaciones de Horario semanal (salir de
+// edición con cambios sin guardar, quitar empleado, duplicar horario,
+// copiar semana anterior). Un solo overlay reutilizado (#horConfirmOverlay),
+// una promesa a la vez — no hace falta una cola: esta pantalla nunca
+// dispara dos confirmaciones superpuestas.
+function confirmCroma(mensaje, opciones) {
+  opciones = opciones || {};
+  return new Promise(function(resolve) {
+    var overlay   = document.getElementById('horConfirmOverlay');
+    var btnAceptar = document.getElementById('horConfirmAceptar');
+    var btnCancelar = document.getElementById('horConfirmCancelar');
+    document.getElementById('horConfirmMensaje').textContent = mensaje;
+    btnAceptar.textContent  = opciones.textoAceptar  || 'Confirmar';
+    btnCancelar.textContent = opciones.textoCancelar || 'Cancelar';
+    function cerrar(resultado) {
+      overlay.classList.remove('open');
+      btnAceptar.removeEventListener('click', onAceptar);
+      btnCancelar.removeEventListener('click', onCancelar);
+      overlay.removeEventListener('click', onOverlayClick);
+      resolve(resultado);
+    }
+    function onAceptar()  { cerrar(true); }
+    function onCancelar() { cerrar(false); }
+    // Click afuera del cuadro = "Cancelar", mismo criterio que el resto de
+    // los .modal-overlay estáticos de esta app.
+    function onOverlayClick(e) { if (e.target === overlay) cerrar(false); }
+    btnAceptar.addEventListener('click', onAceptar);
+    btnCancelar.addEventListener('click', onCancelar);
+    overlay.addEventListener('click', onOverlayClick);
+    overlay.classList.add('open');
+  });
 }
 
 // Punto único de control de navegación mientras hay edición inline en
@@ -3249,14 +3313,7 @@ function cancelarEdicionHorario() {
 // caso. Devuelve true si quedó en modo vista (se puede continuar con la
 // navegación que llamó), false si el usuario eligió seguir editando (quien
 // llamó debe abortar su propia operación).
-//
-// Usa window.confirm() a propósito: no hay un componente de confirmación
-// propio en este proyecto (el toast() existente es una notificación, no
-// una decisión de dos opciones) y confirm() YA es el patrón establecido acá
-// para "acción destructiva, ¿estás seguro?" (ver eliminarUsuarioPedidoNombre
-// y eliminarEntrada) — reusar ese patrón es más consistente que inventar un
-// modal nuevo solo para esto.
-function confirmarSalidaEdicionHorario() {
+async function confirmarSalidaEdicionHorario() {
   if (modoHorario !== 'edicion') return true;
   // Fase 3 §14/§35: mientras el PUT está en vuelo, ninguna navegación
   // (Cancelar, cambiar sucursal, cambiar semana) puede proceder — ni
@@ -3270,8 +3327,16 @@ function confirmarSalidaEdicionHorario() {
     salirModoEdicionHorario();
     return true;
   }
-  var descartar = confirm('Tenés cambios sin guardar en el horario de ' + sucursalEditando + '.\n\n¿Querés descartarlos?');
+  var descartar = await confirmCroma(
+    'Tenés cambios sin guardar en el horario de ' + sucursalEditando + '.\n\n¿Querés descartarlos?',
+    { textoAceptar: 'Descartar', textoCancelar: 'Seguir editando' }
+  );
   if (!descartar) return false; // "Seguir editando" — el borrador queda intacto, no se toca nada
+  // A diferencia de window.confirm() (bloqueaba el hilo), este modal no
+  // bloquea nada mientras está abierto — un guardado pudo arrancar y
+  // terminar en el medio. Releer el guard antes de descartar.
+  if (guardandoHorario || cargandoSemanaAnterior) return false;
+  if (modoHorario !== 'edicion') return true; // ya se salió por otro camino mientras tanto
   salirModoEdicionHorario();
   return true;
 }
@@ -3548,16 +3613,19 @@ function agregarExternoManualInline(nombreCrudo) {
 // empleado tiene algo cargado distinto del default vacío (§15) — el editor
 // inline no tiene un "cerrar sin guardar" tan a mano como cerrar el modal,
 // así que perder por error un horario ya tipeado sería más costoso. Mismo
-// patrón confirm() que ya usa confirmarSalidaEdicionHorario(), sin crear un
-// modal de confirmación nuevo.
-function quitarEmpleadoInline(nombre) {
+// componente confirmCroma() que usa confirmarSalidaEdicionHorario().
+async function quitarEmpleadoInline(nombre) {
   if (guardandoHorario || cargandoSemanaAnterior || !horariosEditando[nombre]) return;
   var tieneDatos = DIAS_KEY.some(function(dk) {
     var t = horariosEditando[nombre][dk];
     return t && (t.tipo !== 'libre' || t.h1 || t.h2 || t.h3 || t.h4);
   });
   if (tieneDatos) {
-    if (!confirm('¿Quitar a ' + nombreVisibleEmpleado(nombre) + ' de esta semana?')) return;
+    var confirmado = await confirmCroma('¿Quitar a ' + nombreVisibleEmpleado(nombre) + ' de esta semana?', { textoAceptar: 'Quitar' });
+    if (!confirmado) return;
+    // guardas repetidas tras el await: el usuario pudo disparar otra acción
+    // (Guardar, Copiar semana anterior) mientras el diálogo estaba abierto.
+    if (guardandoHorario || cargandoSemanaAnterior || !horariosEditando[nombre]) return;
   }
   delete horariosEditando[nombre];
   delete externosInline[nombre];
@@ -3789,13 +3857,18 @@ function buildPanelDuplicarEmpleado() {
 // Duplica los 7 días de `origen` sobre `destino` — solo el patrón semanal
 // (objetos turno clonados, §2/§12): nunca nombre, roster, flag externo ni
 // ningún otro dato del destino, que quedan exactamente como estaban.
-// Acción destructiva → confirm() obligatorio (§11), mismo patrón ya
-// establecido en este archivo (no se crea un modal nuevo).
-function duplicarHorarioEmpleado(origen, destino) {
+// Acción destructiva → confirmCroma() obligatorio (§11).
+async function duplicarHorarioEmpleado(origen, destino) {
   if (guardandoHorario || cargandoSemanaAnterior) return;
   if (origen === destino || !horariosEditando[origen] || !horariosEditando[destino]) return; // §12
-  var confirmar = confirm('Esto reemplazará el horario semanal de ' + nombreVisibleEmpleado(destino) + ' con el horario de ' + nombreVisibleEmpleado(origen) + '.\n\n¿Continuar?');
-  if (!confirmar) return;
+  var confirmado = await confirmCroma(
+    'Esto reemplazará el horario semanal de ' + nombreVisibleEmpleado(destino) + ' con el horario de ' + nombreVisibleEmpleado(origen) + '.\n\n¿Continuar?',
+    { textoAceptar: 'Continuar' }
+  );
+  if (!confirmado) return;
+  // El modal no bloquea el hilo — revalidar todo tras el await.
+  if (guardandoHorario || cargandoSemanaAnterior) return;
+  if (origen === destino || !horariosEditando[origen] || !horariosEditando[destino]) return;
   DIAS_KEY.forEach(function(dk) {
     horariosEditando[destino][dk] = clonarTurno(horariosEditando[origen][dk]);
   });
@@ -3814,7 +3887,11 @@ async function copiarSemanaAnteriorInline() {
   var advertencia = horarioTieneCambios
     ? 'Esto reemplazará el horario que estás editando (tenés cambios sin guardar que se van a perder) por el horario de la semana anterior.\n\n¿Querés continuar?'
     : 'Esto reemplazará el horario que estás editando por el horario de la semana anterior.\n\n¿Querés continuar?';
-  if (!confirm(advertencia)) return;
+  var confirmado = await confirmCroma(advertencia, { textoAceptar: 'Continuar' });
+  if (!confirmado) return;
+  // El modal no bloquea el hilo — revalidar el guard tras el await (pudo
+  // arrancar un guardado mientras estaba abierto).
+  if (guardandoHorario || cargandoSemanaAnterior) return;
 
   cerrarTodosLosPaneles();
   horarioErrorGuardado   = null;
