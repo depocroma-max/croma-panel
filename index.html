@@ -598,6 +598,9 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-editando-tag  { font-size: 11px; color: var(--black); background: var(--gray-100); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
 .hor-edicion-hint  { font-size: 12px; color: var(--gray-400); padding: 0 0 .85rem; }
 .hor-cambios-tag   { font-size: 11px; color: var(--gray-600); display: inline-flex; align-items: center; }
+/* Mismos tonos ámbar que .hor-pendiente-tag/.carga-emp-externo, ya
+   establecidos en este archivo para estados de alerta no destructiva. */
+.hor-guardado-error { font-size: 12px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: var(--radius-md); padding: .6rem .9rem; margin: 0 1.25rem .85rem; }
 
 /* Editor compacto de celda (Fase 2) — panel próximo a la grilla, NO el
    modal grande. Mismos tokens (radios, sombras, colores) que el resto del
@@ -2885,13 +2888,16 @@ function renderContenidoLocal() {
   html += '<div class="hor-panel-actions">';
 
   if (editando) {
-    html += '<button class="btn-editar-hor" onclick="cancelarEdicionHorario()">Cancelar</button>';
-    // Fase 2 §16/§17: el botón sigue disabled a propósito (sin PUT hasta
-    // Fase 3) — el indicador de "cambios sin guardar" es la señal visual
-    // de que hay algo pendiente, sin ofrecer un botón que parezca guardar
-    // pero no haga nada.
-    if (horarioTieneCambios) html += '<span class="hor-cambios-tag">● Cambios sin guardar</span>';
-    html += '<button class="btn-guardar-hor" id="btnGuardarHorarioInline" disabled title="Guardado disponible en la próxima fase">' + icon('save','ic-xs') + ' Guardar horario</button>';
+    // Fase 3 §14: Cancelar queda disabled mientras el PUT está en vuelo —
+    // confirmarSalidaEdicionHorario() ya lo bloquearía igual, esto es la
+    // señal visual de por qué.
+    html += '<button class="btn-editar-hor" ' + (guardandoHorario ? 'disabled' : '') + ' onclick="cancelarEdicionHorario()">Cancelar</button>';
+    if (guardandoHorario) {
+      html += '<button class="btn-guardar-hor" id="btnGuardarHorarioInline" disabled>' + icon('save','ic-xs') + ' Guardando…</button>';
+    } else {
+      if (horarioTieneCambios) html += '<span class="hor-cambios-tag">● Cambios sin guardar</span>';
+      html += '<button class="btn-guardar-hor" id="btnGuardarHorarioInline"' + (horarioTieneCambios ? '' : ' disabled title="No hay cambios para guardar"') + ' onclick="guardarHorarioInline()">' + icon('save','ic-xs') + ' Guardar horario</button>';
+    }
   } else if (puedeEditar) {
     html += '<button class="btn-editar-hor" onclick="entrarModoEdicionHorario(\'' + suc + '\')">' + (cargado ? '✎ Editar' : '+ Cargar') + '</button>';
   }
@@ -2913,6 +2919,14 @@ function renderContenidoLocal() {
   html += leyendaItemHorario('cortado',    'Cortado',     'Dos bloques');
   html += leyendaItemHorario('libre',      'Libre',       'Sin turno');
   html += '</div>';
+
+  if (editando && (horarioConflicto || horarioErrorGuardado)) {
+    // Fase 3 §9/§11/§12/§13: banner de feedback tras un guardado fallido —
+    // nunca JSON crudo. mensajeConflictoHorario() es la misma función que
+    // ya usaba el modal legacy, sin duplicar la lógica de superposición.
+    var msgBanner = horarioConflicto ? mensajeConflictoHorario(horarioConflicto) : horarioErrorGuardado;
+    html += '<div class="hor-guardado-error">⚠ ' + escapeHtml(msgBanner) + '</div>';
+  }
 
   if (editando) {
     if (celdaHorarioActiva) {
@@ -3029,8 +3043,11 @@ var todosEmpleados    = []; // todos los de todas las sucursales para esta seman
 // El modal (abrirModalCarga y todo lo que sigue) queda intacto como
 // fallback — no se toca ni se llama desde acá.
 var modoHorario         = 'vista'; // 'vista' | 'edicion'
-var horarioTieneCambios = false;   // dirty state — todavía no lo pone en true nadie (eso es Fase 2, cuando el editor de celda exista de verdad)
-var celdaHorarioActiva  = null;    // { empleado, dia } | null — selección estructural; el editor compacto es Fase 2
+var horarioTieneCambios = false;   // dirty state
+var celdaHorarioActiva  = null;    // { empleado, dia } | null — selección estructural
+var guardandoHorario    = false;   // Fase 3 — true mientras el PUT está en vuelo
+var horarioConflicto    = null;    // Fase 3 — objeto `conflicto` del último 409, o null
+var horarioErrorGuardado= null;    // Fase 3 — mensaje de error genérico (400/401/5xx/network) del último intento, o null
 
 // Arma el borrador desde horariosData[suc] (ya cargado en memoria por
 // cargarHorarios(), sin request nuevo) reusando parsearTurno() — mismo
@@ -3048,6 +3065,9 @@ function entrarModoEdicionHorario(suc) {
   modoHorario         = 'edicion';
   horarioTieneCambios = false;
   celdaHorarioActiva  = null;
+  guardandoHorario    = false;
+  horarioConflicto    = null;
+  horarioErrorGuardado= null;
   renderContenidoLocal();
 }
 
@@ -3059,6 +3079,9 @@ function salirModoEdicionHorario() {
   horariosEditando    = {};
   horarioTieneCambios = false;
   celdaHorarioActiva  = null;
+  guardandoHorario    = false;
+  horarioConflicto    = null;
+  horarioErrorGuardado= null;
   renderContenidoLocal();
 }
 
@@ -3086,6 +3109,11 @@ function cancelarEdicionHorario() {
 // modal nuevo solo para esto.
 function confirmarSalidaEdicionHorario() {
   if (modoHorario !== 'edicion') return true;
+  // Fase 3 §14/§35: mientras el PUT está en vuelo, ninguna navegación
+  // (Cancelar, cambiar sucursal, cambiar semana) puede proceder — ni
+  // siquiera preguntando, para no arrancar un segundo guardado ni dejar el
+  // borrador en un estado a mitad de camino.
+  if (guardandoHorario) return false;
   if (!horarioTieneCambios) {
     salirModoEdicionHorario();
     return true;
@@ -3235,6 +3263,104 @@ document.addEventListener('keydown', function(e) {
     cerrarEditorCelda();
   }
 });
+
+// ── GUARDADO — Fase 3 ──
+// Construye `filas` para el payload de PUT /api/horarios-semanales a partir
+// de una lista de nombres de empleado + el borrador horariosEditando/
+// turnoToString() — misma fuente y misma serialización que ya usaba
+// guardarHorario() (modal legacy), extraída acá para que ambos caminos
+// (modal, editor inline) arment el payload con una única función. No
+// depende del DOM ni del orden visual de ninguna tabla — recorre
+// directamente el nombre de empleado que se le pase.
+function construirFilasHorario(nombresEmpleados) {
+  return nombresEmpleados.map(function(nombre) {
+    var row = { empleado: nombre };
+    DIAS_KEY.forEach(function(dk) {
+      row[dk] = turnoToString(horariosEditando[nombre] ? horariosEditando[nombre][dk] : null);
+    });
+    return row;
+  });
+}
+
+// Envía el PUT real — compartido entre el modal legacy y el editor inline.
+// Normaliza un error de red/timeout (fetch rejection) a la misma forma que
+// una respuesta HTTP ya clasificada ({status, data}), con `errorRed: true`
+// para que quien llama distinga "el backend respondió con un error" de "no
+// hubo respuesta". Nunca cae a GAS automáticamente — mismo criterio ya
+// establecido junto a HORARIOS_SEMANALES_NODE (ver comentario en
+// cargarHorarios()): un fallback silencioso podría escribir dos veces si el
+// PUT en realidad sí llegó a guardar del lado del servidor.
+async function enviarPutHorarioSemanal(payload) {
+  try {
+    return await fetchHorariosSemanalesNode('/api/horarios-semanales', { method: 'PUT', body: payload });
+  } catch (e) {
+    return { status: 0, data: null, errorRed: true };
+  }
+}
+
+// Guarda el borrador de la sucursal en edición inline. Guard defensivo
+// doble (Fase 3 §16/§6): sin cambios no hace nada, y un guardado ya en
+// vuelo bloquea un segundo (evita doble PUT por doble click — el botón ya
+// queda disabled mientras tanto, esto es la segunda barrera).
+async function guardarHorarioInline() {
+  if (!horarioTieneCambios || guardandoHorario) return;
+
+  guardandoHorario     = true;
+  horarioConflicto     = null;
+  horarioErrorGuardado = null;
+  renderContenidoLocal(); // refleja "Guardando…" y bloquea Cancelar/nav de inmediato
+
+  var filas     = construirFilasHorario(Object.keys(horariosEditando));
+  var semanaId  = getSemanaId(semanaOffset);
+  var encargado = sesionSucursal || 'ADMIN';
+  var payload   = { semana: semanaId, sucursal: sucursalEditando, encargado: encargado, filas: filas };
+
+  var res = await enviarPutHorarioSemanal(payload);
+  guardandoHorario = false;
+
+  if (res.status === 200 && res.data && res.data.ok) {
+    // Fase 3 §7: la fuente real después de un guardado exitoso es siempre
+    // el GET, nunca el borrador local — se sale de edición y se vuelve a
+    // pedir el horario recién persistido en vez de asumir que el borrador
+    // ya es la verdad.
+    toast('✓ Horario guardado correctamente', 'success');
+    modoHorario         = 'vista';
+    sucursalEditando    = null;
+    horariosEditando    = {};
+    horarioTieneCambios = false;
+    celdaHorarioActiva  = null;
+    await cargarHorarios();
+    return;
+  }
+
+  if (res.status === 409) {
+    // Superposición cross-sucursal — mismo mensaje que ya usaba el modal
+    // (mensajeConflictoHorario), sin recalcular nada en el frontend. Se
+    // conserva TODO el borrador y el dirty state: el encargado corrige la
+    // celda señalada y reintenta.
+    horarioConflicto = (res.data && res.data.conflicto) || null;
+    // Mejora opcional (§10): el 409 ya trae empleado+día — llevar directo
+    // a esa celda (abre su editor) en vez de solo mostrar el mensaje.
+    if (horarioConflicto && horarioConflicto.empleado && horarioConflicto.dia) {
+      celdaHorarioActiva = { empleado: horarioConflicto.empleado, dia: horarioConflicto.dia };
+    }
+    renderContenidoLocal();
+    return;
+  }
+
+  if (res.status === 401) {
+    // Mismo criterio que el resto del panel ante sesión inválida (ver
+    // cargarEnVivo) — no se inventa un flujo de login paralelo acá.
+    horarioErrorGuardado = 'Tu sesión venció. Volvé a iniciar sesión.';
+  } else if (res.errorRed) {
+    horarioErrorGuardado = 'No se pudo guardar el horario. Los cambios siguen pendientes.';
+  } else {
+    horarioErrorGuardado = (res.data && res.data.error) || 'No se pudo guardar el horario.';
+  }
+  // 400/401/5xx: nunca se descarta nada — horariosEditando y
+  // horarioTieneCambios quedan exactamente como estaban.
+  renderContenidoLocal();
+}
 
 async function abrirModalCarga(suc) {
   sucursalEditando  = suc;
@@ -3668,15 +3794,9 @@ async function guardarHorario() {
     });
   });
 
-  // Armar payload
-  var filas = empleadosAgregados.map(function(emp) {
-    var nombre = emp.id;
-    var row = { empleado: nombre };
-    DIAS_KEY.forEach(function(dk) {
-      row[dk] = turnoToString(horariosEditando[nombre] ? horariosEditando[nombre][dk] : null);
-    });
-    return row;
-  });
+  // Armar payload — Fase 3: extraído a construirFilasHorario(), misma
+  // fuente/serialización que antes, ahora compartida con el editor inline.
+  var filas = construirFilasHorario(empleadosAgregados.map(function(emp){ return emp.id; }));
 
   var semanaId  = getSemanaId(semanaOffset);
   var encargado = sesionSucursal || 'ADMIN';
@@ -3685,31 +3805,30 @@ async function guardarHorario() {
     // Fase 2B: PUT /api/horarios-semanales. Mismo payload funcional que
     // guardarHorario() (GAS), sin el campo `accion` (eso era propio del
     // wrapper de query string de Apps Script, PUT no lo necesita).
+    // Fase 3: el envío en sí (fetch + try/catch) se extrajo a
+    // enviarPutHorarioSemanal(), compartida con el editor inline — el
+    // manejo de cada status sigue siendo específico del modal (DOM propio,
+    // btn/status).
     var payloadNode = { semana: semanaId, sucursal: sucursalEditando, encargado: encargado, filas: filas };
-    try {
-      var resNode = await fetchHorariosSemanalesNode('/api/horarios-semanales', { method: 'PUT', body: payloadNode });
-      if (resNode.status === 200 && resNode.data && resNode.data.ok) {
-        toast('✓ Horario guardado correctamente', 'success');
-        cerrarModalHorario();
-        cargarHorarios();
-      } else if (resNode.status === 409) {
-        // Conflicto de superposición cross-sucursal — comportamiento nuevo
-        // (Fase 2A/2B). Mensaje claro, sin JSON crudo. No se reintenta ni
-        // se resuelve automáticamente: el encargado tiene que corregirlo.
-        status.textContent = '⚠ ' + mensajeConflictoHorario(resNode.data.conflicto);
-        btn.disabled = false;
-      } else {
-        // Cualquier otro error de Node (400/401/502/timeout/offline): se
-        // muestra el error y se corta acá. A propósito NO cae a GAS como
-        // fallback automático — el flag HORARIOS_SEMANALES_NODE es el
-        // único mecanismo de rollback (ver comentario junto al flag). Un
-        // fallback silencioso Node->GAS podría terminar escribiendo dos
-        // veces si el PUT de Node en realidad sí llegó a guardar.
-        status.textContent = '⚠ Error: ' + ((resNode.data && resNode.data.error) || 'No se pudo guardar');
-        btn.disabled = false;
-      }
-    } catch (e) {
-      status.textContent = '⚠ Error de conexión';
+    var resNode = await enviarPutHorarioSemanal(payloadNode);
+    if (resNode.status === 200 && resNode.data && resNode.data.ok) {
+      toast('✓ Horario guardado correctamente', 'success');
+      cerrarModalHorario();
+      cargarHorarios();
+    } else if (resNode.status === 409) {
+      // Conflicto de superposición cross-sucursal — comportamiento nuevo
+      // (Fase 2A/2B). Mensaje claro, sin JSON crudo. No se reintenta ni
+      // se resuelve automáticamente: el encargado tiene que corregirlo.
+      status.textContent = '⚠ ' + mensajeConflictoHorario(resNode.data.conflicto);
+      btn.disabled = false;
+    } else {
+      // Cualquier otro error de Node (400/401/502/timeout/offline): se
+      // muestra el error y se corta acá. A propósito NO cae a GAS como
+      // fallback automático — el flag HORARIOS_SEMANALES_NODE es el
+      // único mecanismo de rollback (ver comentario junto al flag). Un
+      // fallback silencioso Node->GAS podría terminar escribiendo dos
+      // veces si el PUT de Node en realidad sí llegó a guardar.
+      status.textContent = resNode.errorRed ? '⚠ Error de conexión' : ('⚠ Error: ' + ((resNode.data && resNode.data.error) || 'No se pudo guardar'));
       btn.disabled = false;
     }
     return;
