@@ -595,6 +595,12 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-cell-clickable            { cursor: pointer; position: relative; }
 .hor-cell-clickable:hover .hor-cell { box-shadow: inset 0 0 0 1px var(--black); }
 .hor-cell-clickable.hor-celda-activa .hor-cell { box-shadow: inset 0 0 0 2px var(--croma-red); }
+/* Conflicto de superposición (409, ver guardarHorarioInline) — a
+   diferencia de .hor-celda-activa (solo un borde), esto tiene que
+   distinguirse de un vistazo en toda la fila, no solo en el texto del
+   banner de arriba. */
+.hor-fila-conflicto > td:first-child { background: #fef2f2; }
+.hor-cell-clickable.hor-celda-conflicto .hor-cell { background: #fee2e2 !important; color: #991b1b; box-shadow: inset 0 0 0 2px #dc2626; font-weight: 700; }
 /* Fase 4B — acceso rápido "⋯" por celda (mouse/touch, ver notas de
    accesibilidad en renderContenidoLocal): oculto hasta hover/focus para no
    ensuciar la grilla, visible siempre en touch (sin hover) vía la media
@@ -2909,6 +2915,12 @@ function renderContenidoLocal() {
       html += '<button class="btn-guardar-hor" id="btnGuardarHorarioInline" disabled>' + icon('save','ic-xs') + ' Guardando…</button>';
     } else if (bloqueadoPorAccion) {
       html += '<button class="btn-guardar-hor" id="btnGuardarHorarioInline" disabled>' + icon('save','ic-xs') + ' Guardar horario</button>';
+    } else if (horarioConflicto) {
+      // No alcanza con que el PUT ya haya fallado (409) — el botón queda
+      // explícitamente bloqueado hasta que se corrija la celda marcada en
+      // rojo, para cualquier rol (encargado o admin): reintentar guardar
+      // con el mismo conflicto sin tocar nada solo repite el mismo error.
+      html += '<button class="btn-guardar-hor" id="btnGuardarHorarioInline" disabled title="Resolvé el horario superpuesto marcado en rojo para poder guardar">' + icon('save','ic-xs') + ' Resolvé el conflicto para guardar</button>';
     } else {
       if (horarioTieneCambios) html += '<span class="hor-cambios-tag">● Cambios sin guardar</span>';
       html += '<button class="btn-guardar-hor" id="btnGuardarHorarioInline"' + (horarioTieneCambios ? '' : ' disabled title="No hay cambios para guardar"') + ' onclick="guardarHorarioInline()">' + icon('save','ic-xs') + ' Guardar horario</button>';
@@ -3003,7 +3015,11 @@ function renderContenidoLocal() {
       var fotoPropia = foto && foto.indexOf(HORARIOS_BACKEND_URL + '/api/imagen-proxy') === 0;
       var inic  = iniciales(emp.empleado);
       var nombreVisible = nombreVisibleEmpleado(emp.empleado);
-      html += '<tr><td><div class="hor-emp-cell">';
+      // Fila con conflicto de superposición (409 del backend, ver
+      // guardarHorarioInline) — marcada en rojo hasta que se corrija la
+      // celda puntual, no solo un mensaje de texto arriba.
+      var filaConConflicto = horarioConflicto && horarioConflicto.empleado === emp.empleado;
+      html += '<tr' + (filaConConflicto ? ' class="hor-fila-conflicto"' : '') + '><td><div class="hor-emp-cell">';
       html += '<div class="hor-avatar">' + (foto ? '<img src="' + foto + '" alt=""' + (fotoPropia ? ' crossorigin="anonymous"' : '') + ' onerror="this.parentElement.textContent=\'' + inic + '\'">' : inic) + '</div>';
       html += '<span>' + escapeHtml(nombreVisible) + '</span>';
       // Fase 4A §12: mismo badge que ya usaba el modal legacy, sin crear
@@ -3025,12 +3041,13 @@ function renderContenidoLocal() {
         var texto = (!val || val === 'LIBRE') ? 'Libre' : val.replace('|', '<br>');
         if (editando) {
           var activa = celdaHorarioActiva && celdaHorarioActiva.empleado === emp.empleado && celdaHorarioActiva.dia === dk;
+          var enConflicto = horarioConflicto && horarioConflicto.empleado === emp.empleado && horarioConflicto.dia === dk;
           // tabindex+role+keydown (ver wiring más abajo): las celdas no son
           // <button>, así que sin esto quedarían fuera del tab order —
           // mínimo de accesibilidad pedido en Fase 2 §20, no una auditoría
           // completa.
-          html += '<td class="hor-cell-clickable' + (activa ? ' hor-celda-activa' : '') + '" data-empleado="' + escapeAttr(emp.empleado) + '" data-dia="' + dk + '"'
-            + ' tabindex="0" role="button" aria-label="Editar turno de ' + escapeAttr(nombreVisible) + ' el ' + DIAS_LABEL[i] + '">';
+          html += '<td class="hor-cell-clickable' + (activa ? ' hor-celda-activa' : '') + (enConflicto ? ' hor-celda-conflicto' : '') + '" data-empleado="' + escapeAttr(emp.empleado) + '" data-dia="' + dk + '"'
+            + ' tabindex="0" role="button" aria-label="Editar turno de ' + escapeAttr(nombreVisible) + ' el ' + DIAS_LABEL[i] + (enConflicto ? ' (horario superpuesto con otra sucursal)' : '') + '">';
           html += '<span class="hor-cell hor-cell-' + clase + '">' + texto + '</span>';
           // Fase 4B §54: acceso rápido mouse/touch a Libre/Copiar día sin
           // abrir el editor de celda completo. tabindex="-1" a propósito
@@ -3369,9 +3386,21 @@ function cambiarTipoTurno(empleado, dia, nuevoTipo) {
   turno.tipo = nuevoTipo;
 }
 
+// Si hay un conflicto de superposición (409) marcado sobre esta celda
+// puntual, tocarla lo limpia — el encargado ya está corrigiendo lo que
+// causaba el error. Otras celdas/empleados no se ven afectados: si sigue
+// habiendo un conflicto real, el próximo intento de guardar lo vuelve a
+// mostrar tal cual.
+function limpiarConflictoSiCoincide(empleado, dia) {
+  if (horarioConflicto && horarioConflicto.empleado === empleado && horarioConflicto.dia === dia) {
+    horarioConflicto = null;
+  }
+}
+
 // Cambia el tipo del turno activo del editor de celda.
 function cambiarTipoCeldaActiva(nuevoTipo) {
   cambiarTipoTurno(celdaHorarioActiva.empleado, celdaHorarioActiva.dia, nuevoTipo);
+  limpiarConflictoSiCoincide(celdaHorarioActiva.empleado, celdaHorarioActiva.dia);
   renderContenidoLocal();
 }
 
@@ -3381,6 +3410,7 @@ function cambiarTipoCeldaActiva(nuevoTipo) {
 function actualizarHoraCeldaActiva(campo, valor) {
   horariosEditando[celdaHorarioActiva.empleado][celdaHorarioActiva.dia][campo] = valor;
   horarioTieneCambios = true;
+  limpiarConflictoSiCoincide(celdaHorarioActiva.empleado, celdaHorarioActiva.dia);
   renderContenidoLocal();
 }
 
@@ -3407,6 +3437,7 @@ function aplicarPresetCelda(bloque, idx) {
     turno.h4 = preset.h2;
   }
   horarioTieneCambios = true;
+  limpiarConflictoSiCoincide(celdaHorarioActiva.empleado, celdaHorarioActiva.dia);
   renderContenidoLocal();
 }
 
@@ -3630,6 +3661,7 @@ async function quitarEmpleadoInline(nombre) {
   delete horariosEditando[nombre];
   delete externosInline[nombre];
   if (celdaHorarioActiva && celdaHorarioActiva.empleado === nombre) celdaHorarioActiva = null;
+  if (horarioConflicto && horarioConflicto.empleado === nombre) horarioConflicto = null;
   horarioTieneCambios = true;
   renderContenidoLocal();
 }
@@ -3728,7 +3760,10 @@ function clonarTurno(turno) {
 // misma operación, dos puntos de entrada distintos (§8).
 function aplicarTurnoADias(empleado, turnoOrigen, diasDestino) {
   if (!horariosEditando[empleado] || !diasDestino || !diasDestino.length) return;
-  diasDestino.forEach(function(dia) { horariosEditando[empleado][dia] = clonarTurno(turnoOrigen); });
+  diasDestino.forEach(function(dia) {
+    horariosEditando[empleado][dia] = clonarTurno(turnoOrigen);
+    limpiarConflictoSiCoincide(empleado, dia);
+  });
   horarioTieneCambios = true;
 }
 
@@ -3739,6 +3774,7 @@ function aplicarTurnoADias(empleado, turnoOrigen, diasDestino) {
 function marcarLibreRapido(empleado, dia) {
   if (guardandoHorario || cargandoSemanaAnterior || !horariosEditando[empleado] || !horariosEditando[empleado][dia]) return;
   cambiarTipoTurno(empleado, dia, 'libre');
+  limpiarConflictoSiCoincide(empleado, dia);
 }
 
 // Panel de acciones de UNA celda (Libre rápido + Copiar día) — se abre
