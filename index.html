@@ -3122,18 +3122,7 @@ function renderContenidoLocal() {
         }
       });
     });
-    // Fase 4A — mismo criterio data-* + addEventListener que el resto de
-    // esta pantalla (nombres de empleado como dato, no interpolados en un
-    // onclick). data-agregar-empleado-local decide qué función usar — el
-    // dato ya distingue local/externo, no hace falta que el usuario elija
-    // el panel correcto de antemano (panel "+ Empleado" unificado).
-    grid.querySelectorAll('[data-agregar-empleado]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var nombre = btn.getAttribute('data-agregar-empleado');
-        if (btn.getAttribute('data-agregar-empleado-local') === '1') agregarEmpleadoInline(nombre);
-        else agregarExternoInline(nombre);
-      });
-    });
+    wirearBotonesAgregarEmpleado(grid);
     var buscarEmpleadoInput = document.getElementById('agregarEmpleadoBuscar');
     if (buscarEmpleadoInput) buscarEmpleadoInput.addEventListener('input', filtrarPanelAgregarEmpleado);
 
@@ -3636,12 +3625,34 @@ function cerrarPanelAgregar() {
 // Filtra SOLO la lista de resultados del panel "+ Empleado" (no todo el
 // panel/grid) para no perder el foco del input de búsqueda en cada tecla —
 // mismo criterio que ya usa filtrarSidebarLocales()/renderSidebarLocales().
+// Fase 4A — mismo criterio data-* + addEventListener que el resto de esta
+// pantalla (nombres de empleado como dato, no interpolados en un onclick).
+// data-agregar-empleado-local decide qué función usar — el dato ya
+// distingue local/externo, no hace falta que el usuario elija el panel
+// correcto de antemano (panel "+ Empleado" unificado). Extraída a función
+// propia porque hay DOS lugares que necesitan enganchar estos botones: el
+// wiring general de renderContenidoLocal() y filtrarPanelAgregarEmpleado()
+// (que reemplaza SOLO #panelAgregarResultados para no perder el foco del
+// buscador, así que sus botones nuevos quedan sin listener si no se
+// re-enganchan acá también).
+function wirearBotonesAgregarEmpleado(contenedor) {
+  contenedor.querySelectorAll('[data-agregar-empleado]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var nombre = btn.getAttribute('data-agregar-empleado');
+      if (btn.getAttribute('data-agregar-empleado-local') === '1') agregarEmpleadoInline(nombre);
+      else agregarExternoInline(nombre);
+    });
+  });
+}
+
 function filtrarPanelAgregarEmpleado() {
   var input = document.getElementById('agregarEmpleadoBuscar');
   if (!input) return;
   busquedaAgregarEmpleado = input.value;
   var cont = document.getElementById('panelAgregarResultados');
-  if (cont) cont.innerHTML = buildListaAgregarEmpleado();
+  if (!cont) return;
+  cont.innerHTML = buildListaAgregarEmpleado();
+  wirearBotonesAgregarEmpleado(cont);
 }
 
 // Agrega un empleado del local al borrador. MISMA inicialización que
