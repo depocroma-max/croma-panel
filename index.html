@@ -3075,10 +3075,11 @@ function renderContenidoLocal() {
           // se está cargando (eso ya lo marca hor-celda-conflicto en rojo).
           // Ayuda a decidir el horario ANTES de escribirlo, no solo después
           // de que el guardado lo rechace.
-          var horarioExterno = horarioExternoDia(emp.empleado, dk, sucursalEditando);
-          if (horarioExterno) {
-            html += '<div class="hor-cell-externo-nota" title="Ya tiene horas cargadas en otra sucursal esta semana">' + escapeHtml(horarioExterno.sucursal) + ' ' + escapeHtml(horarioExterno.horario.replace(/\|/g, '/')) + '</div>';
-          }
+          // Puede haber más de una (ej. mañana en 09 CIPO, tarde en 14
+          // ROCA) — una línea por sucursal, ya vienen ordenadas por hora.
+          horarioExternoDia(emp.empleado, dk, sucursalEditando).forEach(function(ext) {
+            html += '<div class="hor-cell-externo-nota" title="Ya tiene horas cargadas en otra sucursal esta semana">' + escapeHtml(ext.sucursal) + ' ' + escapeHtml(ext.horario.replace(/\|/g, '/')) + '</div>';
+          });
           // Fase 4B §54: acceso rápido mouse/touch a Libre/Copiar día sin
           // abrir el editor de celda completo. tabindex="-1" a propósito
           // (ver notas de la fase): el flujo por teclado ya llega a las
@@ -3096,20 +3097,22 @@ function renderContenidoLocal() {
           // horario exacto queda para cuando entra a Editar (nota gris ya
           // existente) — acá alcanza con saber DÓNDE.
           var textoVista = texto;
-          var estiloVista = '';
           var tituloVista = '';
           if (!val || val === 'LIBRE') {
-            var externoVista = horarioExternoDia(emp.empleado, dk, suc);
-            if (externoVista) {
-              var otraSucKey = externoVista.sucursal.split(' ')[0];
-              textoVista = escapeHtml(externoVista.sucursal);
-              // Fallback a gris: DEPO/OFICINA no tienen --suc-XXX definido
-              // (mismo color que ya usa el pin del sidebar para esos dos).
-              estiloVista = ' style="color:var(--suc-' + otraSucKey + ', var(--gray-600));font-weight:700"';
-              tituloVista = ' title="Trabaja en ' + escapeAttr(externoVista.sucursal) + ' este día — entrá a Editar para ver el horario"';
+            // Puede ser más de una (ej. mañana en 09 CIPO, tarde en 14
+            // ROCA) — un nombre por línea, cada uno con el color de SU
+            // sucursal (fallback gris para DEPO/OFICINA, que no tienen
+            // --suc-XXX definido, mismo criterio que el pin del sidebar).
+            var externosVista = horarioExternoDia(emp.empleado, dk, suc);
+            if (externosVista.length) {
+              tituloVista = ' title="Trabaja en ' + escapeAttr(externosVista.map(function(e){ return e.sucursal; }).join(' y ')) + ' este día — entrá a Editar para ver el horario"';
+              textoVista = externosVista.map(function(e) {
+                var key = e.sucursal.split(' ')[0];
+                return '<span style="color:var(--suc-' + key + ', var(--gray-600));font-weight:700">' + escapeHtml(e.sucursal) + '</span>';
+              }).join('<br>');
             }
           }
-          html += '<td><span class="hor-cell hor-cell-' + clase + '"' + estiloVista + tituloVista + '>' + textoVista + '</span></td>';
+          html += '<td><span class="hor-cell hor-cell-' + clase + '"' + tituloVista + '>' + textoVista + '</span></td>';
         }
       });
       html += '</tr>';
@@ -4247,26 +4250,35 @@ function _bloquesDeStringLocal(val) {
   return _bloquesDeTurnoLocal(parsearTurno(val));
 }
 
-// Busca si `empleado` ya tiene horas cargadas en OTRA sucursal (distinta
-// de `sucursalPropia`) para `dia`, en la semana que se está viendo — para
-// la nota gris en edición Y para la vista de solo lectura (§ más abajo en
-// renderContenidoLocal), sin importar si se superpone o no (informativo).
-// `sucursalPropia` se recibe explícito (no se asume sucursalEditando)
-// porque en modo vista no hay ninguna sucursal "en edición" todavía.
-// Devuelve la PRIMERA que encuentra: alcanza para el aviso, no hace falta
-// juntar todas.
+// Busca TODAS las OTRAS sucursales (distintas de `sucursalPropia`) donde
+// `empleado` ya tiene horas cargadas ese `dia`, en la semana que se está
+// viendo — para la nota gris en edición Y para la vista de solo lectura
+// (ver renderContenidoLocal), sin importar si se superpone o no
+// (informativo). Puede ser más de una: ej. mañana en 09 CIPO SAN MARTIN,
+// tarde en 14 ROCA — devuelve las DOS, ordenadas por hora de inicio, para
+// que se lean en el orden real del día. `sucursalPropia` se recibe
+// explícito (no se asume sucursalEditando) porque en modo vista no hay
+// ninguna sucursal "en edición" todavía.
 function horarioExternoDia(empleado, dia, sucursalPropia) {
   var empNorm = normalizarNombreParaComparar(empleado);
+  var resultados = [];
   for (var suc in horariosData) {
     if (suc === sucursalPropia) continue;
     var filas = horariosData[suc] || [];
     for (var f = 0; f < filas.length; f++) {
       if (normalizarNombreParaComparar(filas[f].empleado) !== empNorm) continue;
       var val = filas[f][dia];
-      if (val && val !== 'LIBRE') return { sucursal: suc, horario: val };
+      if (val && val !== 'LIBRE') resultados.push({ sucursal: suc, horario: val });
     }
   }
-  return null;
+  resultados.sort(function(a, b) {
+    var bloquesA = _bloquesDeStringLocal(a.horario);
+    var bloquesB = _bloquesDeStringLocal(b.horario);
+    var iniA = bloquesA.length ? _horaAMinutos(bloquesA[0].ini) : 0;
+    var iniB = bloquesB.length ? _horaAMinutos(bloquesB[0].ini) : 0;
+    return iniA - iniB;
+  });
+  return resultados;
 }
 
 // Recorre TODO el borrador buscando el primer conflicto real de
