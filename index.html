@@ -3075,7 +3075,7 @@ function renderContenidoLocal() {
           // se está cargando (eso ya lo marca hor-celda-conflicto en rojo).
           // Ayuda a decidir el horario ANTES de escribirlo, no solo después
           // de que el guardado lo rechace.
-          var horarioExterno = horarioExternoDia(emp.empleado, dk);
+          var horarioExterno = horarioExternoDia(emp.empleado, dk, sucursalEditando);
           if (horarioExterno) {
             html += '<div class="hor-cell-externo-nota" title="Ya tiene horas cargadas en otra sucursal esta semana">' + escapeHtml(horarioExterno.sucursal) + ' ' + escapeHtml(horarioExterno.horario.replace(/\|/g, '/')) + '</div>';
           }
@@ -3087,7 +3087,29 @@ function renderContenidoLocal() {
           html += '<button type="button" class="hor-cell-quick" tabindex="-1" data-quick-emp="' + escapeAttr(emp.empleado) + '" data-quick-dia="' + dk + '" title="Acciones rápidas" aria-hidden="true">' + icon('moreHorizontal','ic-xs') + '</button>';
           html += '</td>';
         } else {
-          html += '<td><span class="hor-cell hor-cell-' + clase + '">' + texto + '</span></td>';
+          // Vista de solo lectura (Fase 6): un día "Libre" acá puede en
+          // realidad significar "trabaja en otra sucursal ese día" — sin
+          // entrar a Editar no había forma de saberlo. Si está libre EN
+          // ESTA sucursal, mostrar el nombre de la otra en vez de "Libre",
+          // con el color que ya identifica a esa sucursal en el resto del
+          // panel (mismo var(--suc-XXX) que usa el pin del sidebar). El
+          // horario exacto queda para cuando entra a Editar (nota gris ya
+          // existente) — acá alcanza con saber DÓNDE.
+          var textoVista = texto;
+          var estiloVista = '';
+          var tituloVista = '';
+          if (!val || val === 'LIBRE') {
+            var externoVista = horarioExternoDia(emp.empleado, dk, suc);
+            if (externoVista) {
+              var otraSucKey = externoVista.sucursal.split(' ')[0];
+              textoVista = escapeHtml(externoVista.sucursal);
+              // Fallback a gris: DEPO/OFICINA no tienen --suc-XXX definido
+              // (mismo color que ya usa el pin del sidebar para esos dos).
+              estiloVista = ' style="color:var(--suc-' + otraSucKey + ', var(--gray-600));font-weight:700"';
+              tituloVista = ' title="Trabaja en ' + escapeAttr(externoVista.sucursal) + ' este día — entrá a Editar para ver el horario"';
+            }
+          }
+          html += '<td><span class="hor-cell hor-cell-' + clase + '"' + estiloVista + tituloVista + '>' + textoVista + '</span></td>';
         }
       });
       html += '</tr>';
@@ -4225,15 +4247,18 @@ function _bloquesDeStringLocal(val) {
   return _bloquesDeTurnoLocal(parsearTurno(val));
 }
 
-// Busca si `empleado` ya tiene horas cargadas en OTRA sucursal (no
-// sucursalEditando) para `dia`, en la semana que se está viendo — para
-// mostrar la nota gris en la celda, sin importar si se superpone o no
-// (informativo). Devuelve la PRIMERA que encuentra: alcanza para el aviso,
-// no hace falta juntar todas.
-function horarioExternoDia(empleado, dia) {
+// Busca si `empleado` ya tiene horas cargadas en OTRA sucursal (distinta
+// de `sucursalPropia`) para `dia`, en la semana que se está viendo — para
+// la nota gris en edición Y para la vista de solo lectura (§ más abajo en
+// renderContenidoLocal), sin importar si se superpone o no (informativo).
+// `sucursalPropia` se recibe explícito (no se asume sucursalEditando)
+// porque en modo vista no hay ninguna sucursal "en edición" todavía.
+// Devuelve la PRIMERA que encuentra: alcanza para el aviso, no hace falta
+// juntar todas.
+function horarioExternoDia(empleado, dia, sucursalPropia) {
   var empNorm = normalizarNombreParaComparar(empleado);
   for (var suc in horariosData) {
-    if (suc === sucursalEditando) continue;
+    if (suc === sucursalPropia) continue;
     var filas = horariosData[suc] || [];
     for (var f = 0; f < filas.length; f++) {
       if (normalizarNombreParaComparar(filas[f].empleado) !== empNorm) continue;
