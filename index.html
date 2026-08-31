@@ -601,6 +601,9 @@ td { padding: 10px 14px; vertical-align: middle; }
    banner de arriba. */
 .hor-fila-conflicto > td:first-child { background: #fef2f2; }
 .hor-cell-clickable.hor-celda-conflicto .hor-cell { background: #fee2e2 !important; color: #991b1b; box-shadow: inset 0 0 0 2px #dc2626; font-weight: 700; }
+/* Nota informativa "ya tiene horas en otra sucursal" (Fase 6) — gris a
+   propósito, para no competir visualmente con el rojo de conflicto real. */
+.hor-cell-externo-nota { font-size: 9px; color: var(--gray-400); margin-top: 2px; line-height: 1.3; }
 /* Fase 4B — acceso rápido "⋯" por celda (mouse/touch, ver notas de
    accesibilidad en renderContenidoLocal): oculto hasta hover/focus para no
    ensuciar la grilla, visible siempre en touch (sin hover) vía la media
@@ -645,13 +648,13 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-celda-editor-presets { display: flex; flex-wrap: wrap; gap: 5px; }
 .hor-celda-libre-msg   { font-size: 13px; color: var(--gray-400); padding: .5rem 0 .25rem; }
 
-/* Paneles "+ Empleado"/"+ Externo" (Fase 4A) — mismo contenedor
-   .hor-celda-editor de arriba, solo el contenido interno es propio. */
+/* Paneles "+ Empleado"/"+ Manual" (Fase 4A, unificado Fase 6) — mismo
+   contenedor .hor-celda-editor de arriba, solo el contenido interno es
+   propio. */
 .hor-agregar-lista     { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; }
 .hor-agregar-item, .hor-agregar-item-externo { text-align: left; padding: 8px 10px; font-family: var(--font-body); font-size: 13px; color: var(--black); background: var(--white); border: 1px solid var(--gray-100); border-radius: var(--radius-sm); cursor: pointer; }
 .hor-agregar-item:hover, .hor-agregar-item-externo:hover { background: var(--gray-50); border-color: var(--gray-200); }
 .hor-agregar-item-externo small { display: block; color: var(--gray-400); font-weight: 400; margin-top: 1px; }
-.hor-agregar-manual    { margin-top: .75rem; padding-top: .75rem; border-top: 1px dashed var(--gray-200); }
 
 /* Botón "quitar" de una fila en modo edición — discreto (ver Fase 4A §13),
    empujado al final de la celda de empleado. */
@@ -2383,6 +2386,12 @@ function buscarFotoEmpleado(nombreEmpleado) {
 // apodo — ver construirFilasHorario().
 function nombreVisibleEmpleado(nombreEmpleado) {
   var nombreLimpio = String(nombreEmpleado || '').replace(/^\d+\s+/, '');
+  // "Externo manual" (ver externosManualInline, Horario semanal): texto
+  // libre nunca confirmado contra la lista real — buscarPerfilEmpleado()
+  // matchea por substring, así que un nombre corto tipeado a mano puede
+  // "encontrar" por accidente el perfil de OTRO empleado real y mostrar su
+  // apodo como si fueran la misma persona. Se muestra tal cual se tipeó.
+  if (externosManualInline && externosManualInline[nombreEmpleado]) return nombreLimpio;
   var perfil = buscarPerfilEmpleado(nombreEmpleado);
   var apodo  = (perfil && perfil.apodo) ? String(perfil.apodo).trim() : '';
   return apodo || nombreLimpio;
@@ -2905,7 +2914,7 @@ function renderContenidoLocal() {
     // anterior" en vuelo — mismo criterio que ya usaba guardandoHorario solo.
     var bloqueadoPorAccion = guardandoHorario || cargandoSemanaAnterior;
     html += '<button class="btn-editar-hor" ' + (bloqueadoPorAccion ? 'disabled' : '') + ' onclick="abrirPanelAgregarEmpleado()">+ Empleado</button>';
-    html += '<button class="btn-editar-hor" ' + (bloqueadoPorAccion ? 'disabled' : '') + ' onclick="abrirPanelAgregarExterno()">+ Externo</button>';
+    html += '<button class="btn-editar-hor" ' + (bloqueadoPorAccion ? 'disabled' : '') + ' onclick="abrirPanelAgregarManual()">+ Manual</button>';
     html += '<button class="btn-editar-hor" ' + (bloqueadoPorAccion ? 'disabled' : '') + ' onclick="copiarSemanaAnteriorInline()">' + (cargandoSemanaAnterior ? 'Copiando…' : 'Copiar semana anterior') + '</button>';
     // Fase 3 §14: Cancelar queda disabled mientras el PUT está en vuelo —
     // confirmarSalidaEdicionHorario() ya lo bloquearía igual, esto es la
@@ -2961,8 +2970,8 @@ function renderContenidoLocal() {
     // y cada abrirPanel*/abrirEditorCelda).
     if (panelAgregarAbierto === 'empleado') {
       html += buildPanelAgregarEmpleado();
-    } else if (panelAgregarAbierto === 'externo') {
-      html += buildPanelAgregarExterno();
+    } else if (panelAgregarAbierto === 'manual') {
+      html += buildPanelAgregarManual();
     } else if (panelAccionesEmpleado) {
       html += buildPanelAccionesEmpleado();
     } else if (panelDuplicarEmpleado) {
@@ -2999,11 +3008,20 @@ function renderContenidoLocal() {
     // borrador se armó 1 a 1 desde acá al entrar en modo edición
     // (entrarModoEdicionHorario), pero es la fuente que Fase 2 va a mutar.
     var filasRender = editando
-      ? Object.keys(horariosEditando).map(function(nombre){ return { empleado: nombre, externo: !!externosInline[nombre] }; })
+      ? Object.keys(horariosEditando).map(function(nombre){ return { empleado: nombre, externo: !!externosInline[nombre], manual: !!externosManualInline[nombre] }; })
       : empleados;
 
     filasRender.forEach(function(emp) {
-      var foto  = buscarFotoEmpleado(emp.empleado);
+      // "Externo manual" es texto libre sin confirmar contra la lista real
+      // de empleados (ver externosManualInline) — buscarFotoEmpleado()/
+      // nombreVisibleEmpleado() matchean por substring contra esa lista, así
+      // que un nombre corto tipeado a mano (ej. "FRAN") puede coincidir por
+      // accidente con OTRO empleado real (ej. "FRANCISCO PACHADO") y
+      // mostrar su foto/apodo como si el sistema supiera que son la misma
+      // persona. Para estas filas, ni se intenta: se muestra tal cual se
+      // tipeó, con iniciales genéricas en vez de una foto prestada.
+      var esManual = emp.manual;
+      var foto  = esManual ? null : buscarFotoEmpleado(emp.empleado);
       // crossorigin="anonymous" solo si la foto pasó por NUESTRO proxy (fotos
       // de Drive, que sí manda Access-Control-Allow-Origin — ver
       // imagen-proxy.js/proxyFotoUrl). Si en la hoja EMPLEADOS alguien cargó
@@ -3014,7 +3032,7 @@ function renderContenidoLocal() {
       // html2canvas (que ya degrada con un mensaje, no rompe la pantalla).
       var fotoPropia = foto && foto.indexOf(HORARIOS_BACKEND_URL + '/api/imagen-proxy') === 0;
       var inic  = iniciales(emp.empleado);
-      var nombreVisible = nombreVisibleEmpleado(emp.empleado);
+      var nombreVisible = nombreVisibleEmpleado(emp.empleado); // ya devuelve el nombre tal cual para manuales, ver esa función
       // Fila con conflicto de superposición (409 del backend, ver
       // guardarHorarioInline) — marcada en rojo hasta que se corrija la
       // celda puntual, no solo un mensaje de texto arriba.
@@ -3023,8 +3041,11 @@ function renderContenidoLocal() {
       html += '<div class="hor-avatar">' + (foto ? '<img src="' + foto + '" alt=""' + (fotoPropia ? ' crossorigin="anonymous"' : '') + ' onerror="this.parentElement.textContent=\'' + inic + '\'">' : inic) + '</div>';
       html += '<span>' + escapeHtml(nombreVisible) + '</span>';
       // Fase 4A §12: mismo badge que ya usaba el modal legacy, sin crear
-      // una segunda clasificación de fila.
-      if (editando && emp.externo) html += '<span class="carga-emp-externo">EXTERNO</span>';
+      // una segunda clasificación de fila. "MANUAL" reemplaza a "EXTERNO"
+      // para dejar explícito que este nombre nunca se confirmó contra la
+      // lista real (pedido del usuario tras el caso FRAN/FRANCISCO PACHADO).
+      if (editando && esManual) html += '<span class="carga-emp-externo" title="Cargado a mano — no confirmado contra la lista de empleados">MANUAL</span>';
+      else if (editando && emp.externo) html += '<span class="carga-emp-externo">EXTERNO</span>';
       if (editando) {
         html += '<button type="button" class="btn-quitar-emp" data-acciones-emp="' + escapeAttr(emp.empleado) + '" title="Acciones de ' + escapeAttr(nombreVisible) + '" aria-label="Acciones de ' + escapeAttr(nombreVisible) + '">' + icon('moreHorizontal','ic-xs') + '</button>';
       }
@@ -3049,6 +3070,15 @@ function renderContenidoLocal() {
           html += '<td class="hor-cell-clickable' + (activa ? ' hor-celda-activa' : '') + (enConflicto ? ' hor-celda-conflicto' : '') + '" data-empleado="' + escapeAttr(emp.empleado) + '" data-dia="' + dk + '"'
             + ' tabindex="0" role="button" aria-label="Editar turno de ' + escapeAttr(nombreVisible) + ' el ' + DIAS_LABEL[i] + (enConflicto ? ' (horario superpuesto con otra sucursal)' : '') + '">';
           html += '<span class="hor-cell hor-cell-' + clase + '">' + texto + '</span>';
+          // Nota informativa (Fase 6): si ya tiene horas en OTRA sucursal
+          // esta semana, avisar acá — aunque no se superpongan con lo que
+          // se está cargando (eso ya lo marca hor-celda-conflicto en rojo).
+          // Ayuda a decidir el horario ANTES de escribirlo, no solo después
+          // de que el guardado lo rechace.
+          var horarioExterno = horarioExternoDia(emp.empleado, dk);
+          if (horarioExterno) {
+            html += '<div class="hor-cell-externo-nota" title="Ya tiene horas cargadas en otra sucursal esta semana">' + escapeHtml(horarioExterno.sucursal) + ' ' + escapeHtml(horarioExterno.horario.replace(/\|/g, '/')) + '</div>';
+          }
           // Fase 4B §54: acceso rápido mouse/touch a Libre/Copiar día sin
           // abrir el editor de celda completo. tabindex="-1" a propósito
           // (ver notas de la fase): el flujo por teclado ya llega a las
@@ -3066,7 +3096,7 @@ function renderContenidoLocal() {
     html += '</tbody></table></div>';
   } else {
     var msgVacio = editando
-      ? 'No hay empleados cargados. Usá "+ Empleado" o "+ Externo" para agregar.'
+      ? 'No hay empleados cargados. Usá "+ Empleado" o "+ Manual" para agregar.'
       : 'Sin horario cargado para esta semana';
     html += '<div class="caja-sin-cierre-msg" style="padding:1.5rem">' + msgVacio + '</div>';
   }
@@ -3094,13 +3124,18 @@ function renderContenidoLocal() {
     });
     // Fase 4A — mismo criterio data-* + addEventListener que el resto de
     // esta pantalla (nombres de empleado como dato, no interpolados en un
-    // onclick).
-    grid.querySelectorAll('[data-agregar-local]').forEach(function(btn) {
-      btn.addEventListener('click', function() { agregarEmpleadoInline(btn.getAttribute('data-agregar-local')); });
+    // onclick). data-agregar-empleado-local decide qué función usar — el
+    // dato ya distingue local/externo, no hace falta que el usuario elija
+    // el panel correcto de antemano (panel "+ Empleado" unificado).
+    grid.querySelectorAll('[data-agregar-empleado]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var nombre = btn.getAttribute('data-agregar-empleado');
+        if (btn.getAttribute('data-agregar-empleado-local') === '1') agregarEmpleadoInline(nombre);
+        else agregarExternoInline(nombre);
+      });
     });
-    grid.querySelectorAll('[data-agregar-externo]').forEach(function(btn) {
-      btn.addEventListener('click', function() { agregarExternoInline(btn.getAttribute('data-agregar-externo')); });
-    });
+    var buscarEmpleadoInput = document.getElementById('agregarEmpleadoBuscar');
+    if (buscarEmpleadoInput) buscarEmpleadoInput.addEventListener('input', filtrarPanelAgregarEmpleado);
 
     // ── Fase 4B — acciones rápidas ──
     grid.querySelectorAll('[data-acciones-emp]').forEach(function(btn) {
@@ -3187,8 +3222,17 @@ var horarioErrorGuardado= null;    // Fase 3 — mensaje de error genérico (400
 // paralela (§20/§21 del pedido). empleadosAgregados/empleadosLista/
 // todosEmpleados del modal legacy NO se tocan desde acá — dos flujos
 // completamente separados que reusan solo los mismos endpoints.
-var panelAgregarAbierto = null;  // null | 'empleado' | 'externo' — cuál de los dos paneles está abierto (excluyente con celdaHorarioActiva, ver abrirEditorCelda/abrirPanelAgregar*)
+var panelAgregarAbierto = null;  // null | 'empleado' | 'manual' — cuál de los paneles está abierto (excluyente con celdaHorarioActiva, ver abrirEditorCelda/abrirPanelAgregar*). "empleado" busca en TODOS los empleados (locales primero); "manual" es carga a mano, sin pasar por la lista real.
+var busquedaAgregarEmpleado = ''; // texto del buscador del panel "+ Empleado", se resetea al abrir/cerrar
 var externosInline      = {};    // { nombre: true } — SOLO empleados agregados por "+ Externo" en esta sesión de edición; el flag nunca se persiste (§11)
+// { nombre: true } — subconjunto de externosInline agregado con "Externo
+// manual" (texto libre, sin pasar por la lista real de empleados). No
+// confiar en buscarPerfilEmpleado() para estos: matchea por substring y un
+// nombre corto tipeado a mano (ej. "FRAN") puede coincidir por accidente
+// con el nombre real de OTRO empleado (ej. "FRANCISCO PACHADO") y mostrar
+// su foto — confuso y especialmente riesgoso porque sugiere que el sistema
+// "sabe" que son la misma persona cuando en realidad nadie lo confirmó.
+var externosManualInline = {};
 var rosterCargado        = false; // true una vez que empleadosLista/todosEmpleados están listos para ESTA sucursal en ESTA sesión de edición
 var rosterCargando       = false;
 var rosterError          = null;
@@ -3233,6 +3277,7 @@ function entrarModoEdicionHorario(suc) {
   horarioErrorGuardado= null;
   panelAgregarAbierto = null;
   externosInline       = {};
+  externosManualInline = {};
   rosterCargado        = false;
   rosterCargando       = false;
   rosterError          = null;
@@ -3241,6 +3286,7 @@ function entrarModoEdicionHorario(suc) {
   panelAccionesEmpleado    = null;
   panelDuplicarEmpleado    = null;
   cargandoSemanaAnterior   = false;
+  recalcularConflictoLocal(); // por si el horario ya guardado (Sheets) tenía un conflicto sin detectar de antes
   renderContenidoLocal();
 }
 
@@ -3257,6 +3303,7 @@ function salirModoEdicionHorario() {
   horarioErrorGuardado= null;
   panelAgregarAbierto = null;
   externosInline       = {};
+  externosManualInline = {};
   rosterCargado        = false;
   rosterCargando       = false;
   rosterError          = null;
@@ -3386,21 +3433,10 @@ function cambiarTipoTurno(empleado, dia, nuevoTipo) {
   turno.tipo = nuevoTipo;
 }
 
-// Si hay un conflicto de superposición (409) marcado sobre esta celda
-// puntual, tocarla lo limpia — el encargado ya está corrigiendo lo que
-// causaba el error. Otras celdas/empleados no se ven afectados: si sigue
-// habiendo un conflicto real, el próximo intento de guardar lo vuelve a
-// mostrar tal cual.
-function limpiarConflictoSiCoincide(empleado, dia) {
-  if (horarioConflicto && horarioConflicto.empleado === empleado && horarioConflicto.dia === dia) {
-    horarioConflicto = null;
-  }
-}
-
 // Cambia el tipo del turno activo del editor de celda.
 function cambiarTipoCeldaActiva(nuevoTipo) {
   cambiarTipoTurno(celdaHorarioActiva.empleado, celdaHorarioActiva.dia, nuevoTipo);
-  limpiarConflictoSiCoincide(celdaHorarioActiva.empleado, celdaHorarioActiva.dia);
+  recalcularConflictoLocal();
   renderContenidoLocal();
 }
 
@@ -3410,7 +3446,7 @@ function cambiarTipoCeldaActiva(nuevoTipo) {
 function actualizarHoraCeldaActiva(campo, valor) {
   horariosEditando[celdaHorarioActiva.empleado][celdaHorarioActiva.dia][campo] = valor;
   horarioTieneCambios = true;
-  limpiarConflictoSiCoincide(celdaHorarioActiva.empleado, celdaHorarioActiva.dia);
+  recalcularConflictoLocal();
   renderContenidoLocal();
 }
 
@@ -3437,7 +3473,7 @@ function aplicarPresetCelda(bloque, idx) {
     turno.h4 = preset.h2;
   }
   horarioTieneCambios = true;
-  limpiarConflictoSiCoincide(celdaHorarioActiva.empleado, celdaHorarioActiva.dia);
+  recalcularConflictoLocal();
   renderContenidoLocal();
 }
 
@@ -3576,27 +3612,36 @@ function abrirPanelAgregarEmpleado() {
   if (guardandoHorario || cargandoSemanaAnterior) return; // Fase 4A §25 / Fase 4B §27
   cerrarTodosLosPaneles();
   panelAgregarAbierto = 'empleado';
+  busquedaAgregarEmpleado = '';
   renderContenidoLocal();
   asegurarRosterCargado();
 }
 
-function abrirPanelAgregarExterno() {
+// "+ Manual" — carga a mano, deliberadamente separado de "+ Empleado"
+// (pedido explícito del usuario): nunca pasa por la lista real, así que no
+// tiene sentido mezclarlo con un buscador que sí busca en esa lista.
+function abrirPanelAgregarManual() {
   if (guardandoHorario || cargandoSemanaAnterior) return;
   cerrarTodosLosPaneles();
-  panelAgregarAbierto = 'externo';
+  panelAgregarAbierto = 'manual';
   renderContenidoLocal();
-  asegurarRosterCargado();
 }
 
 function cerrarPanelAgregar() {
   panelAgregarAbierto = null;
+  busquedaAgregarEmpleado = '';
   renderContenidoLocal();
 }
 
-function toggleExternoManualInline() {
-  var wrap = document.getElementById('externoManualInlineWrap');
-  if (!wrap) return;
-  wrap.style.display = wrap.style.display === 'flex' ? 'none' : 'flex';
+// Filtra SOLO la lista de resultados del panel "+ Empleado" (no todo el
+// panel/grid) para no perder el foco del input de búsqueda en cada tecla —
+// mismo criterio que ya usa filtrarSidebarLocales()/renderSidebarLocales().
+function filtrarPanelAgregarEmpleado() {
+  var input = document.getElementById('agregarEmpleadoBuscar');
+  if (!input) return;
+  busquedaAgregarEmpleado = input.value;
+  var cont = document.getElementById('panelAgregarResultados');
+  if (cont) cont.innerHTML = buildListaAgregarEmpleado();
 }
 
 // Agrega un empleado del local al borrador. MISMA inicialización que
@@ -3610,6 +3655,7 @@ function agregarEmpleadoInline(nombre) {
   horariosEditando[nombre] = {};
   DIAS_KEY.forEach(function(dk) { horariosEditando[nombre][dk] = { tipo: 'libre', h1: '', h2: '', h3: '', h4: '' }; });
   delete externosInline[nombre]; // por si acaso — un agregado "local" nunca es externo
+  delete externosManualInline[nombre];
   horarioTieneCambios = true;
   panelAgregarAbierto = null;
   renderContenidoLocal();
@@ -3631,10 +3677,14 @@ function agregarExternoInline(nombre) {
 
 // Externo manual — misma normalización que agregarExternoManual() del
 // modal legacy (trim + mayúsculas), sin inventar una regla nueva de RRHH.
+// Se marca aparte en externosManualInline: texto libre, nunca confirmado
+// contra la lista real de empleados (ver ese var arriba y el render de la
+// fila — nunca se le busca foto/apodo por posible coincidencia falsa).
 function agregarExternoManualInline(nombreCrudo) {
   var nombre = String(nombreCrudo || '').trim().toUpperCase();
   if (!nombre) return;
   agregarExternoInline(nombre);
+  externosManualInline[nombre] = true;
 }
 
 // Quita un empleado del borrador semanal de ESTA sucursal (Fase 4A §14) —
@@ -3660,88 +3710,94 @@ async function quitarEmpleadoInline(nombre) {
   }
   delete horariosEditando[nombre];
   delete externosInline[nombre];
+  delete externosManualInline[nombre];
   if (celdaHorarioActiva && celdaHorarioActiva.empleado === nombre) celdaHorarioActiva = null;
   if (horarioConflicto && horarioConflicto.empleado === nombre) horarioConflicto = null;
   horarioTieneCambios = true;
   renderContenidoLocal();
 }
 
-// Construye el panel "+ Empleado" — mismo patrón visual que el editor de
-// celda (.hor-celda-editor: panel compacto en desktop, bottom sheet en
-// mobile vía el mismo breakpoint), sin componente nuevo.
+// Construye el panel "+ Empleado" — buscador (data-* + addEventListener,
+// ver wiring) + lista de resultados en un contenedor propio
+// (#panelAgregarResultados) para que filtrarPanelAgregarEmpleado() pueda
+// re-renderizar SOLO la lista sin perder el foco del input en cada tecla.
+// Mismo patrón visual que el editor de celda (.hor-celda-editor: panel
+// compacto en desktop, bottom sheet en mobile), sin componente nuevo.
 function buildPanelAgregarEmpleado() {
   var html = '<div class="hor-celda-editor" id="panelAgregar">';
   html += '<div class="hor-celda-editor-head"><div class="hor-celda-editor-emp">Agregar empleado</div>';
   html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarPanelAgregar()">Cerrar</button></div>';
-
-  if (rosterCargando) {
-    html += '<div class="hor-edicion-hint">Cargando empleados…</div>';
-  } else if (rosterError) {
-    html += '<div class="hor-guardado-error">⚠ ' + escapeHtml(rosterError) + '</div>';
-  } else {
-    var disponibles = empleadosLista.filter(function(n) { return !horariosEditando[n]; });
-    if (!disponibles.length) {
-      html += '<div class="hor-edicion-hint">No hay más empleados del local para agregar.</div>';
-    } else {
-      html += '<div class="hor-agregar-lista">';
-      disponibles.forEach(function(n) {
-        // Fase 5 §6/§7 — primero APODO (fallback nombre limpio); el nombre
-        // real solo se muestra como secundario cuando hay apodo, para
-        // desambiguar sin volver a mostrar el legajo (ya no aporta nada
-        // útil al encargado — el apodo es lo que reconoce).
-        var visible    = nombreVisibleEmpleado(n);
-        var nombreReal = n.replace(/^\d+\s+/, '');
-        html += '<button type="button" class="hor-agregar-item-externo" data-agregar-local="' + escapeAttr(n) + '">' + escapeHtml(visible)
-          + (visible !== nombreReal ? '<small>' + escapeHtml(nombreReal) + '</small>' : '') + '</button>';
-      });
-      html += '</div>';
-    }
-  }
+  html += '<input type="text" id="agregarEmpleadoBuscar" class="hora-input" placeholder="Buscar por nombre o apodo…" style="width:100%;text-align:left;text-transform:none;margin-bottom:.6rem" value="' + escapeAttr(busquedaAgregarEmpleado) + '">';
+  html += '<div id="panelAgregarResultados">' + buildListaAgregarEmpleado() + '</div>';
   html += '</div>';
   return html;
 }
 
-// Construye el panel "+ Externo" — lista de otras sucursales (mismo filtro
-// que buildSelectorHTML() del modal: excluye ya agregados Y excluye a
-// quien sea del local actual, que debe entrar por "+ Empleado") + opción
-// de nombre manual, igual que el modal legacy.
-function buildPanelAgregarExterno() {
-  var html = '<div class="hor-celda-editor" id="panelAgregar">';
-  html += '<div class="hor-celda-editor-head"><div class="hor-celda-editor-emp">Agregar externo</div>';
-  html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarPanelAgregar()">Cerrar</button></div>';
+// Lista combinada: empleados de ESTA sucursal primero, después el resto
+// (pedido explícito del usuario — reemplaza el viejo "+ Externo" separado).
+// Un solo click sigue distinguiendo bien "local" de "externo": el propio
+// dato ya lo dice (está o no en empleadosLista), no hace falta que el
+// usuario elija el panel correcto de antemano.
+function buildListaAgregarEmpleado() {
+  if (rosterCargando) return '<div class="hor-edicion-hint">Cargando empleados…</div>';
+  if (rosterError) return '<div class="hor-guardado-error">⚠ ' + escapeHtml(rosterError) + '</div>';
 
-  if (rosterCargando) {
-    html += '<div class="hor-edicion-hint">Cargando empleados…</div>';
-  } else if (rosterError) {
-    html += '<div class="hor-guardado-error">⚠ ' + escapeHtml(rosterError) + '</div>';
-  } else {
-    var disponibles = todosEmpleados.filter(function(e) {
-      return !horariosEditando[e.nombre] && empleadosLista.indexOf(e.nombre) < 0;
-    });
-    if (disponibles.length) {
-      html += '<div class="hor-agregar-lista">';
-      disponibles.forEach(function(e) {
-        // Fase 5 §6 — "LAURA / 14 ROCA": apodo (fallback nombre limpio)
-        // como principal, sucursal siempre como secundario (ya lo era, es
-        // el dato que de verdad distingue externos) + nombre real también
-        // si hay apodo, para no perder de vista quién es exactamente.
-        var visible    = nombreVisibleEmpleado(e.nombre);
-        var nombreReal = e.nombre.replace(/^\d+\s+/, '');
-        var secundario = (visible !== nombreReal ? nombreReal + ' · ' : '') + e.sucursal;
-        html += '<button type="button" class="hor-agregar-item-externo" data-agregar-externo="' + escapeAttr(e.nombre) + '">' + escapeHtml(visible) + '<small>' + escapeHtml(secundario) + '</small></button>';
-      });
-      html += '</div>';
-    } else {
-      html += '<div class="hor-edicion-hint">No hay empleados de otras sucursales para agregar.</div>';
-    }
-    html += '<div class="hor-agregar-manual">';
-    html += '<button type="button" class="hor-celda-tipo-btn" onclick="toggleExternoManualInline()">✏ Escribir nombre manualmente</button>';
-    html += '<div id="externoManualInlineWrap" class="hor-celda-editor-horas" style="display:none;margin-top:.6rem">';
-    html += '<input type="text" id="externoManualInlineInput" class="hora-input" placeholder="Nombre completo" style="width:auto;flex:1;text-align:left;text-transform:none">';
-    html += '<button type="button" class="btn-agregar-emp" onclick="agregarExternoManualInline(document.getElementById(\'externoManualInlineInput\').value)">Agregar</button>';
-    html += '</div>';
-    html += '</div>';
+  var yaAgregados = {};
+  Object.keys(horariosEditando).forEach(function(n) { yaAgregados[n] = true; });
+
+  var locales = empleadosLista
+    .filter(function(n) { return !yaAgregados[n]; })
+    .map(function(n) { return { nombre: n, sucursal: sucursalEditando, esLocal: true }; });
+
+  var localesSet = {};
+  empleadosLista.forEach(function(n) { localesSet[n] = true; });
+  var otros = todosEmpleados
+    .filter(function(e) { return !yaAgregados[e.nombre] && !localesSet[e.nombre]; })
+    .map(function(e) { return { nombre: e.nombre, sucursal: e.sucursal, esLocal: false }; });
+
+  var candidatos = locales.concat(otros); // locales primero, siempre — pedido explícito
+
+  var filtro = busquedaAgregarEmpleado.trim().toLowerCase();
+  var filtrados = !filtro ? candidatos : candidatos.filter(function(c) {
+    var visible    = nombreVisibleEmpleado(c.nombre).toLowerCase();
+    var nombreReal = c.nombre.replace(/^\d+\s+/, '').toLowerCase();
+    return visible.indexOf(filtro) >= 0 || nombreReal.indexOf(filtro) >= 0 || String(c.sucursal||'').toLowerCase().indexOf(filtro) >= 0;
+  });
+
+  if (!filtrados.length) {
+    return '<div class="hor-edicion-hint">' + (candidatos.length ? 'Sin resultados para "' + escapeHtml(busquedaAgregarEmpleado) + '".' : 'No hay más empleados para agregar.') + '</div>';
   }
+
+  var html = '<div class="hor-agregar-lista">';
+  filtrados.forEach(function(c) {
+    // Fase 5 §6/§7 — primero APODO (fallback nombre limpio); nombre real +
+    // sucursal (si no es la propia) como secundario para desambiguar.
+    var visible    = nombreVisibleEmpleado(c.nombre);
+    var nombreReal = c.nombre.replace(/^\d+\s+/, '');
+    var partesSecundario = [];
+    if (visible !== nombreReal) partesSecundario.push(nombreReal);
+    if (!c.esLocal) partesSecundario.push(c.sucursal);
+    var secundario = partesSecundario.join(' · ');
+    html += '<button type="button" class="hor-agregar-item-externo" data-agregar-empleado="' + escapeAttr(c.nombre) + '" data-agregar-empleado-local="' + (c.esLocal ? '1' : '0') + '">' + escapeHtml(visible)
+      + (secundario ? '<small>' + escapeHtml(secundario) + '</small>' : '') + '</button>';
+  });
+  html += '</div>';
+  return html;
+}
+
+// Panel "+ Manual" — deliberadamente separado de "+ Empleado" (pedido
+// explícito del usuario): carga a mano, sin pasar nunca por la lista real
+// de empleados. La nota fija dejando esto explícito reemplaza el toggle
+// "Escribir nombre manualmente" que antes vivía escondido en "+ Externo".
+function buildPanelAgregarManual() {
+  var html = '<div class="hor-celda-editor" id="panelAgregar">';
+  html += '<div class="hor-celda-editor-head"><div class="hor-celda-editor-emp">Agregar manual</div>';
+  html += '<button type="button" class="hor-celda-editor-listo" onclick="cerrarPanelAgregar()">Cerrar</button></div>';
+  html += '<div class="hor-guardado-error">⚠ Este empleado no se busca en la lista real — puede ser alguien de prueba o que todavía no está cargado en el sistema. No va a tener foto ni apodo, y queda marcado como "MANUAL" en la grilla.</div>';
+  html += '<div class="hor-celda-editor-horas" style="margin-top:.6rem">';
+  html += '<input type="text" id="agregarManualInput" class="hora-input" placeholder="Nombre completo" style="width:auto;flex:1;text-align:left;text-transform:none">';
+  html += '<button type="button" class="btn-agregar-emp" onclick="agregarExternoManualInline(document.getElementById(\'agregarManualInput\').value)">Agregar</button>';
+  html += '</div>';
   html += '</div>';
   return html;
 }
@@ -3762,9 +3818,9 @@ function aplicarTurnoADias(empleado, turnoOrigen, diasDestino) {
   if (!horariosEditando[empleado] || !diasDestino || !diasDestino.length) return;
   diasDestino.forEach(function(dia) {
     horariosEditando[empleado][dia] = clonarTurno(turnoOrigen);
-    limpiarConflictoSiCoincide(empleado, dia);
   });
   horarioTieneCambios = true;
+  recalcularConflictoLocal();
 }
 
 // Acción 1 — Libre rápido (§4): marca un día puntual como LIBRE sin abrir
@@ -3774,7 +3830,7 @@ function aplicarTurnoADias(empleado, turnoOrigen, diasDestino) {
 function marcarLibreRapido(empleado, dia) {
   if (guardandoHorario || cargandoSemanaAnterior || !horariosEditando[empleado] || !horariosEditando[empleado][dia]) return;
   cambiarTipoTurno(empleado, dia, 'libre');
-  limpiarConflictoSiCoincide(empleado, dia);
+  recalcularConflictoLocal();
 }
 
 // Panel de acciones de UNA celda (Libre rápido + Copiar día) — se abre
@@ -3911,6 +3967,7 @@ async function duplicarHorarioEmpleado(origen, destino) {
   horarioTieneCambios  = true;
   panelDuplicarEmpleado= null;
   panelAccionesEmpleado= null;
+  recalcularConflictoLocal();
   renderContenidoLocal();
 }
 
@@ -3972,6 +4029,7 @@ async function copiarSemanaAnteriorInline() {
     if (empleadosLista.indexOf(nombre) < 0) externosInline[nombre] = true; // §20
   });
   horarioTieneCambios = true; // §23
+  recalcularConflictoLocal();
   toast('Semana anterior copiada al borrador', 'success');
   renderContenidoLocal();
 }
@@ -4043,6 +4101,7 @@ async function guardarHorarioInline() {
     celdaHorarioActiva  = null;
     panelAgregarAbierto = null; // Fase 4A
     externosInline       = {};
+    externosManualInline = {};
     panelAccionesCelda       = null; // Fase 4B
     mostrarAplicarVariosDias = false;
     panelAccionesEmpleado    = null;
@@ -4108,6 +4167,122 @@ function turnoToString(t) {
   return 'LIBRE';
 }
 
+// ── Conflicto de superposición — detección LOCAL (Fase 6) ──
+// El backend ya rechaza (409) un guardado que se superpone con otra
+// sucursal (guardarHorarioSemanal/_buscarConflictoSuperposicion,
+// horarios-semanales.js) — eso sigue siendo la fuente de verdad final,
+// nunca se reemplaza. Esto es ADEMÁS: como horariosData ya tiene el
+// horario de TODAS las sucursales de la semana en memoria (lo trae
+// cargarHorarios(), no hace falta pedir nada nuevo), se puede avisar
+// ANTES de intentar guardar, con el mismo criterio de superposición.
+// Comparación de nombre EXACTA tras normalizar (nunca por substring como
+// buscarPerfilEmpleado — ese fuzzy-match fue justamente el origen del bug
+// FRAN/FRANCISCO PACHADO, acá no correspondía repetirlo).
+function normalizarNombreParaComparar(s) {
+  return String(s || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function _horaAMinutos(hhmm) {
+  var p = String(hhmm || '').split(':');
+  return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+}
+
+// Mismo algoritmo que horariosSeSuperponen() de croma-backend/services/
+// fichadas.js (puerto 1 a 1, ver comentario ahí) — un turno que cruza
+// medianoche (fin <= inicio) se trata como que termina al día siguiente.
+function _horasSeSuperponenLocal(aIni, aFin, bIni, bFin) {
+  var a1 = _horaAMinutos(aIni), a2 = _horaAMinutos(aFin); if (a2 <= a1) a2 += 1440;
+  var b1 = _horaAMinutos(bIni), b2 = _horaAMinutos(bFin); if (b2 <= b1) b2 += 1440;
+  return a1 < b2 && b1 < a2;
+}
+
+// Bloques horarios verificables de un turno-objeto (borrador propio) o de
+// un string crudo (fila de otra sucursal en horariosData) — misma noción
+// de "bloque" que _parsearBloquesDia() del backend, sin el caso "?" (acá
+// nunca se genera ese placeholder).
+function _bloquesDeTurnoLocal(turno) {
+  if (!turno || turno.tipo === 'libre' || !turno.tipo) return [];
+  var bloques = [];
+  if (turno.tipo === 'corrido' && turno.h1 && turno.h2) bloques.push({ ini: turno.h1, fin: turno.h2 });
+  if (turno.tipo === 'cortado') {
+    if (turno.h1 && turno.h2) bloques.push({ ini: turno.h1, fin: turno.h2 });
+    if (turno.h3 && turno.h4) bloques.push({ ini: turno.h3, fin: turno.h4 });
+  }
+  return bloques;
+}
+function _bloquesDeStringLocal(val) {
+  return _bloquesDeTurnoLocal(parsearTurno(val));
+}
+
+// Busca si `empleado` ya tiene horas cargadas en OTRA sucursal (no
+// sucursalEditando) para `dia`, en la semana que se está viendo — para
+// mostrar la nota gris en la celda, sin importar si se superpone o no
+// (informativo). Devuelve la PRIMERA que encuentra: alcanza para el aviso,
+// no hace falta juntar todas.
+function horarioExternoDia(empleado, dia) {
+  var empNorm = normalizarNombreParaComparar(empleado);
+  for (var suc in horariosData) {
+    if (suc === sucursalEditando) continue;
+    var filas = horariosData[suc] || [];
+    for (var f = 0; f < filas.length; f++) {
+      if (normalizarNombreParaComparar(filas[f].empleado) !== empNorm) continue;
+      var val = filas[f][dia];
+      if (val && val !== 'LIBRE') return { sucursal: suc, horario: val };
+    }
+  }
+  return null;
+}
+
+// Recorre TODO el borrador buscando el primer conflicto real de
+// superposición contra otras sucursales — mismo shape de objeto que
+// devuelve el backend en el 409 ({empleado,dia,sucursalNueva,
+// sucursalExistente,horarioNuevo,horarioExistente}), para reusar tal cual
+// horarioConflicto/mensajeConflictoHorario()/el resaltado en rojo de la
+// grilla y el bloqueo de "Guardar horario" — sin duplicar esa UI.
+function detectarConflictoLocal() {
+  var nombres = Object.keys(horariosEditando);
+  for (var i = 0; i < nombres.length; i++) {
+    var empleado = nombres[i];
+    var empNorm = normalizarNombreParaComparar(empleado);
+    for (var d = 0; d < DIAS_KEY.length; d++) {
+      var dia = DIAS_KEY[d];
+      var bloquesNuevos = _bloquesDeTurnoLocal(horariosEditando[empleado][dia]);
+      if (!bloquesNuevos.length) continue;
+
+      for (var suc in horariosData) {
+        if (suc === sucursalEditando) continue;
+        var filas = horariosData[suc] || [];
+        for (var f = 0; f < filas.length; f++) {
+          if (normalizarNombreParaComparar(filas[f].empleado) !== empNorm) continue;
+          var bloquesExistentes = _bloquesDeStringLocal(filas[f][dia]);
+          for (var bn = 0; bn < bloquesNuevos.length; bn++) {
+            for (var be = 0; be < bloquesExistentes.length; be++) {
+              if (_horasSeSuperponenLocal(bloquesNuevos[bn].ini, bloquesNuevos[bn].fin, bloquesExistentes[be].ini, bloquesExistentes[be].fin)) {
+                return {
+                  empleado: empleado,
+                  dia: dia,
+                  sucursalNueva: sucursalEditando,
+                  sucursalExistente: suc,
+                  horarioNuevo: bloquesNuevos[bn].ini + '-' + bloquesNuevos[bn].fin,
+                  horarioExistente: bloquesExistentes[be].ini + '-' + bloquesExistentes[be].fin,
+                };
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// Recalcula horarioConflicto desde cero contra el estado ACTUAL del
+// borrador — llamarla después de cualquier edición reemplaza por completo
+// el resultado anterior (encuentra uno nuevo, o lo limpia si ya no
+// corresponde). Punto único para no repetir el recorrido en cada handler.
+function recalcularConflictoLocal() {
+  horarioConflicto = detectarConflictoLocal();
+}
 
 // Arma el mensaje legible del 409 de superposición (ver PUT
 // /api/horarios-semanales, Fase 2A) — nunca se muestra el JSON crudo.
