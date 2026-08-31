@@ -3098,21 +3098,35 @@ function renderContenidoLocal() {
           // existente) — acá alcanza con saber DÓNDE.
           var textoVista = texto;
           var tituloVista = '';
-          if (!val || val === 'LIBRE') {
-            // Puede ser más de una (ej. mañana en 09 CIPO, tarde en 14
-            // ROCA) — un nombre por línea, cada uno con el color de SU
-            // sucursal (fallback gris para DEPO/OFICINA, que no tienen
-            // --suc-XXX definido, mismo criterio que el pin del sidebar).
-            var externosVista = horarioExternoDia(emp.empleado, dk, suc);
-            if (externosVista.length) {
-              tituloVista = ' title="Trabaja en ' + escapeAttr(externosVista.map(function(e){ return e.sucursal; }).join(' y ')) + ' este día — entrá a Editar para ver el horario"';
+          var notaVista = '';
+          var esLibreAqui = (!val || val === 'LIBRE');
+          // SIEMPRE se busca, tenga o no horas ACÁ: el caso que faltaba era
+          // justo el de la mitad del día en cada sucursal (ej. mañana en
+          // Perito, tarde en Depo) — con horas reales acá, antes ni se
+          // miraba si había algo más ese mismo día en otro lado.
+          var externosVista = horarioExternoDia(emp.empleado, dk, suc);
+          if (externosVista.length) {
+            tituloVista = ' title="Trabaja en ' + escapeAttr(externosVista.map(function(e){ return e.sucursal; }).join(' y ')) + ' este día"';
+            if (esLibreAqui) {
+              // Libre ACÁ: el nombre de la otra sucursal reemplaza "Libre"
+              // directamente — un nombre por línea, cada uno con el color
+              // de SU sucursal (fallback gris para DEPO/OFICINA, que no
+              // tienen --suc-XXX definido, mismo criterio que el pin del
+              // sidebar).
               textoVista = externosVista.map(function(e) {
                 var key = e.sucursal.split(' ')[0];
                 return '<span style="color:var(--suc-' + key + ', var(--gray-600));font-weight:700">' + escapeHtml(e.sucursal) + '</span>';
               }).join('<br>');
+            } else {
+              // Ya tiene horas ACÁ (ej. la mañana) — se mantienen tal cual,
+              // y la(s) otra(s) sucursal(es) van como nota debajo (mismo
+              // estilo que ya usa la nota gris del modo edición).
+              notaVista = externosVista.map(function(e) {
+                return '<div class="hor-cell-externo-nota">' + escapeHtml(e.sucursal) + ' ' + escapeHtml(e.horario.replace(/\|/g, '/')) + '</div>';
+              }).join('');
             }
           }
-          html += '<td><span class="hor-cell hor-cell-' + clase + '"' + tituloVista + '>' + textoVista + '</span></td>';
+          html += '<td><span class="hor-cell hor-cell-' + clase + '"' + tituloVista + '>' + textoVista + '</span>' + notaVista + '</td>';
         }
       });
       html += '</tr>';
