@@ -3527,7 +3527,7 @@ function buildEditorCeldaHorario(empleado, dia, turno) {
   html += '</div>';
 
   html += '<div class="hor-celda-editor-tipos" role="group" aria-label="Tipo de turno">';
-  [['corrido','Corrido'], ['cortado','Cortado'], ['libre','Libre']].forEach(function(t) {
+  [['corrido','Individual'], ['cortado','Cortado'], ['libre','Libre']].forEach(function(t) {
     var activo = turno.tipo === t[0];
     html += '<button type="button" class="hor-celda-tipo-btn' + (activo ? ' activo' : '') + '" onclick="cambiarTipoCeldaActiva(\'' + t[0] + '\')">' + t[1] + '</button>';
   });
