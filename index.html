@@ -546,6 +546,7 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-table       { width: 100%; border-collapse: collapse; font-size: 12px; }
 .hor-table th    { padding: 8px 12px; text-align: center; font-size: 10px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--gray-100); white-space: nowrap; background: var(--gray-50); }
 .hor-table th:first-child { text-align: left; min-width: 150px; }
+.hor-table th.hor-th-hoy { background: var(--accent); color: #fff; border-radius: 4px 4px 0 0; }
 .hor-table td    { padding: 8px 12px; border-bottom: 1px solid var(--gray-100); text-align: center; vertical-align: middle; }
 .hor-table td:first-child { text-align: left; font-weight: 500; color: var(--black); font-size: 12px; }
 .hor-table tr:last-child td { border-bottom: none; }
@@ -2998,9 +2999,11 @@ function renderContenidoLocal() {
   if (hayFilas) {
     html += '<div class="hor-table-wrap"><table class="hor-table">';
     html += '<thead><tr><th>Empleado</th>';
+    var hoyStr = new Date().toDateString();
     dias.forEach(function(d, i) {
       var esWeekend = (i === 5 || i === 6);
-      html += '<th style="' + (esWeekend ? 'color:var(--accent)' : '') + '">' + DIAS_LABEL[i] + '<br><span style="font-size:9px;font-weight:400">' + d.getDate() + '</span></th>';
+      var esHoy = d.toDateString() === hoyStr;
+      html += '<th class="' + (esHoy ? 'hor-th-hoy' : '') + '" style="' + (esWeekend && !esHoy ? 'color:var(--accent)' : '') + '">' + DIAS_LABEL[i] + '<br><span style="font-size:9px;font-weight:400">' + d.getDate() + '</span></th>';
     });
     html += '</tr></thead><tbody>';
 
