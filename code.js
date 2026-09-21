@@ -573,7 +573,7 @@ function obtenerTodosEmpleados() {
     var mapaLocal = {
       'PASEO': '01 PASEO', 'WAVE': '05 WAVE', 'CIPO': '09 CIPO SAN MARTIN',
       'PERITO': '10 PERITO MORENO', 'CENTE': '12 CENTENARIO', 'ROCA': '14 ROCA',
-      'DEPO': 'DEPO'
+      'DEPO': 'DEPO', 'OFICINA': 'OFICINA'
     };
 
     var empleadosSet = {};

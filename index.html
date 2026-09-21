@@ -1707,6 +1707,13 @@ tbody tr:hover { background: var(--gray-50); }
 <script src="croma-icons.js?v=20260718-ds"></script>
 <script>
 var SUCURSALES = ['01 PASEO','05 WAVE','09 CIPO SAN MARTIN','10 PERITO MORENO','12 CENTENARIO','14 ROCA','DEPO'];
+// Solo para Horario semanal (ver renderHorarios()): a diferencia de SUCURSALES
+// (que comparten Pedidos/Cajas/Entradas y deliberadamente excluyen OFICINA por
+// no ser punto de venta), acá SÍ se agrega OFICINA para que el encargado pueda
+// cargarle horario semanal a su gente igual que a los locales — pedido
+// explícito del usuario. No se agrega a SUCURSALES para no filtrar OFICINA a
+// las otras pantallas que la reusan.
+var SUCURSALES_HORARIO_SEMANAL = SUCURSALES.concat(['OFICINA']);
 var todosLosPedidos = [];
 var usuariosPedidos = [];
 var vistaActual = 'hoy';
@@ -2827,7 +2834,7 @@ function renderHorarios(semanaId, dias) {
   document.getElementById('horariosTitleTxt').textContent = 'Horario semanal';
 
   // Encargado ve todas las sucursales — la suya primero
-  var sucursalesVer = SUCURSALES.slice();
+  var sucursalesVer = SUCURSALES_HORARIO_SEMANAL.slice();
   if (sesionRol === 'encargado' && sesionSucursal) {
     sucursalesVer = sucursalesVer.filter(function(s){ return s !== sesionSucursal; });
     sucursalesVer.unshift(sesionSucursal);
