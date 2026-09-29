@@ -1642,7 +1642,7 @@ tbody tr:hover { background: var(--gray-50); }
           <select id="meSucursal">
             <option value="">— Elegir sucursal —</option>
             <option>01 PASEO</option><option>05 WAVE</option>
-            <option>09 CIPO SAN MARTIN</option><option>10 PERITO MORENO</option>
+            <option>10 PERITO MORENO</option>
             <option>12 CENTENARIO</option><option>14 ROCA</option>
           </select>
         </div>
@@ -1706,7 +1706,8 @@ tbody tr:hover { background: var(--gray-50); }
 
 <script src="croma-icons.js?v=20260718-ds"></script>
 <script>
-var SUCURSALES = ['01 PASEO','05 WAVE','09 CIPO SAN MARTIN','10 PERITO MORENO','12 CENTENARIO','14 ROCA','DEPO'];
+// 09 CIPO SAN MARTIN cerró definitivamente (24/09/2026): fuera de las listas operativas.
+var SUCURSALES = ['01 PASEO','05 WAVE','10 PERITO MORENO','12 CENTENARIO','14 ROCA','DEPO'];
 // Solo para Horario semanal (ver renderHorarios()): a diferencia de SUCURSALES
 // (que comparten Pedidos/Cajas/Entradas y deliberadamente excluyen OFICINA por
 // no ser punto de venta), acá SÍ se agrega OFICINA para que el encargado pueda
@@ -2192,7 +2193,6 @@ var MAPA_SUCURSALES = [
   { nombre: 'Perito',          lat: -38.958313, lon: -68.057062 },
   { nombre: 'Paseo',           lat: -38.958063, lon: -68.056187 },
   { nombre: 'Wave',            lat: -38.957313, lon: -68.059687 },
-  { nombre: 'Cipo San Martín', lat: -38.940438, lon: -67.996437 },
   { nombre: 'Roca 180',        lat: -38.938313, lon: -67.999313 },
   { nombre: 'Centenario',      lat: -38.833313, lon: -68.120812 },
   { nombre: 'Depósito',        lat: -38.958313, lon: -68.057062 }
@@ -2432,7 +2432,6 @@ var DIAS_FULL_ENVIVO = ['domingo','lunes','martes','miércoles','jueves','vierne
 var ENVIVO_SUCURSALES = [
   { id: '01',      nombre: '01 PASEO',           color: '#2563EB', colorLight: '#EFF6FF' },
   { id: '05',      nombre: '05 WAVE',            color: '#10B981', colorLight: '#ECFDF5' },
-  { id: '09',      nombre: '09 CIPO SAN MARTIN', color: '#F97316', colorLight: '#FFF7ED' },
   { id: '10',      nombre: '10 PERITO MORENO',   color: '#DB2777', colorLight: '#FDF2F8' },
   { id: '12',      nombre: '12 CENTENARIO',      color: '#7C3AED', colorLight: '#F5F3FF' },
   { id: '14',      nombre: '14 ROCA',            color: '#92400E', colorLight: '#FEF3C7' },
@@ -5068,6 +5067,7 @@ async function cargarCajas() {
 var cajasData = [];
 
 function renderCajas(cajas) {
+  cajas = cajas.filter(function(c){ return String(c.sucursal || '').indexOf('09') !== 0; }); // CIPO cerrada
   cajasData = cajas;
   var cerro     = cajas.filter(function(c){ return !c.sinCierre; }).length;
   var sinCierre = cajas.filter(function(c){ return  c.sinCierre; }).length;
