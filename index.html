@@ -1203,6 +1203,7 @@ tbody tr:hover { background: var(--gray-50); }
       <button class="nav-btn" id="navEntradas">Entradas</button>
       <button class="nav-btn" id="navMapa">Mapa de reparto</button>
       <button class="nav-btn" id="navStock" style="display:none">Stock</button>
+      <a class="nav-btn" id="navMascota" href="https://www.cromashop.com.ar/app/croma-shop/mascot" target="_blank" rel="noopener noreferrer" title="Se abre en el administrador de Croma Shop" style="display:none;text-decoration:none;align-items:center">✨ Mascota (Croma Shop)</a>
     </nav>
     <div class="sesion-chip" id="sesionChip">
       <span class="sesion-nombre" id="sesionNombre">Admin</span>
@@ -1700,6 +1701,7 @@ tbody tr:hover { background: var(--gray-50); }
     <button class="drawer-nav-btn" id="drawerNavEntradas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg> Entradas</button>
     <button class="drawer-nav-btn" id="drawerNavMapa"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> Mapa de reparto</button>
     <button class="drawer-nav-btn" id="drawerNavStock" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/></svg> Stock</button>
+    <a class="drawer-nav-btn" id="drawerNavMascota" href="https://www.cromashop.com.ar/app/croma-shop/mascot" target="_blank" rel="noopener noreferrer" style="display:none;text-decoration:none;align-items:center">✨ Mascota (Croma Shop)</a>
   </nav>
   <div style="text-align:center;padding:.75rem 1rem 1rem;font-size:10px;letter-spacing:.02em;color:var(--gray-400)">Croma App · Desarrollado por Nequ</div>
 </div>
@@ -1978,6 +1980,15 @@ function initNav() {
     if (elNS) elNS.style.display = '';
     var elDNS = document.getElementById('drawerNavStock');
     if (elDNS) elDNS.style.display = '';
+  }
+
+  // Mascota promocional de Croma Shop: acceso directo al administrador (abre el Admin de Medusa en otra pestana y
+  // usa su propio login/permisos; no cambia nada del panel). Solo se muestra al rol admin.
+  if (sesionRol === 'admin') {
+    var elNM = document.getElementById('navMascota');
+    if (elNM) elNM.style.display = 'inline-flex';
+    var elDNM = document.getElementById('drawerNavMascota');
+    if (elDNM) elDNM.style.display = 'flex';
   }
 
   // En vivo: mismo criterio de acceso que Stock (admin y encargado)
