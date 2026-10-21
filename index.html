@@ -618,6 +618,32 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-agregar-item-danger { color: #b91c1c; }
 .hor-agregar-item-danger:hover { background: #fee2e2; border-color: #fecaca; }
 .hor-editando-tag  { font-size: 11px; color: var(--black); background: var(--gray-100); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+.hor-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; padding: 1rem 1.25rem 0; }
+.hor-kpi { display: flex; align-items: center; gap: 10px; padding: .8rem .9rem; border-radius: var(--radius-md); border: 1px solid var(--gray-100); }
+.hor-kpi-ico { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,.7); flex-shrink: 0; }
+.hor-kpi-num { font-size: 20px; font-weight: 700; line-height: 1.1; color: var(--black); }
+.hor-kpi-label { font-size: 11px; color: var(--gray-600); }
+.hor-kpi-sub { font-size: 10px; color: var(--gray-400); margin-top: 1px; }
+.hor-kpi-azul { background: #eff6ff; color: #2563eb; } .hor-kpi-amarillo { background: #fffbeb; color: #b45309; }
+.hor-kpi-verde { background: #f0fdf4; color: #16a34a; } .hor-kpi-gris { background: var(--gray-50); color: var(--gray-400); }
+.hor-cuerpo { display: flex; gap: 1rem; align-items: flex-start; }
+.hor-cuerpo-main { flex: 1; min-width: 0; }
+.hor-cuerpo-lado { width: 310px; flex-shrink: 0; position: sticky; top: 1rem; padding: 1rem 1.25rem 1rem 0; }
+.hor-cuerpo-lado .hor-celda-editor { margin: 0; max-width: none; box-shadow: none; }
+.hor-lado-vacio { font-size: 12px; color: var(--gray-400); border: 1px dashed var(--gray-200); border-radius: var(--radius-md); padding: 1rem; text-align: center; }
+.hor-table td.hor-total-horas { font-weight: 700; color: var(--black); font-size: 12px; white-space: nowrap; }
+.hor-plantillas { padding: 1rem 1.25rem; border-top: 1px solid var(--gray-100); }
+.hor-plantillas-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: .6rem; font-size: 13px; }
+.hor-plantillas-head small { color: var(--gray-400); font-size: 11px; }
+.hor-plantillas-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .6rem; }
+.hor-plantilla { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left; padding: .6rem .75rem; border: 1px solid var(--gray-100); border-left-width: 4px; border-radius: var(--radius-md); background: var(--white); cursor: pointer; font-family: var(--font-body); }
+.hor-plantilla:disabled { opacity: .5; cursor: not-allowed; }
+.hor-plantilla:not(:disabled):hover { background: var(--gray-50); }
+.hor-plantilla-corrido { border-left-color: #3b82f6; } .hor-plantilla-manana { border-left-color: #f59e0b; } .hor-plantilla-tarde { border-left-color: #ec4899; }
+.hor-plantilla-nombre { font-size: 12px; font-weight: 700; color: var(--black); }
+.hor-plantilla-hora { font-size: 11px; color: var(--gray-600); } .hor-plantilla-h { font-size: 10px; color: var(--gray-400); }
+@media (max-width: 1100px) { .hor-cuerpo.con-lado { flex-direction: column; align-items: stretch; } .hor-cuerpo-lado { width: auto; position: static; padding: 0 1.25rem 1rem; align-self: stretch; } }
+@media (max-width: 700px) { .hor-cuerpo-lado { padding: 0; } }
 .hor-edicion-hint  { font-size: 12px; color: var(--gray-400); padding: 0 0 .85rem; }
 .hor-cambios-tag   { font-size: 11px; color: var(--gray-600); display: inline-flex; align-items: center; }
 /* Mismos tonos ámbar que .hor-pendiente-tag/.carga-emp-externo, ya
@@ -676,7 +702,8 @@ td { padding: 10px 14px; vertical-align: middle; }
 }
 
 @media (max-width: 900px) {
-  .hor-layout      { flex-direction: column; }
+  .hor-layout      { flex-direction: column; align-items: stretch; }
+  #horariosGrid    { min-width: 0; width: 100%; }
   .hor-sidebar     { width: 100%; position: static; }
   .hor-sidebar-list{ max-height: 220px; }
 }
@@ -2892,6 +2919,60 @@ function leyendaItemHorario(clase, label, rango) {
   return '<div class="hor-leyenda-item"><span class="hor-leyenda-dot hor-cell-' + clase + '"></span><b>' + label + '</b><small>' + rango + '</small></div>';
 }
 
+// ── Resumen / plantillas (rediseño V2) — solo presentación, sin lógica de
+// negocio nueva: se calcula sobre lo que ya está en pantalla (borrador en
+// edición, horariosData en vista) y solo cuenta los turnos de ESTA sucursal
+// (las asignaciones a otras sucursales no se suman, evita doble conteo).
+function horasDeValorHorario(val) {
+  var total = 0;
+  _bloquesDeStringLocal(val).forEach(function(b) {
+    var m = _horaAMinutos(b.fin) - _horaAMinutos(b.ini);
+    if (m <= 0) m += 1440;
+    total += m;
+  });
+  return total / 60;
+}
+function formatearHorasHorario(h) {
+  return (Math.round(h * 10) / 10).toString().replace('.', ',') + ' h';
+}
+function buildResumenSemanaHorario(filas) {
+  var asignados = 0, horas = 0, cortados = 0, medios = 0, libres = 0;
+  filas.forEach(function(f) {
+    var tiene = false;
+    DIAS_KEY.forEach(function(dk) {
+      var v = f[dk] || '';
+      var c = clasificarTurnoColor(v);
+      if (c === 'libre') { libres++; return; }
+      tiene = true;
+      horas += horasDeValorHorario(v);
+      if (c === 'cortado') cortados++;
+      else if (c === 'medioturno') medios++;
+    });
+    if (tiene) asignados++;
+  });
+  var prom = asignados ? horas / asignados : 0;
+  function card(cls, ico, num, label, sub) {
+    return '<div class="hor-kpi hor-kpi-' + cls + '"><span class="hor-kpi-ico">' + icon(ico, 'ic-sm') + '</span><div><div class="hor-kpi-num">' + num + '</div><div class="hor-kpi-label">' + label + '</div>' + (sub ? '<div class="hor-kpi-sub">' + sub + '</div>' : '') + '</div></div>';
+  }
+  return '<div class="hor-kpis">'
+    + card('azul', 'users', asignados, 'Empleados asignados', (filas.length - asignados) + ' sin asignar')
+    + card('azul', 'clock', formatearHorasHorario(horas), 'Horas en la semana', asignados ? 'Prom. ' + formatearHorasHorario(prom) + ' por empleado' : '')
+    + card('amarillo', 'calendar', cortados, 'Turnos cortados', '')
+    + card('verde', 'sun', medios, 'Medios turnos', '')
+    + card('gris', 'minus', libres, 'Días libres', '')
+    + '</div>';
+}
+// Plantillas rápidas: reutiliza PRESETS_TURNO (única fuente de presets).
+// Seleccionar una completa el turno de la celda activa — nunca guarda solo.
+function buildPlantillasTurnos() {
+  var html = '<div class="hor-plantillas"><div class="hor-plantillas-head"><b>Plantillas de turnos</b><small>' + (celdaHorarioActiva ? 'Tocá una para completar el turno seleccionado' : 'Seleccioná un día para aplicar una plantilla') + '</small></div><div class="hor-plantillas-lista">';
+  PRESETS_TURNO.corrido.forEach(function(p, i) {
+    var nombre = p.clase === 'corrido' ? 'Individual' : (p.clase === 'manana' ? 'Mañana' : 'Tarde');
+    html += '<button type="button" class="hor-plantilla hor-plantilla-' + p.clase + '" data-plantilla-bloque="corrido" data-plantilla-idx="' + i + '"' + (celdaHorarioActiva ? '' : ' disabled') + '><span class="hor-plantilla-nombre">' + nombre + '</span><span class="hor-plantilla-hora">' + p.label.replace('-', ' - ') + '</span><span class="hor-plantilla-h">' + formatearHorasHorario(horasDeValorHorario(p.label)) + '</span></button>';
+  });
+  return html + '</div></div>';
+}
+
 function renderContenidoLocal() {
   var grid = document.getElementById('horariosGrid');
   var suc  = horarioSucActiva;
@@ -2957,6 +3038,10 @@ function renderContenidoLocal() {
 
   html += '</div></div>';
 
+  html += buildResumenSemanaHorario(editando
+    ? Object.keys(horariosEditando).map(function(n){ var f = { empleado: n }; DIAS_KEY.forEach(function(dk){ f[dk] = turnoToString(horariosEditando[n][dk] || { tipo:'libre', h1:'', h2:'', h3:'', h4:'' }); }); return f; })
+    : empleados);
+
   html += '<div class="hor-leyenda">';
   html += leyendaItemHorario('corrido',    'Corrido',     '8 hs o más');
   html += leyendaItemHorario('medioturno', 'Medio Turno', 'Menos de 8 hs');
@@ -2972,20 +3057,21 @@ function renderContenidoLocal() {
     html += '<div class="hor-guardado-error">⚠ ' + escapeHtml(msgBanner) + '</div>';
   }
 
+  var htmlLado = '';
   if (editando) {
     // Fase 4A §22 / Fase 4B §26: como mucho UN panel/editor visible a la
     // vez — todos excluyentes por construcción (ver cerrarTodosLosPaneles()
     // y cada abrirPanel*/abrirEditorCelda).
     if (panelAgregarAbierto === 'empleado') {
-      html += buildPanelAgregarEmpleado();
+      htmlLado += buildPanelAgregarEmpleado();
     } else if (panelAgregarAbierto === 'manual') {
-      html += buildPanelAgregarManual();
+      htmlLado += buildPanelAgregarManual();
     } else if (panelAccionesEmpleado) {
-      html += buildPanelAccionesEmpleado();
+      htmlLado += buildPanelAccionesEmpleado();
     } else if (panelDuplicarEmpleado) {
-      html += buildPanelDuplicarEmpleado();
+      htmlLado += buildPanelDuplicarEmpleado();
     } else if (panelAccionesCelda) {
-      html += buildPanelAccionesCelda();
+      htmlLado += buildPanelAccionesCelda();
     } else if (celdaHorarioActiva) {
       // Fase 2 — editor compacto real. Opera directamente sobre el objeto
       // ya existente en horariosEditando (sin copia intermedia, ver §13
@@ -2994,14 +3080,15 @@ function renderContenidoLocal() {
       // libre vacío en vez de romper el render.
       var turnoActivo = (horariosEditando[celdaHorarioActiva.empleado] && horariosEditando[celdaHorarioActiva.empleado][celdaHorarioActiva.dia])
         || { tipo: 'libre', h1: '', h2: '', h3: '', h4: '' };
-      html += buildEditorCeldaHorario(celdaHorarioActiva.empleado, celdaHorarioActiva.dia, turnoActivo);
+      htmlLado += buildEditorCeldaHorario(celdaHorarioActiva.empleado, celdaHorarioActiva.dia, turnoActivo);
     } else {
-      html += '<div class="hor-edicion-hint">Modo edición: hacé click en un día para seleccionarlo.</div>';
+      htmlLado += '<div class="hor-lado-vacio">' + icon('info','ic-xs') + ' Seleccioná un día de la grilla para editar su turno.</div>';
     }
   }
 
   var hayFilas = editando ? Object.keys(horariosEditando).length > 0 : cargado;
 
+  html += '<div class="hor-cuerpo' + (htmlLado ? ' con-lado' : '') + '"><div class="hor-cuerpo-main">';
   if (hayFilas) {
     html += '<div class="hor-table-wrap"><table class="hor-table">';
     html += '<thead><tr><th>Empleado</th>';
@@ -3011,7 +3098,7 @@ function renderContenidoLocal() {
       var esHoy = d.toDateString() === hoyStr;
       html += '<th class="' + (esHoy ? 'hor-th-hoy' : '') + '" style="' + (esWeekend && !esHoy ? 'color:var(--accent)' : '') + '">' + DIAS_LABEL[i] + '<br><span style="font-size:9px;font-weight:400">' + d.getDate() + '</span></th>';
     });
-    html += '</tr></thead><tbody>';
+    html += '<th>Total horas</th></tr></thead><tbody>';
 
     // En modo edición se recorre horariosEditando (el borrador) en vez de
     // `empleados` (horariosData crudo) — mismo set de empleados, ya que el
@@ -3060,6 +3147,7 @@ function renderContenidoLocal() {
         html += '<button type="button" class="btn-quitar-emp" data-acciones-emp="' + escapeAttr(emp.empleado) + '" title="Acciones de ' + escapeAttr(nombreVisible) + '" aria-label="Acciones de ' + escapeAttr(nombreVisible) + '">' + icon('moreHorizontal','ic-xs') + '</button>';
       }
       html += '</div></td>';
+      var horasFila = 0;
       DIAS_KEY.forEach(function(dk, i) {
         var val;
         if (editando) {
@@ -3138,7 +3226,9 @@ function renderContenidoLocal() {
           }
           html += '<td><span class="hor-cell hor-cell-' + clase + '"' + tituloVista + '>' + textoVista + '</span>' + notaVista + '</td>';
         }
+        horasFila += horasDeValorHorario(val);
       });
+      html += '<td class="hor-total-horas">' + formatearHorasHorario(horasFila) + '</td>';
       html += '</tr>';
     });
 
@@ -3149,7 +3239,11 @@ function renderContenidoLocal() {
       : 'Sin horario cargado para esta semana';
     html += '<div class="caja-sin-cierre-msg" style="padding:1.5rem">' + msgVacio + '</div>';
   }
-  html += '</div>';
+  if (editando) html += buildPlantillasTurnos();
+  html += '</div>'; // .hor-cuerpo-main
+  if (htmlLado) html += '<aside class="hor-cuerpo-lado" aria-label="Editor de turno">' + htmlLado + '</aside>';
+  html += '</div>'; // .hor-cuerpo
+  html += '</div>'; // .hor-panel
 
   grid.innerHTML = html;
 
@@ -3172,6 +3266,12 @@ function renderContenidoLocal() {
       });
     });
     wirearBotonesAgregarEmpleado(grid);
+    grid.querySelectorAll('[data-plantilla-bloque]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!celdaHorarioActiva) return;
+        aplicarPresetCelda(btn.getAttribute('data-plantilla-bloque'), parseInt(btn.getAttribute('data-plantilla-idx'), 10));
+      });
+    });
     var buscarEmpleadoInput = document.getElementById('agregarEmpleadoBuscar');
     if (buscarEmpleadoInput) buscarEmpleadoInput.addEventListener('input', filtrarPanelAgregarEmpleado);
 
@@ -3485,7 +3585,13 @@ function actualizarHoraCeldaActiva(campo, valor) {
   horariosEditando[celdaHorarioActiva.empleado][celdaHorarioActiva.dia][campo] = valor;
   horarioTieneCambios = true;
   recalcularConflictoLocal();
-  renderContenidoLocal();
+  // Sin re-render acá: Chrome dispara 'change' en cuanto el campo tiene un
+  // valor válido (ej. al teclear el 1 de '12'), y re-dibujar el panel
+  // reemplaza el <input> y lo saca del foco a mitad de tipeo. El refresco
+  // visual (totales, conflicto) se hace al salir del campo.
+}
+function refrescarTrasHoraCelda() {
+  setTimeout(function() { if (modoHorario === 'edicion') renderContenidoLocal(); }, 0);
 }
 
 // Aplica un preset de PRESETS_TURNO al turno activo. `bloque` es
@@ -3544,8 +3650,8 @@ function buildEditorCeldaHorario(empleado, dia, turno) {
 
   if (turno.tipo === 'corrido') {
     html += '<div class="hor-celda-editor-horas">';
-    html += '<label>Desde<input class="hora-input" type="time" value="' + escapeAttr(turno.h1 || '') + '" onchange="actualizarHoraCeldaActiva(\'h1\', this.value)"></label>';
-    html += '<label>Hasta<input class="hora-input" type="time" value="' + escapeAttr(turno.h2 || '') + '" onchange="actualizarHoraCeldaActiva(\'h2\', this.value)"></label>';
+    html += '<label>Desde<input class="hora-input" type="time" value="' + escapeAttr(turno.h1 || '') + '" onblur="refrescarTrasHoraCelda()" onchange="actualizarHoraCeldaActiva(\'h1\', this.value)"></label>';
+    html += '<label>Hasta<input class="hora-input" type="time" value="' + escapeAttr(turno.h2 || '') + '" onblur="refrescarTrasHoraCelda()" onchange="actualizarHoraCeldaActiva(\'h2\', this.value)"></label>';
     html += '</div>';
     html += '<div class="hor-celda-editor-presets">';
     PRESETS_TURNO.corrido.forEach(function(p, i) {
@@ -3555,8 +3661,8 @@ function buildEditorCeldaHorario(empleado, dia, turno) {
   } else if (turno.tipo === 'cortado') {
     html += '<div class="hor-celda-bloque"><div class="hor-celda-bloque-label">Primer bloque</div>';
     html += '<div class="hor-celda-editor-horas">';
-    html += '<label>Desde<input class="hora-input" type="time" value="' + escapeAttr(turno.h1 || '') + '" onchange="actualizarHoraCeldaActiva(\'h1\', this.value)"></label>';
-    html += '<label>Hasta<input class="hora-input" type="time" value="' + escapeAttr(turno.h2 || '') + '" onchange="actualizarHoraCeldaActiva(\'h2\', this.value)"></label>';
+    html += '<label>Desde<input class="hora-input" type="time" value="' + escapeAttr(turno.h1 || '') + '" onblur="refrescarTrasHoraCelda()" onchange="actualizarHoraCeldaActiva(\'h1\', this.value)"></label>';
+    html += '<label>Hasta<input class="hora-input" type="time" value="' + escapeAttr(turno.h2 || '') + '" onblur="refrescarTrasHoraCelda()" onchange="actualizarHoraCeldaActiva(\'h2\', this.value)"></label>';
     html += '</div>';
     html += '<div class="hor-celda-editor-presets">';
     PRESETS_TURNO.b1.forEach(function(p, i) {
@@ -3566,8 +3672,8 @@ function buildEditorCeldaHorario(empleado, dia, turno) {
 
     html += '<div class="hor-celda-bloque"><div class="hor-celda-bloque-label">Segundo bloque</div>';
     html += '<div class="hor-celda-editor-horas">';
-    html += '<label>Desde<input class="hora-input" type="time" value="' + escapeAttr(turno.h3 || '') + '" onchange="actualizarHoraCeldaActiva(\'h3\', this.value)"></label>';
-    html += '<label>Hasta<input class="hora-input" type="time" value="' + escapeAttr(turno.h4 || '') + '" onchange="actualizarHoraCeldaActiva(\'h4\', this.value)"></label>';
+    html += '<label>Desde<input class="hora-input" type="time" value="' + escapeAttr(turno.h3 || '') + '" onblur="refrescarTrasHoraCelda()" onchange="actualizarHoraCeldaActiva(\'h3\', this.value)"></label>';
+    html += '<label>Hasta<input class="hora-input" type="time" value="' + escapeAttr(turno.h4 || '') + '" onblur="refrescarTrasHoraCelda()" onchange="actualizarHoraCeldaActiva(\'h4\', this.value)"></label>';
     html += '</div>';
     html += '<div class="hor-celda-editor-presets">';
     PRESETS_TURNO.b2.forEach(function(p, i) {
