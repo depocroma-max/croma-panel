@@ -640,6 +640,19 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-plantilla:disabled { opacity: .5; cursor: not-allowed; }
 .hor-plantilla:not(:disabled):hover { background: var(--gray-50); }
 .hor-plantilla-corrido { border-left-color: #3b82f6; } .hor-plantilla-manana { border-left-color: #f59e0b; } .hor-plantilla-tarde { border-left-color: #ec4899; }
+.hor-plantilla-wrap { position: relative; display: flex; }
+.hor-plantilla-wrap .hor-plantilla { flex: 1; }
+.hor-plantilla-edit { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; padding: 0; border: none; border-radius: 5px; background: transparent; color: var(--gray-400); cursor: pointer; font-size: 13px; }
+.hor-plantilla-edit:hover { background: var(--gray-100); color: var(--black); }
+.hor-plantilla-nueva { flex-direction: row; align-items: center; justify-content: center; gap: 6px; border: 1px dashed var(--gray-200); border-left-width: 1px; color: var(--gray-600); font-size: 12px; font-weight: 600; min-height: 56px; }
+.hor-plantilla-nueva:not(:disabled) { opacity: 1; cursor: pointer; }
+.hor-plantilla-form { margin-top: .9rem; padding: 1rem; border: 1px solid var(--gray-200); border-radius: var(--radius-md); background: var(--gray-50); max-width: 420px; }
+.hor-plantilla-form-titulo { font-size: 13px; font-weight: 700; margin-bottom: .7rem; }
+.hor-plantilla-form-nombre { display: flex; flex-direction: column; gap: 3px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--gray-400); margin-bottom: .7rem; }
+.hor-plantilla-form-nombre input { height: 34px; padding: 0 10px; font-family: var(--font-body); font-size: 13px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); }
+.hor-plantilla-form-error { font-size: 12px; color: #b91c1c; min-height: 16px; margin: .2rem 0 .4rem; }
+.hor-plantilla-form-acciones { display: flex; gap: 6px; flex-wrap: wrap; }
+.hor-plantilla-borrar { color: #b91c1c; margin-left: auto; }
 .hor-plantilla-nombre { font-size: 12px; font-weight: 700; color: var(--black); }
 .hor-plantilla-hora { font-size: 11px; color: var(--gray-600); } .hor-plantilla-h { font-size: 10px; color: var(--gray-400); }
 @media (max-width: 1100px) { .hor-cuerpo.con-lado { flex-direction: column; align-items: stretch; } .hor-cuerpo-lado { width: auto; position: static; padding: 0 1.25rem 1rem; align-self: stretch; } }
@@ -2962,15 +2975,152 @@ function buildResumenSemanaHorario(filas) {
     + card('gris', 'minus', libres, 'Días libres', '')
     + '</div>';
 }
-// Plantillas rápidas: reutiliza PRESETS_TURNO (única fuente de presets).
-// Seleccionar una completa el turno de la celda activa — nunca guarda solo.
-function buildPlantillasTurnos() {
-  var html = '<div class="hor-plantillas"><div class="hor-plantillas-head"><b>Plantillas de turnos</b><small>' + (celdaHorarioActiva ? 'Tocá una para completar el turno seleccionado' : 'Seleccioná un día para aplicar una plantilla') + '</small></div><div class="hor-plantillas-lista">';
-  PRESETS_TURNO.corrido.forEach(function(p, i) {
-    var nombre = p.clase === 'corrido' ? 'Individual' : (p.clase === 'manana' ? 'Mañana' : 'Tarde');
-    html += '<button type="button" class="hor-plantilla hor-plantilla-' + p.clase + '" data-plantilla-bloque="corrido" data-plantilla-idx="' + i + '"' + (celdaHorarioActiva ? '' : ' disabled') + '><span class="hor-plantilla-nombre">' + nombre + '</span><span class="hor-plantilla-hora">' + p.label.replace('-', ' - ') + '</span><span class="hor-plantilla-h">' + formatearHorasHorario(horasDeValorHorario(p.label)) + '</span></button>';
+// Plantillas de turnos (rediseño V2): predefinidos del usuario, guardados en
+// ESTE navegador (localStorage) — sin backend, no se comparten entre
+// dispositivos. Arrancan con los presets de PRESETS_TURNO.corrido (única
+// fuente de horarios base); una vez que se crea/edita/borra una, la lista
+// guardada manda. Seleccionar una completa el turno de la celda activa y
+// nunca guarda el horario solo.
+var PLANTILLAS_LS_KEY = 'croma_hor_plantillas_v1';
+var plantillaForm = null; // null | { id: string|null, tipo: 'corrido'|'cortado' }
+var plantillaFormBorrador = null; // valores tipeados al cambiar Individual/Cortado
+
+function plantillasPorDefecto() {
+  return PRESETS_TURNO.corrido.map(function(p, i) {
+    return { id: 'def' + i, nombre: p.clase === 'corrido' ? 'Individual' : (p.clase === 'manana' ? 'Mañana' : 'Tarde'),
+             tipo: 'corrido', h1: p.h1, h2: p.h2, h3: '', h4: '' };
   });
-  return html + '</div></div>';
+}
+function leerPlantillasTurnos() {
+  try {
+    var raw = localStorage.getItem(PLANTILLAS_LS_KEY);
+    if (raw) {
+      var arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return arr;
+    }
+  } catch (e) {}
+  return plantillasPorDefecto();
+}
+function guardarPlantillasTurnos(arr) {
+  try { localStorage.setItem(PLANTILLAS_LS_KEY, JSON.stringify(arr)); return true; } catch (e) { return false; }
+}
+function valorPlantilla(p) {
+  return turnoToString({ tipo: p.tipo, h1: p.h1, h2: p.h2, h3: p.h3, h4: p.h4 });
+}
+function buildPlantillasTurnos() {
+  var lista = leerPlantillasTurnos();
+  var html = '<div class="hor-plantillas"><div class="hor-plantillas-head"><b>Plantillas de turnos</b><small>' + (celdaHorarioActiva ? 'Tocá una para completar el turno seleccionado' : 'Seleccioná un día para aplicar una plantilla') + '</small></div><div class="hor-plantillas-lista">';
+  lista.forEach(function(p) {
+    var val = valorPlantilla(p);
+    var clase = clasificarTurnoColor(val);
+    var color = clase === 'cortado' ? 'manana' : (clase === 'medioturno' ? 'tarde' : 'corrido');
+    html += '<div class="hor-plantilla-wrap">'
+      + '<button type="button" class="hor-plantilla hor-plantilla-' + color + '" data-plantilla-id="' + escapeAttr(p.id) + '"' + (celdaHorarioActiva ? '' : ' disabled') + '>'
+      + '<span class="hor-plantilla-nombre">' + escapeHtml(p.nombre) + '</span>'
+      + '<span class="hor-plantilla-hora">' + escapeHtml(val.replace('|', ' | ').replace(/-/g, ' - ')) + '</span>'
+      + '<span class="hor-plantilla-h">' + formatearHorasHorario(horasDeValorHorario(val)) + '</span></button>'
+      + '<button type="button" class="hor-plantilla-edit" data-plantilla-editar="' + escapeAttr(p.id) + '" title="Editar plantilla" aria-label="Editar plantilla ' + escapeAttr(p.nombre) + '">✎</button></div>';
+  });
+  html += '<button type="button" class="hor-plantilla hor-plantilla-nueva" data-plantilla-nueva="1">' + icon('plus', 'ic-xs') + ' Nueva plantilla</button>';
+  html += '</div>';
+  if (plantillaForm) html += buildFormPlantilla(lista);
+  return html + '</div>';
+}
+function buildFormPlantilla(lista) {
+  var existente = plantillaForm.id ? lista.filter(function(p) { return p.id === plantillaForm.id; })[0] : null;
+  var tipo = plantillaForm.tipo;
+  var v = plantillaFormBorrador || existente || { nombre: '', h1: '', h2: '', h3: '', h4: '' };
+  plantillaFormBorrador = null;
+  function hora(id, label, val) { return '<label>' + label + '<input class="hora-input" type="time" id="' + id + '" value="' + escapeAttr(val || '') + '"></label>'; }
+  var html = '<div class="hor-plantilla-form" id="plantillaForm">';
+  html += '<div class="hor-plantilla-form-titulo">' + (existente ? 'Editar plantilla' : 'Nueva plantilla') + '</div>';
+  html += '<label class="hor-plantilla-form-nombre">Nombre<input type="text" id="plantillaNombre" maxlength="24" placeholder="Ej: Mañana corta" value="' + escapeAttr(v.nombre) + '"></label>';
+  html += '<div class="hor-celda-editor-tipos" role="group" aria-label="Tipo de plantilla">';
+  [['corrido', 'Individual'], ['cortado', 'Cortado']].forEach(function(t) {
+    html += '<button type="button" class="hor-celda-tipo-btn' + (tipo === t[0] ? ' activo' : '') + '" data-plantilla-tipo="' + t[0] + '">' + t[1] + '</button>';
+  });
+  html += '</div>';
+  html += '<div class="hor-celda-editor-horas">' + hora('plantillaH1', tipo === 'cortado' ? 'Bloque 1 desde' : 'Desde', v.h1) + hora('plantillaH2', tipo === 'cortado' ? 'Bloque 1 hasta' : 'Hasta', v.h2) + '</div>';
+  if (tipo === 'cortado') html += '<div class="hor-celda-editor-horas">' + hora('plantillaH3', 'Bloque 2 desde', v.h3) + hora('plantillaH4', 'Bloque 2 hasta', v.h4) + '</div>';
+  html += '<div class="hor-plantilla-form-error" id="plantillaFormError"></div>';
+  html += '<div class="hor-plantilla-form-acciones">';
+  html += '<button type="button" class="btn-agregar-emp" data-plantilla-guardar="1">Guardar plantilla</button>';
+  html += '<button type="button" class="btn-editar-hor" data-plantilla-cancelar="1">Cancelar</button>';
+  if (existente) html += '<button type="button" class="btn-editar-hor hor-plantilla-borrar" data-plantilla-borrar="1">Eliminar</button>';
+  html += '</div></div>';
+  return html;
+}
+function _valorInputPlantilla(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+function aplicarPlantillaCelda(id) {
+  if (!celdaHorarioActiva) return;
+  var p = leerPlantillasTurnos().filter(function(x) { return x.id === id; })[0];
+  if (!p) return;
+  var turno = horariosEditando[celdaHorarioActiva.empleado][celdaHorarioActiva.dia];
+  turno.tipo = p.tipo;
+  turno.h1 = p.h1; turno.h2 = p.h2;
+  turno.h3 = p.tipo === 'cortado' ? p.h3 : '';
+  turno.h4 = p.tipo === 'cortado' ? p.h4 : '';
+  horarioTieneCambios = true;
+  recalcularConflictoLocal();
+  renderContenidoLocal();
+}
+function guardarFormPlantilla() {
+  var nombre = _valorInputPlantilla('plantillaNombre').trim();
+  var tipo = plantillaForm.tipo;
+  var p = { id: plantillaForm.id || ('u' + Date.now()), nombre: nombre, tipo: tipo,
+            h1: _valorInputPlantilla('plantillaH1'), h2: _valorInputPlantilla('plantillaH2'),
+            h3: tipo === 'cortado' ? _valorInputPlantilla('plantillaH3') : '', h4: tipo === 'cortado' ? _valorInputPlantilla('plantillaH4') : '' };
+  var err = '';
+  if (!nombre) err = 'Poné un nombre para la plantilla.';
+  else if (!p.h1 || !p.h2) err = 'Completá el horario (desde y hasta).';
+  else if (tipo === 'cortado' && (!p.h3 || !p.h4)) err = 'Completá el segundo bloque.';
+  else if (p.h1 === p.h2 || (tipo === 'cortado' && p.h3 === p.h4)) err = 'El horario de inicio y fin no puede ser igual.';
+  if (err) { var e = document.getElementById('plantillaFormError'); if (e) e.textContent = err; return; }
+  var lista = leerPlantillasTurnos();
+  var idx = -1; lista.forEach(function(x, k) { if (x.id === p.id) idx = k; });
+  if (idx >= 0) lista[idx] = p; else lista.push(p);
+  if (!guardarPlantillasTurnos(lista)) { var e2 = document.getElementById('plantillaFormError'); if (e2) e2.textContent = 'No se pudo guardar en este navegador.'; return; }
+  plantillaForm = null;
+  renderContenidoLocal();
+}
+async function borrarFormPlantilla() {
+  var id = plantillaForm && plantillaForm.id;
+  if (!id) return;
+  var ok = await confirmCroma('¿Eliminar esta plantilla?');
+  if (!ok) return;
+  guardarPlantillasTurnos(leerPlantillasTurnos().filter(function(p) { return p.id !== id; }));
+  plantillaForm = null;
+  renderContenidoLocal();
+}
+function wirearPlantillasTurnos(grid) {
+  grid.querySelectorAll('[data-plantilla-id]').forEach(function(btn) {
+    btn.addEventListener('click', function() { aplicarPlantillaCelda(btn.getAttribute('data-plantilla-id')); });
+  });
+  grid.querySelectorAll('[data-plantilla-editar]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = btn.getAttribute('data-plantilla-editar');
+      var p = leerPlantillasTurnos().filter(function(x) { return x.id === id; })[0];
+      if (!p) return;
+      plantillaForm = { id: id, tipo: p.tipo };
+      renderContenidoLocal();
+    });
+  });
+  var nueva = grid.querySelector('[data-plantilla-nueva]');
+  if (nueva) nueva.addEventListener('click', function() { plantillaForm = { id: null, tipo: 'corrido' }; renderContenidoLocal(); });
+  grid.querySelectorAll('[data-plantilla-tipo]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      // Conservar nombre/horas ya tipeados al cambiar de tipo: se guardan
+      // en una plantilla temporal antes de redibujar el formulario.
+      var tmp = { id: '__tmp', nombre: _valorInputPlantilla('plantillaNombre'), tipo: btn.getAttribute('data-plantilla-tipo'),
+                  h1: _valorInputPlantilla('plantillaH1'), h2: _valorInputPlantilla('plantillaH2'), h3: _valorInputPlantilla('plantillaH3'), h4: _valorInputPlantilla('plantillaH4') };
+      plantillaForm.tipo = tmp.tipo;
+      plantillaFormBorrador = tmp;
+      renderContenidoLocal();
+    });
+  });
+  var g = grid.querySelector('[data-plantilla-guardar]'); if (g) g.addEventListener('click', guardarFormPlantilla);
+  var c = grid.querySelector('[data-plantilla-cancelar]'); if (c) c.addEventListener('click', function() { plantillaForm = null; renderContenidoLocal(); });
+  var b = grid.querySelector('[data-plantilla-borrar]'); if (b) b.addEventListener('click', borrarFormPlantilla);
 }
 
 function renderContenidoLocal() {
@@ -3266,12 +3416,7 @@ function renderContenidoLocal() {
       });
     });
     wirearBotonesAgregarEmpleado(grid);
-    grid.querySelectorAll('[data-plantilla-bloque]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        if (!celdaHorarioActiva) return;
-        aplicarPresetCelda(btn.getAttribute('data-plantilla-bloque'), parseInt(btn.getAttribute('data-plantilla-idx'), 10));
-      });
-    });
+    wirearPlantillasTurnos(grid);
     var buscarEmpleadoInput = document.getElementById('agregarEmpleadoBuscar');
     if (buscarEmpleadoInput) buscarEmpleadoInput.addEventListener('input', filtrarPanelAgregarEmpleado);
 
@@ -3431,6 +3576,7 @@ function entrarModoEdicionHorario(suc) {
 // Descarta el borrador y vuelve a modo vista. Nunca dispara un request —
 // horariosData (lo último traído por GET) queda intacto.
 function salirModoEdicionHorario() {
+  plantillaForm       = null;
   modoHorario         = 'vista';
   sucursalEditando    = null;
   horariosEditando    = {};
