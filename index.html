@@ -191,6 +191,7 @@ td { padding: 10px 14px; vertical-align: middle; }
 .ped-card-cod[data-suc="12 CENTENARIO"]     { color: var(--suc-12); background: var(--suc-12-light); }
 .ped-card-cod[data-suc="14 ROCA"]           { color: var(--suc-14); background: var(--suc-14-light); }
 .ped-card-detalle { font-size: 13px; color: #0d0d0d; font-weight: 500; }
+.ped-card-resp { margin-top: 6px; padding: 6px 8px; font-size: 12px; line-height: 1.35; color: #14532d; background: #f0fdf4; border-left: 3px solid #16a34a; border-radius: 4px; white-space: pre-wrap; word-break: break-word; }
 .ped-card-obs { font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
 .ped-card-estado { margin-left: auto; flex-shrink: 0; }
 
@@ -283,7 +284,7 @@ td { padding: 10px 14px; vertical-align: middle; }
 .modal-field label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-400); }
 .modal-field span { font-size: 14px; color: var(--black); font-weight: 500; }
 .modal-obs-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-400); margin-bottom: 6px; display: block; }
-.modal-obs-box { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-md); padding: .875rem; margin-bottom: 1.25rem; font-size: 13px; color: var(--gray-600); font-style: italic; line-height: 1.5; }
+.modal-obs-box { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-md); padding: .875rem; margin-bottom: 1.25rem; font-size: 13px; color: var(--gray-600); font-style: italic; line-height: 1.5; white-space: pre-wrap; }
 .modal-sol-box { display: block; border-top: 1px solid var(--gray-100); padding-top: 1rem; margin-top: .25rem; }
 .modal-sol-box label { font-size: 11px; font-weight: 600; color: var(--gray-600); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
 .modal-sol-box textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-md); font-family: var(--font-body); font-size: 13px; resize: vertical; min-height: 70px; color: var(--black); }
@@ -1991,13 +1992,13 @@ function initNav() {
     drawerUsr.innerHTML = icon('user', '') + ' ' + userLabel;
   }
 
-  // Ocultar navegación de pedidos/cajas si es encargado, horarios u operador
+  // Ocultar navegación de pedidos/cajas si es encargado, horarios u operador.
+  // El encargado sí ve Pedidos (solo lectura, de su local) para leer las
+  // respuestas que les dejan; Cajas sigue oculta para él.
   if (sesionRol === 'encargado' || sesionRol === 'horarios' || sesionRol === 'operador') {
-    ['navPedidos','navCajas'].forEach(function(id){
-      var el = document.getElementById(id);
-      if (el) el.style.display = 'none';
-    });
-    ['drawerNavPedidos','drawerNavCajas'].forEach(function(id){
+    var ocultar = ['navCajas', 'drawerNavCajas'];
+    if (sesionRol !== 'encargado') ocultar.push('navPedidos', 'drawerNavPedidos');
+    ocultar.forEach(function(id){
       var el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -2029,6 +2030,10 @@ function initNav() {
   }
 }
 
+function esEncargadoLocal() {
+  return sesionRol === 'encargado' && !!sesionSucursal;
+}
+
 function iniciarSesion(rol, suc) {
   sesionRol      = rol;
   sesionSucursal = suc || null;
@@ -2045,6 +2050,12 @@ function iniciarSesion(rol, suc) {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('dashApp').style.display = '';
   initNav();
+  // Encargado: Pedidos en solo lectura y limitado a su local (sin selector de locales)
+  if (esEncargadoLocal()) {
+    pedSucActiva = sesionSucursal;
+    var pedSide = document.querySelector('#pedLayout .ped-sidebar');
+    if (pedSide) pedSide.style.display = 'none';
+  }
   var vistaInicial = obtenerVistaInicial();
   if (vistaInicial === 'hoy') {
     vistaActual = 'hoy';
@@ -2062,7 +2073,9 @@ function obtenerVistaInicial() {
   var envivoOk = (sesionRol === 'admin' || sesionRol === 'encargado');
   var vistasValidas = ['hoy', 'cajas', 'horarios', 'entradas', 'mapa'];
   if (sesionRol === 'admin' || sesionRol === 'encargado') vistasValidas.push('stock', 'envivo');
-  if (sesionRol === 'encargado' || sesionRol === 'horarios' || sesionRol === 'operador') {
+  if (sesionRol === 'encargado') {
+    vistasValidas = vistasValidas.filter(function(v) { return v !== 'cajas'; });
+  } else if (sesionRol === 'horarios' || sesionRol === 'operador') {
     vistasValidas = vistasValidas.filter(function(v) { return v !== 'hoy' && v !== 'cajas'; });
   }
   if (sesionRol === 'horarios') {
@@ -4726,7 +4739,9 @@ async function cargarDatos(silencioso) {
     var resp = await fetch(API_URL + '?accion=obtenerPedidos&dias=' + dias);
     var data = await resp.json();
     if (data.ok) {
-      todosLosPedidos = (data.pedidos || []).map(function(p) {
+      todosLosPedidos = (data.pedidos || []).filter(function(p) {
+        return !esEncargadoLocal() || p.sucursal === sesionSucursal;
+      }).map(function(p) {
         if (p.estado === 'Pendiente') p.estado = 'SinVer';
         if (p.estado === 'Procesado') p.estado = 'EnProceso';
         if (p.estado === 'Enviado')   p.estado = 'Solucionado';
@@ -4889,6 +4904,10 @@ function buildPedCard(p) {
   html += '<span>' + icon('calendar', 'ic-xs') + ' ' + fechaDisplay + (p.hora ? ' ' + p.hora : '') + '</span>';
   if (p.obs) html += '<span class="ped-card-obs" title="' + p.obs.replace(/"/g,'&quot;') + '">' + icon('messageSquare', 'ic-xs') + ' ' + p.obs + '</span>';
   html += '</div>';
+  // Respuesta de quien gestionó el pedido (visible también para el local)
+  if (p.obsExtra) {
+    html += '<div class="ped-card-resp">' + icon('check', 'ic-xs') + ' <b>Respuesta' + (p.responsable ? ' (' + escapeHtml(p.responsable) + ')' : '') + ':</b> ' + escapeHtml(p.obsExtra) + '</div>';
+  }
   html += '</div>';
   return html;
 }
@@ -4962,7 +4981,18 @@ function abrirModal(idx) {
   // Armar botones según estado
   var esSol = p.estado === 'Solucionado';
   var actions = document.getElementById('modalActions');
-  if (!esSol) {
+  var soloLectura = esEncargadoLocal();
+  document.getElementById('modalSolBox').style.display = soloLectura ? 'none' : '';
+  if (soloLectura) {
+    var estadoTxt = { SinVer: 'Sin ver', EnProceso: 'En proceso', Revisar: 'Revisar', Solucionado: 'Solucionado' }[p.estado] || p.estado;
+    if (!(p.obsExtra && p.obsExtra.trim())) {
+      obsSolEl.textContent = 'Estado: ' + estadoTxt + ' — todavía sin respuesta.';
+      obsSolWrap.style.display = '';
+    } else {
+      obsSolEl.textContent = 'Estado: ' + estadoTxt + '\n' + obsSolEl.textContent;
+    }
+    actions.innerHTML = '<button class="modal-btn cancelar" onclick="cerrarModal()">Cerrar</button>';
+  } else if (!esSol) {
     actions.innerHTML =
       '<button class="modal-btn sol"  data-estado="Solucionado" onclick="modalAccionBtn(this)">' + icon('check','ic-xs') + ' Solucionado</button>' +
       '<button class="modal-btn proc" data-estado="EnProceso"   onclick="modalAccionBtn(this)">' + icon('clock','ic-xs') + ' En proceso</button>' +
