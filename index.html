@@ -2021,12 +2021,20 @@ function initNav() {
     if (elDNS) elDNS.style.display = '';
   }
 
-  // En vivo: mismo criterio de acceso que Stock (admin y encargado)
-  if (sesionRol === 'admin' || sesionRol === 'encargado') {
+  // En vivo: admin y encargado (junto con Stock) + jefe (Tincho), que ve SOLO esta vista
+  if (sesionRol === 'admin' || sesionRol === 'encargado' || sesionRol === 'jefe') {
     var elNEV = document.getElementById('navEnVivo');
     if (elNEV) elNEV.style.display = '';
     var elDNEV = document.getElementById('drawerNavEnVivo');
     if (elDNEV) elDNEV.style.display = '';
+  }
+  if (sesionRol === 'jefe') {
+    ['navPedidos','navCajas','navHorarios','navEntradas','navMapa','navStock',
+     'drawerNavPedidos','drawerNavCajas','drawerNavHorarios','drawerNavEntradas','drawerNavMapa','drawerNavStock'
+    ].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
   }
 }
 
@@ -2072,6 +2080,7 @@ function iniciarSesion(rol, suc) {
 // volver a abrir el panel; si no hay ninguna guardada (o ya no está disponible
 // para el rol actual), entra directo a "En vivo" cuando el rol tiene acceso.
 function obtenerVistaInicial() {
+  if (sesionRol === 'jefe') return 'envivo'; // jefe: única vista disponible
   var envivoOk = (sesionRol === 'admin' || sesionRol === 'encargado');
   var vistasValidas = ['hoy', 'cajas', 'horarios', 'entradas', 'mapa'];
   if (sesionRol === 'admin' || sesionRol === 'encargado') vistasValidas.push('stock', 'envivo');
