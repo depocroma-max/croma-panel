@@ -5642,9 +5642,41 @@ var SUC_COLORS = {
 };
 var SUCURSALES_ENT = SUCURSALES.filter(function(s){ return s !== 'DEPO'; });
 
+// Búsqueda de una entrada por sucursal + id en los datos cargados (para los
+// handlers delegados: nunca se serializa el objeto dentro del HTML).
+function buscarEntradaEnt(suc, id) {
+  var lista = entradasData[suc] || [];
+  for (var i = 0; i < lista.length; i++) { if (String(lista[i].id) === String(id)) return lista[i]; }
+  return null;
+}
+
+// Un único listener delegado sobre la grilla (se registra una sola vez).
+// Reemplaza los onclick inline que serializaban el objeto de la entrada.
+function asegurarListenerEntradasGrid(grid) {
+  if (grid._entDelegado) return;
+  grid._entDelegado = true;
+  grid.addEventListener('click', function(ev) {
+    var t = ev.target;
+    if (!t || !t.closest) return;
+    var btnAdd = t.closest('.ent-add-btn');
+    if (btnAdd && grid.contains(btnAdd)) {
+      abrirModalEntrada(null, btnAdd.getAttribute('data-suc') || '');
+      return;
+    }
+    var item = t.closest('.ent-item.editable[data-ent-id]'); // solo ítems editables por el rol
+    if (!item || !grid.contains(item)) return;
+    var suc = item.getAttribute('data-suc') || '';
+    var entrada = buscarEntradaEnt(suc, item.getAttribute('data-ent-id'));
+    if (!entrada) return;
+    if (t.closest('.ent-toggle-agotado')) { toggleAgotado(entrada, suc); return; }
+    abrirModalEntrada(entrada, suc);
+  });
+}
+
 function renderEntradasSucursal() {
   var grid = document.getElementById('entradasGrid');
   if (!grid) return;
+  asegurarListenerEntradasGrid(grid);
   var html = '';
 
   SUCURSALES_ENT.forEach(function(suc) {
@@ -5670,10 +5702,9 @@ function renderEntradasSucursal() {
       if (puedeEditar) html += '<div class="ent-empty-sub">Sé el primero en informar</div>';
       html += '</div>';
     } else if (lista.length === 0 && entFiltro) {
-      html += '<div class="ent-empty-state"><div class="ent-empty-txt">Sin resultados para "' + entFiltro + '"</div></div>';
+      html += '<div class="ent-empty-state"><div class="ent-empty-txt">Sin resultados para "' + escEnt(entFiltro) + '"</div></div>';
     } else {
       lista.forEach(function(e) {
-        var eData = JSON.stringify(e).replace(/'/g, "\\'").replace(/"/g, '&quot;');
         var fechaStr = '';
         if (e.fecha) {
           var parts = e.fecha.split('-');
@@ -5683,17 +5714,17 @@ function renderEntradasSucursal() {
           }
         }
         var isAgotado = !!e.agotado;
-        html += '<div class="ent-item' + (puedeEditar ? ' editable' : '') + (isAgotado ? ' agotado' : '') + '"' + (puedeEditar ? ' onclick="abrirModalEntrada(' + eData + ', \'' + suc + '\')"' : '') + '>';
+        html += '<div class="ent-item' + (puedeEditar ? ' editable' : '') + (isAgotado ? ' agotado' : '') + '"' + ' data-ent-id="' + escEnt(e.id) + '" data-suc="' + escEnt(suc) + '">';
         html += '<div class="ent-item-row1">';
         html += '<span class="ent-item-icon">' + icon('ticket', 'ic-xs') + '</span>';
-        html += '<span class="ent-item-nombre" title="' + e.nombre + '">' + e.nombre + '</span>';
+        html += '<span class="ent-item-nombre" title="' + escEnt(e.nombre) + '">' + escEnt(e.nombre) + '</span>';
         if (isAgotado) {
           html += '<span class="ent-badge-agotado">AGOTADO</span>';
         } else {
           html += '<span class="ent-item-precio">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
         }
         if (puedeEditar) {
-          html += '<button class="ent-toggle-agotado ' + (isAgotado ? 'desmarcar' : 'marcar') + '" onclick="event.stopPropagation();toggleAgotado(' + eData + ', \'' + suc + '\')" title="' + (isAgotado ? 'Marcar como disponible' : 'Marcar como agotado') + '">' + (isAgotado ? icon('check','ic-xs') + ' Marcar disponible' : icon('x','ic-xs') + ' Marcar agotado') + '</button>';
+          html += '<button class="ent-toggle-agotado ' + (isAgotado ? 'desmarcar' : 'marcar') + '" title="' + (isAgotado ? 'Marcar como disponible' : 'Marcar como agotado') + '">' + (isAgotado ? icon('check','ic-xs') + ' Marcar disponible' : icon('x','ic-xs') + ' Marcar agotado') + '</button>';
         }
         html += '</div>';
         if (fechaStr || e.obs || isAgotado || e.lugar) {
@@ -5702,7 +5733,7 @@ function renderEntradasSucursal() {
           if (e.lugar) html += '<span class="ent-item-fecha" title="Lugar del evento">' + icon('map-pin', 'ic-xs') + ' ' + escEnt(e.lugar) + '</span>';
           else html += '<span class="ent-item-fecha" style="color:#b45309" title="Falta cargar el lugar">Sin lugar</span>';
           if (isAgotado) html += '<span class="ent-item-precio" style="text-decoration:line-through;background:#f1f5f9;color:#94a3b8">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
-          if (e.obs) html += '<span class="ent-item-obs" title="' + e.obs + '">' + e.obs + '</span>';
+          if (e.obs) html += '<span class="ent-item-obs" title="' + escEnt(e.obs) + '">' + escEnt(e.obs) + '</span>';
           html += '</div>';
         }
         html += '</div>';
@@ -5712,7 +5743,7 @@ function renderEntradasSucursal() {
     // Footer
     if (puedeEditar) {
       html += '<div class="ent-suc-foot">';
-      html += '<button class="ent-add-btn" onclick="abrirModalEntrada(null, \'' + suc + '\')">+ Agregar entrada</button>';
+      html += '<button class="ent-add-btn" data-suc="' + escEnt(suc) + '">+ Agregar entrada</button>';
       html += '</div>';
     }
     html += '</div>';
@@ -5771,7 +5802,7 @@ function poblarSelectorEvento(sucActual, idEditando) {
   sel.value = '';
 }
 function escEnt(s) {
-  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 function elegirEventoExistente() {
   var v = document.getElementById('meEventoExistente').value;
@@ -5837,7 +5868,7 @@ function renderEntradasEvento() {
     var sucStr   = ev.sucursales.map(function(s){ return s.replace(/^\d+\s+/,''); }).join(', ');
     var fechaStr = fmtFechaCortaEnt(ev.fecha);
     html += '<div class="ent-evt-card">';
-    html += '<div><div class="ent-evt-card-nombre">' + ev.nombre + (fechaStr ? ' <span style="font-weight:400;color:var(--gray-400);font-size:12px">· ' + fechaStr + '</span>' : '') + '</div>';
+    html += '<div><div class="ent-evt-card-nombre">' + escEnt(ev.nombre) + (fechaStr ? ' <span style="font-weight:400;color:var(--gray-400);font-size:12px">· ' + fechaStr + '</span>' : '') + '</div>';
     html += '<div class="ent-evt-card-suc">' + (ev.lugar ? icon('map-pin','ic-xs') + ' ' + escEnt(ev.lugar) + ' · ' : '') + sucStr + '</div></div>';
     html += '<span class="ent-evt-card-badge">' + ev.sucursales.length + ' sucursal' + (ev.sucursales.length !== 1 ? 'es' : '') + '</span>';
     html += '</div>';
@@ -5869,7 +5900,7 @@ function renderEntradasSidebar() {
   eventos.forEach(function(ev) {
     var fechaStr = fmtFechaCortaEnt(ev.fecha);
     html += '<div class="ent-sb-item">';
-    html += '<div class="ent-sb-nombre">' + ev.nombre + '<span class="ent-sb-badge">' + ev.sucursales.length + '</span></div>';
+    html += '<div class="ent-sb-nombre">' + escEnt(ev.nombre) + '<span class="ent-sb-badge">' + ev.sucursales.length + '</span></div>';
     html += '<div class="ent-sb-suc">' + (fechaStr ? fechaStr + ' · ' : '') + (ev.lugar ? escEnt(ev.lugar) + ' · ' : '') + ev.sucursales.join(', ') + '</div>';
     html += '</div>';
   });
