@@ -1688,8 +1688,19 @@ tbody tr:hover { background: var(--gray-50); }
           </select>
         </div>
         <div class="entrada-form-field entrada-form-full">
-          <label for="meNombre">Nombre del evento / entrada *</label>
-          <input type="text" id="meNombre" placeholder="Ej: La Renga — Sábado 15 jun">
+          <label for="meEventoExistente">¿Ya lo cargó otra sucursal?</label>
+          <select id="meEventoExistente" onchange="elegirEventoExistente()">
+            <option value="">— Es un evento nuevo —</option>
+          </select>
+        </div>
+        <div class="entrada-form-field entrada-form-full">
+          <label for="meNombre">Nombre del evento *</label>
+          <input type="text" id="meNombre" placeholder="Ej: La Renga" oninput="sugerirEventoSimilar()">
+          <div id="meSugerencia" style="display:none;font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:6px 10px;margin-top:4px"></div>
+        </div>
+        <div class="entrada-form-field entrada-form-full">
+          <label for="meLugar">Lugar del evento *</label>
+          <input type="text" id="meLugar" placeholder="Ej: Estadio Ruca Che, Neuquén">
         </div>
         <div class="entrada-form-field">
           <label for="mePrecio">Precio *</label>
@@ -5685,9 +5696,11 @@ function renderEntradasSucursal() {
           html += '<button class="ent-toggle-agotado ' + (isAgotado ? 'desmarcar' : 'marcar') + '" onclick="event.stopPropagation();toggleAgotado(' + eData + ', \'' + suc + '\')" title="' + (isAgotado ? 'Marcar como disponible' : 'Marcar como agotado') + '">' + (isAgotado ? icon('check','ic-xs') + ' Marcar disponible' : icon('x','ic-xs') + ' Marcar agotado') + '</button>';
         }
         html += '</div>';
-        if (fechaStr || e.obs || isAgotado) {
+        if (fechaStr || e.obs || isAgotado || e.lugar) {
           html += '<div class="ent-item-meta">';
           if (fechaStr) html += '<span class="ent-item-fecha">' + icon('calendar', 'ic-xs') + ' ' + fechaStr + '</span>';
+          if (e.lugar) html += '<span class="ent-item-fecha" title="Lugar del evento">' + icon('map-pin', 'ic-xs') + ' ' + escEnt(e.lugar) + '</span>';
+          else html += '<span class="ent-item-fecha" style="color:#b45309" title="Falta cargar el lugar">Sin lugar</span>';
           if (isAgotado) html += '<span class="ent-item-precio" style="text-decoration:line-through;background:#f1f5f9;color:#94a3b8">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
           if (e.obs) html += '<span class="ent-item-obs" title="' + e.obs + '">' + e.obs + '</span>';
           html += '</div>';
@@ -5716,15 +5729,98 @@ function fmtFechaCortaEnt(fecha) {
   return parseInt(parts[2], 10) + ' ' + meses[parseInt(parts[1], 10) - 1];
 }
 
+// Normaliza texto para comparar: sin tildes, minúsculas, sin signos, espacios simples
+function normEnt(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ').trim();
+}
+// Identidad de un evento: nombre + fecha + lugar (así dos sucursales que eligieron
+// el mismo evento quedan agrupadas aunque tengan distinta mayúscula/tilde)
+function eventoKey(e) {
+  return normEnt(e.nombre) + '|' + (e.fecha || '') + '|' + normEnt(e.lugar);
+}
+// Eventos únicos ya cargados por cualquier sucursal
+function listarEventosUnicos() {
+  var mapa = {};
+  SUCURSALES_ENT.forEach(function(suc) {
+    (entradasData[suc] || []).forEach(function(e) {
+      var k = eventoKey(e);
+      if (!mapa[k]) mapa[k] = { key: k, nombre: e.nombre, fecha: e.fecha || '', lugar: e.lugar || '', sucursales: [] };
+      mapa[k].sucursales.push(suc);
+      if (!mapa[k].lugar && e.lugar) mapa[k].lugar = e.lugar;
+    });
+  });
+  return Object.keys(mapa).sort().map(function(k) { return mapa[k]; });
+}
+function txtEvento(ev) {
+  return ev.nombre + (ev.fecha ? ' · ' + fmtFechaCortaEnt(ev.fecha) : '') + (ev.lugar ? ' · ' + ev.lugar : '');
+}
+var meEventosOpciones = [];
+function poblarSelectorEvento(sucActual, idEditando) {
+  var sel = document.getElementById('meEventoExistente');
+  // Eventos que esta sucursal todavía no tiene (salvo el que está editando)
+  var propias = {};
+  (entradasData[sucActual] || []).forEach(function(e) { if (e.id !== idEditando) propias[eventoKey(e)] = true; });
+  meEventosOpciones = listarEventosUnicos().filter(function(ev) { return !propias[ev.key]; });
+  var html = '<option value="">— Es un evento nuevo —</option>';
+  meEventosOpciones.forEach(function(ev, i) {
+    var sucs = ev.sucursales.map(function(s) { return s.replace(/^\d+\s+/, ''); }).join(', ');
+    html += '<option value="' + i + '">' + escEnt(txtEvento(ev)) + '  (' + escEnt(sucs) + ')</option>';
+  });
+  sel.innerHTML = html;
+  sel.value = '';
+}
+function escEnt(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function elegirEventoExistente() {
+  var v = document.getElementById('meEventoExistente').value;
+  var bloquear = v !== '';
+  if (bloquear) {
+    var ev = meEventosOpciones[parseInt(v, 10)];
+    document.getElementById('meNombre').value = ev.nombre;
+    document.getElementById('meFecha').value  = ev.fecha || '';
+    document.getElementById('meLugar').value  = ev.lugar || '';
+    document.getElementById('meSugerencia').style.display = 'none';
+  }
+  ['meNombre', 'meFecha', 'meLugar'].forEach(function(id) {
+    var el = document.getElementById(id);
+    el.readOnly = bloquear;
+    el.style.background = bloquear ? 'var(--gray-100)' : '';
+  });
+  if (bloquear) document.getElementById('mePrecio').focus();
+}
+// Mientras escribe un nombre nuevo, avisa si se parece a un evento ya cargado
+function sugerirEventoSimilar() {
+  var box = document.getElementById('meSugerencia');
+  var q = normEnt(document.getElementById('meNombre').value);
+  if (document.getElementById('meNombre').readOnly || q.length < 3) { box.style.display = 'none'; return; }
+  var coinciden = [];
+  meEventosOpciones.forEach(function(ev, i) {
+    var n = normEnt(ev.nombre);
+    if (n && (n.indexOf(q) >= 0 || q.indexOf(n) >= 0)) coinciden.push(i);
+  });
+  if (!coinciden.length) { box.style.display = 'none'; return; }
+  box.innerHTML = '¿Es el mismo evento? ' + coinciden.slice(0, 3).map(function(i) {
+    return '<a href="#" style="color:#b45309;font-weight:700" onclick="event.preventDefault();usarEventoSugerido(' + i + ')">' + escEnt(txtEvento(meEventosOpciones[i])) + '</a>';
+  }).join(' &nbsp;|&nbsp; ');
+  box.style.display = '';
+}
+function usarEventoSugerido(i) {
+  document.getElementById('meEventoExistente').value = String(i);
+  elegirEventoExistente();
+}
+
 function renderEntradasEvento() {
-  // Agrupa todas las entradas por nombre de evento
+  // Agrupa todas las entradas por evento (nombre + fecha + lugar)
   var mapa = {};
   SUCURSALES_ENT.forEach(function(suc) {
     getEntFiltradas(suc).forEach(function(e) {
-      var key = (e.nombre || '').trim().toLowerCase();
-      if (!mapa[key]) mapa[key] = { nombre: e.nombre, sucursales: [], precio: e.precio, fecha: e.fecha };
+      var key = eventoKey(e);
+      if (!mapa[key]) mapa[key] = { nombre: e.nombre, sucursales: [], precio: e.precio, fecha: e.fecha, lugar: e.lugar || '' };
       mapa[key].sucursales.push(suc);
       if (!mapa[key].fecha && e.fecha) mapa[key].fecha = e.fecha;
+      if (!mapa[key].lugar && e.lugar) mapa[key].lugar = e.lugar;
     });
   });
 
@@ -5742,7 +5838,7 @@ function renderEntradasEvento() {
     var fechaStr = fmtFechaCortaEnt(ev.fecha);
     html += '<div class="ent-evt-card">';
     html += '<div><div class="ent-evt-card-nombre">' + ev.nombre + (fechaStr ? ' <span style="font-weight:400;color:var(--gray-400);font-size:12px">· ' + fechaStr + '</span>' : '') + '</div>';
-    html += '<div class="ent-evt-card-suc">' + sucStr + '</div></div>';
+    html += '<div class="ent-evt-card-suc">' + (ev.lugar ? icon('map-pin','ic-xs') + ' ' + escEnt(ev.lugar) + ' · ' : '') + sucStr + '</div></div>';
     html += '<span class="ent-evt-card-badge">' + ev.sucursales.length + ' sucursal' + (ev.sucursales.length !== 1 ? 'es' : '') + '</span>';
     html += '</div>';
   });
@@ -5753,10 +5849,11 @@ function renderEntradasSidebar() {
   var mapa = {};
   SUCURSALES_ENT.forEach(function(suc) {
     (entradasData[suc] || []).forEach(function(e) {
-      var key = (e.nombre || '').trim().toLowerCase();
-      if (!mapa[key]) mapa[key] = { nombre: e.nombre, sucursales: [], fecha: e.fecha };
+      var key = eventoKey(e);
+      if (!mapa[key]) mapa[key] = { nombre: e.nombre, sucursales: [], fecha: e.fecha, lugar: e.lugar || '' };
       mapa[key].sucursales.push(suc.replace(/^\d+\s+/,''));
       if (!mapa[key].fecha && e.fecha) mapa[key].fecha = e.fecha;
+      if (!mapa[key].lugar && e.lugar) mapa[key].lugar = e.lugar;
     });
   });
 
@@ -5773,7 +5870,7 @@ function renderEntradasSidebar() {
     var fechaStr = fmtFechaCortaEnt(ev.fecha);
     html += '<div class="ent-sb-item">';
     html += '<div class="ent-sb-nombre">' + ev.nombre + '<span class="ent-sb-badge">' + ev.sucursales.length + '</span></div>';
-    html += '<div class="ent-sb-suc">' + (fechaStr ? fechaStr + ' · ' : '') + ev.sucursales.join(', ') + '</div>';
+    html += '<div class="ent-sb-suc">' + (fechaStr ? fechaStr + ' · ' : '') + (ev.lugar ? escEnt(ev.lugar) + ' · ' : '') + ev.sucursales.join(', ') + '</div>';
     html += '</div>';
   });
   el.innerHTML = html;
@@ -5788,6 +5885,8 @@ function abrirModalEntrada(entrada, suc) {
   document.getElementById('meFecha').value   = entrada ? (entrada.fecha  || '') : '';
   document.getElementById('meObs').value     = entrada ? (entrada.obs    || '') : '';
   document.getElementById('meAgotado').checked = entrada ? !!entrada.agotado : false;
+  document.getElementById('meLugar').value   = entrada ? (entrada.lugar  || '') : '';
+  document.getElementById('meSugerencia').style.display = 'none';
 
   var sucSel = document.getElementById('meSucursal');
   var sucWrap = document.getElementById('meSucursalWrap');
@@ -5803,6 +5902,10 @@ function abrirModalEntrada(entrada, suc) {
 
   var btnEliminar = document.getElementById('meBtnEliminar');
   if (btnEliminar) btnEliminar.style.display = esNueva ? 'none' : '';
+
+  // Selector de eventos ya cargados (también al editar: sirve para vincular una entrada existente)
+  poblarSelectorEvento(sucSel.value || suc || '', entrada ? entrada.id : '');
+  elegirEventoExistente(); // deja los campos desbloqueados
 
   // Stripe color según sucursal
   var sucActual = document.getElementById('meSucursal').value || suc || '';
@@ -5823,12 +5926,14 @@ async function guardarEntrada() {
   var fecha   = document.getElementById('meFecha').value.trim();
   var obs     = document.getElementById('meObs').value.trim();
   var agotado = document.getElementById('meAgotado').checked;
+  var lugar   = document.getElementById('meLugar').value.trim();
 
   if (!suc)    { toast('⚠ Elegí una sucursal', 'error'); return; }
   if (!nombre) { toast('⚠ El nombre es obligatorio', 'error'); document.getElementById('meNombre').focus(); return; }
+  if (!lugar)  { toast('⚠ Indicá el lugar del evento', 'error'); document.getElementById('meLugar').focus(); return; }
   if (!precio) { toast('⚠ El precio es obligatorio', 'error'); document.getElementById('mePrecio').focus(); return; }
 
-  var payload = { id: id, sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs, agotado: agotado };
+  var payload = { id: id, sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs, agotado: agotado, lugar: lugar };
   cerrarModalEntrada();
 
   try {
@@ -5839,12 +5944,12 @@ async function guardarEntrada() {
       toast('✓ Entrada guardada', 'success');
       cargarEntradas();
     } else {
-      actualizarEntradaLocal(suc, id, { id: id || Date.now().toString(), sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs, agotado: agotado });
+      actualizarEntradaLocal(suc, id, { id: id || Date.now().toString(), sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs, agotado: agotado, lugar: lugar });
       renderEntradas();
       toast('✓ Guardada localmente', 'success');
     }
   } catch(e) {
-    actualizarEntradaLocal(suc, id, { id: id || Date.now().toString(), sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs, agotado: agotado });
+    actualizarEntradaLocal(suc, id, { id: id || Date.now().toString(), sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs, agotado: agotado, lugar: lugar });
     renderEntradas();
     toast('✓ Guardada localmente', 'success');
   }
@@ -5858,6 +5963,7 @@ async function toggleAgotado(entrada, suc) {
 
   try {
     var payload = { id: entrada.id, sucursal: suc, nombre: entrada.nombre, precio: entrada.precio, fecha: entrada.fecha || '', obs: entrada.obs || '', agotado: nuevoEstado };
+    if (entrada.lugar) payload.lugar = entrada.lugar; // filas viejas sin lugar: el backend conserva lo que haya
     var url = API_URL + '?accion=guardarEntrada&datos=' + encodeURIComponent(JSON.stringify(payload));
     var resp = await fetch(url);
     var data = await resp.json();

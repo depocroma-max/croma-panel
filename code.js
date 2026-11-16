@@ -714,7 +714,7 @@ function guardarHorario(payload) {
 
 // ------------------------------------------------------------
 // ENTRADAS — catálogo de tickets por sucursal
-// Hoja: ENTRADAS  →  ID | SUCURSAL | NOMBRE | PRECIO | FECHA | OBS | TIMESTAMP
+// Hoja: ENTRADAS  →  ID | SUCURSAL | NOMBRE | PRECIO | FECHA | OBS | TIMESTAMP | AGOTADO | LUGAR
 // ------------------------------------------------------------
 var HOJA_ENTRADAS = 'ENTRADAS';
 
@@ -722,9 +722,12 @@ function asegurarHojaEntradas(ss) {
   var hoja = ss.getSheetByName(HOJA_ENTRADAS);
   if (!hoja) {
     hoja = ss.insertSheet(HOJA_ENTRADAS);
-    hoja.appendRow(['ID', 'SUCURSAL', 'NOMBRE', 'PRECIO', 'FECHA', 'OBS', 'TIMESTAMP', 'AGOTADO']);
-    hoja.getRange(1, 1, 1, 8).setFontWeight('bold').setBackground('#0d0d0d').setFontColor('#ffffff');
+    hoja.appendRow(['ID', 'SUCURSAL', 'NOMBRE', 'PRECIO', 'FECHA', 'OBS', 'TIMESTAMP', 'AGOTADO', 'LUGAR']);
+    hoja.getRange(1, 1, 1, 9).setFontWeight('bold').setBackground('#0d0d0d').setFontColor('#ffffff');
     hoja.setFrozenRows(1);
+  } else if (!String(hoja.getRange(1, 9).getValue() || '').trim()) {
+    // Hoja existente sin columna LUGAR: se agrega el encabezado
+    hoja.getRange(1, 9).setValue('LUGAR').setFontWeight('bold').setBackground('#0d0d0d').setFontColor('#ffffff');
   }
   return hoja;
 }
@@ -753,12 +756,13 @@ function obtenerEntradas(sucursalFiltro) {
       } catch(e) {}
       var obs     = String(fila[5] || '').trim();
       var agotado = String(fila[7] || '').trim().toUpperCase() === 'SI';
+      var lugar   = String(fila[8] || '').trim();
 
       if (!id || !nombre) continue;
       if (sucursalFiltro && suc !== sucursalFiltro) continue;
 
       if (!entradas[suc]) entradas[suc] = [];
-      entradas[suc].push({ id: id, sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs, agotado: agotado });
+      entradas[suc].push({ id: id, sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs, agotado: agotado, lugar: lugar });
     }
 
     return { ok: true, entradas: entradas };
@@ -783,14 +787,21 @@ function guardarEntrada(datos) {
     var obs      = String(datos.obs     || '').trim();
     var agotado  = datos.agotado ? 'SI' : '';
     var ts       = new Date().toISOString();
+    var lugarEnviado = datos.lugar !== undefined && datos.lugar !== null;
+    var lugar    = lugarEnviado ? String(datos.lugar).trim() : '';
 
     if (!sucursal || !nombre) return { ok: false, error: 'Faltan campos obligatorios (sucursal, nombre)' };
+    // El lugar es obligatorio al crear. Al actualizar, si no se envía se conserva el existente
+    // (así filas viejas sin lugar siguen pudiéndose marcar agotadas).
+    if (!id && !lugar) return { ok: false, error: 'Falta el lugar del evento' };
+    if (id && lugarEnviado && !lugar) return { ok: false, error: 'Falta el lugar del evento' };
 
     if (id) {
       // Buscar fila existente y actualizar
       var filas = hoja.getDataRange().getValues();
       for (var i = 1; i < filas.length; i++) {
         if (String(filas[i][0]).trim() === id) {
+          if (lugarEnviado) hoja.getRange(i + 1, 9).setValue(lugar);
           hoja.getRange(i + 1, 2).setValue(sucursal);
           hoja.getRange(i + 1, 3).setValue(nombre);
           hoja.getRange(i + 1, 4).setValue(precio);
@@ -805,7 +816,7 @@ function guardarEntrada(datos) {
 
     // Nueva entrada
     var nuevoId = 'ENT-' + new Date().getTime();
-    hoja.appendRow([nuevoId, sucursal, nombre, precio, fecha, obs, ts, agotado]);
+    hoja.appendRow([nuevoId, sucursal, nombre, precio, fecha, obs, ts, agotado, lugar]);
     return { ok: true, id: nuevoId };
 
   } catch(err) {
