@@ -619,10 +619,10 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-agregar-item-danger { color: #b91c1c; }
 .hor-agregar-item-danger:hover { background: #fee2e2; border-color: #fecaca; }
 .hor-editando-tag  { font-size: 11px; color: var(--black); background: var(--gray-100); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
-.hor-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; padding: 1rem 1.25rem 0; }
-.hor-kpi { display: flex; align-items: center; gap: 10px; padding: .8rem .9rem; border-radius: var(--radius-md); border: 1px solid var(--gray-100); }
-.hor-kpi-ico { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,.7); flex-shrink: 0; }
-.hor-kpi-num { font-size: 20px; font-weight: 700; line-height: 1.1; color: var(--black); }
+.hor-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: .5rem; padding: .75rem 1.25rem 0; }
+.hor-kpi { display: flex; align-items: center; gap: 8px; padding: .5rem .7rem; border-radius: 12px; border: 1px solid rgba(0,0,0,.04); }
+.hor-kpi-ico { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 9px; background: rgba(255,255,255,.7); flex-shrink: 0; }
+.hor-kpi-num { font-size: 17px; font-weight: 700; line-height: 1.1; color: var(--black); }
 .hor-kpi-label { font-size: 11px; color: var(--gray-600); }
 .hor-kpi-sub { font-size: 10px; color: var(--gray-400); margin-top: 1px; }
 .hor-kpi-azul { background: #eff6ff; color: #2563eb; } .hor-kpi-amarillo { background: #fffbeb; color: #b45309; }
@@ -633,11 +633,15 @@ td { padding: 10px 14px; vertical-align: middle; }
 .hor-cuerpo-lado .hor-celda-editor { margin: 0; max-width: none; box-shadow: none; }
 .hor-lado-vacio { font-size: 12px; color: var(--gray-400); border: 1px dashed var(--gray-200); border-radius: var(--radius-md); padding: 1rem; text-align: center; }
 .hor-table td.hor-total-horas { font-weight: 700; color: var(--black); font-size: 12px; white-space: nowrap; }
-.hor-plantillas { padding: 1rem 1.25rem; border-top: 1px solid var(--gray-100); }
-.hor-plantillas-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: .6rem; font-size: 13px; }
+.hor-plantillas { padding: .6rem 1.25rem; border-top: 1px solid var(--gray-100); }
+.hor-plantillas-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 13px; cursor: pointer; list-style: none; user-select: none; }
+.hor-plantillas-head::-webkit-details-marker { display: none; }
+.hor-plantillas-head::before { content: '▸'; color: var(--gray-400); font-size: 11px; transition: transform .15s; }
+.hor-plantillas[open] > .hor-plantillas-head::before { transform: rotate(90deg); }
+.hor-plantillas[open] > .hor-plantillas-head { margin-bottom: .6rem; }
 .hor-plantillas-head small { color: var(--gray-400); font-size: 11px; }
 .hor-plantillas-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .6rem; }
-.hor-plantilla { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left; padding: .6rem .75rem; border: 1px solid var(--gray-100); border-left-width: 4px; border-radius: var(--radius-md); background: var(--white); cursor: pointer; font-family: var(--font-body); }
+.hor-plantilla { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left; padding: .5rem .7rem; border: 1px solid var(--gray-100); border-left-width: 4px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); background: var(--white); cursor: pointer; font-family: var(--font-body); }
 .hor-plantilla:disabled { opacity: .5; cursor: not-allowed; }
 .hor-plantilla:not(:disabled):hover { background: var(--gray-50); }
 .hor-plantilla-corrido { border-left-color: #3b82f6; } .hor-plantilla-manana { border-left-color: #f59e0b; } .hor-plantilla-tarde { border-left-color: #ec4899; }
@@ -663,6 +667,27 @@ td { padding: 10px 14px; vertical-align: middle; }
 /* Mismos tonos ámbar que .hor-pendiente-tag/.carga-emp-externo, ya
    establecidos en este archivo para estados de alerta no destructiva. */
 .hor-guardado-error { font-size: 12px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: var(--radius-md); padding: .6rem .9rem; margin: 0 1.25rem .85rem; }
+
+/* Pulido visual compacto (solo CSS, colores de turnos intactos) */
+.hor-panel { border-radius: 18px; }
+.hor-panel-head { padding: .7rem 1.25rem; }
+.hor-panel-titulo { font-size: 20px; }
+.btn-editar-hor { padding: 6px 14px; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.btn-guardar-hor { padding: 7px 16px; font-size: 12px; }
+.hor-leyenda { padding: .55rem 1.25rem; gap: .35rem 1rem; }
+.hor-table th { padding: 7px 8px; }
+.hor-table td { padding: 6px 8px; }
+.hor-table th.hor-th-hoy { border-radius: 10px 10px 0 0; }
+.hor-cell { padding: 6px 10px; border-radius: 9px; min-width: 96px; }
+.hor-cell-clickable:hover .hor-cell { transform: translateY(-1px); transition: transform .12s; }
+.hor-avatar { width: 34px; height: 34px; }
+@media (max-width: 700px) {
+  .hor-kpis { grid-template-columns: repeat(3, 1fr); padding: .6rem .75rem 0; }
+  .hor-kpi { flex-direction: column; align-items: flex-start; gap: 2px; padding: .45rem .55rem; }
+  .hor-kpi-ico, .hor-kpi-sub { display: none; }
+  .hor-panel-head, .hor-plantillas, .hor-leyenda { padding-left: .75rem; padding-right: .75rem; }
+  .hor-cell { min-width: 0; padding: 5px 7px; }
+}
 
 /* Confirmación de Horario semanal (reemplaza window.confirm() nativo) —
    mismo .modal-overlay/.modal-box que el resto de la app, ver confirmCroma(). */
@@ -3075,7 +3100,7 @@ function valorPlantilla(p) {
 }
 function buildPlantillasTurnos() {
   var lista = leerPlantillasTurnos();
-  var html = '<div class="hor-plantillas"><div class="hor-plantillas-head"><b>Plantillas de turnos</b><small>' + (celdaHorarioActiva ? 'Tocá una para completar el turno seleccionado' : 'Seleccioná un día para aplicar una plantilla') + '</small></div><div class="hor-plantillas-lista">';
+  var html = '<details class="hor-plantillas" id="horPlantillasDet"' + ((plantillasAbiertas || plantillaForm || celdaHorarioActiva) ? ' open' : '') + '><summary class="hor-plantillas-head"><b>Plantillas de turnos</b><small>' + (celdaHorarioActiva ? 'Tocá una para completar el turno seleccionado' : 'Seleccioná un día para aplicar una plantilla') + '</small></summary><div class="hor-plantillas-lista">';
   lista.forEach(function(p) {
     var val = valorPlantilla(p);
     var clase = clasificarTurnoColor(val);
@@ -3090,8 +3115,9 @@ function buildPlantillasTurnos() {
   html += '<button type="button" class="hor-plantilla hor-plantilla-nueva" data-plantilla-nueva="1">' + icon('plus', 'ic-xs') + ' Nueva plantilla</button>';
   html += '</div>';
   if (plantillaForm) html += buildFormPlantilla(lista);
-  return html + '</div>';
+  return html + '</details>';
 }
+var plantillasAbiertas = false;
 function buildFormPlantilla(lista) {
   var existente = plantillaForm.id ? lista.filter(function(p) { return p.id === plantillaForm.id; })[0] : null;
   var tipo = plantillaForm.tipo;
@@ -3159,6 +3185,8 @@ async function borrarFormPlantilla() {
   renderContenidoLocal();
 }
 function wirearPlantillasTurnos(grid) {
+  var det = grid.querySelector('#horPlantillasDet');
+  if (det) det.addEventListener('toggle', function() { plantillasAbiertas = det.open; });
   grid.querySelectorAll('[data-plantilla-id]').forEach(function(btn) {
     btn.addEventListener('click', function() { aplicarPlantillaCelda(btn.getAttribute('data-plantilla-id')); });
   });
