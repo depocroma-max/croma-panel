@@ -35,7 +35,7 @@ function extraerFuncion(nombre) {
 }
 
 const FUNCIONES = [
-  'escEnt', 'normEnt', 'eventoKey', 'fmtFechaCortaEnt', 'getEntFiltradas', 'buscarEntradaEnt',
+  'escEnt', 'normEnt', 'eventoKey', 'fmtFechaCortaEnt', 'hoyEnt', 'entVencida', 'entActivas', 'entArchivadas', 'getEntFiltradas', 'buscarEntradaEnt', 'htmlItemEnt', 'agruparEventosEnt',
   'asegurarListenerEntradasGrid', 'renderEntradasSucursal', 'renderEntradasEvento',
   'renderEntradasSidebar',
 ];
@@ -54,7 +54,7 @@ function crearEntorno() {
     icon: (n) => '<svg class="ic"><path d="p"/></svg>',
     SUCURSALES_ENT: ['01 PASEO', '05 WAVE', '10 PERITO MORENO', '12 CENTENARIO', '14 ROCA'],
     SUC_COLORS: {},
-    entradasData: {}, entFiltro: '', sesionRol: 'admin', sesionSucursal: '',
+    entradasData: {}, entFiltro: '', entVerArchivo: false, sesionRol: 'admin', sesionSucursal: '',
     abrirModalEntrada: (e, s) => llamadas.push(['abrir', e, s]),
     toggleAgotado: (e, s) => llamadas.push(['toggle', e, s]),
   };

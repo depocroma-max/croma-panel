@@ -1009,6 +1009,10 @@ tbody tr:hover { background: var(--gray-50); }
 .ent-badge-agotado { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: #dc2626; padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
 .ent-item.agotado .ent-item-precio { background: #f1f5f9; color: #94a3b8; text-decoration: line-through; }
 .ent-item.agotado { opacity: .75; }
+.ent-item.archivada, .ent-evt-card.archivada { opacity: .6; filter: grayscale(.6); }
+.ent-arch-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-400); margin: 12px 0 6px; }
+.ent-arch-btn { font-size: 12px; font-weight: 600; padding: 7px 12px; margin-right: 8px; border: 1px solid var(--gray-200); border-radius: 8px; background: #fff; color: var(--gray-600); cursor: pointer; }
+.ent-arch-btn.active { background: var(--gray-100); color: var(--gray-800); }
 .ent-toggle-agotado { font-size: 10px; font-weight: 600; border: none; border-radius: 20px; padding: 2px 9px; cursor: pointer; transition: background .15s; white-space: nowrap; flex-shrink: 0; }
 .ent-toggle-agotado.marcar   { background: #fee2e2; color: #dc2626; }
 .ent-toggle-agotado.marcar:hover { background: #fecaca; }
@@ -1404,6 +1408,7 @@ tbody tr:hover { background: var(--gray-50); }
           <div class="ent-subtitle">Entradas informadas por cada sucursal</div>
         </div>
         <div class="ent-search-wrap">
+          <button type="button" class="ent-arch-btn" id="entBtnArchivo" style="display:none" onclick="toggleEntArchivo()">Ver archivadas</button>
           <input class="ent-search" type="text" id="entSearch" placeholder="Buscar entrada o evento..." aria-label="Buscar entrada o evento" oninput="filtrarEntradas()">
         </div>
       </div>
@@ -5636,7 +5641,7 @@ function renderEntradas() {
 function actualizarEntKpis() {
   var total = 0, sucActivas = 0;
   SUCURSALES_ENT.forEach(function(s) {
-    var n = (entradasData[s] || []).length;
+    var n = entActivas(s).length;
     total += n;
     if (n > 0) sucActivas++;
   });
@@ -5645,10 +5650,35 @@ function actualizarEntKpis() {
   document.getElementById('entStatTotal').textContent = total;
   document.getElementById('entStatSuc').textContent   = sucActivas;
   document.getElementById('entStatHora').textContent  = hora;
+  var nArch = 0;
+  SUCURSALES_ENT.forEach(function(s) { nArch += entArchivadas(s).length; });
+  var btn = document.getElementById('entBtnArchivo');
+  if (btn) {
+    btn.style.display = nArch > 0 ? '' : 'none';
+    btn.textContent = (entVerArchivo ? 'Ocultar archivadas' : 'Ver archivadas') + ' (' + nArch + ')';
+    btn.classList.toggle('active', entVerArchivo);
+  }
 }
 
-function getEntFiltradas(suc) {
-  var lista = entradasData[suc] || [];
+var entVerArchivo = false;
+function hoyEnt() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+// Archivada = tiene fecha y ya pasó (el mismo día del evento sigue vigente)
+function entVencida(e) {
+  var f = String((e && e.fecha) || '').slice(0, 10);
+  return !!f && f < hoyEnt();
+}
+function entActivas(suc)    { return (entradasData[suc] || []).filter(function(e) { return !entVencida(e); }); }
+function entArchivadas(suc) { return (entradasData[suc] || []).filter(entVencida); }
+function toggleEntArchivo() {
+  entVerArchivo = !entVerArchivo;
+  renderEntradas();
+}
+
+function getEntFiltradas(suc, archivadas) {
+  var lista = archivadas ? entArchivadas(suc) : entActivas(suc);
   if (!entFiltro) return lista;
   var q = entFiltro.toLowerCase();
   return lista.filter(function(e) {
@@ -5710,6 +5740,43 @@ function asegurarListenerEntradasGrid(grid) {
   });
 }
 
+function htmlItemEnt(e, suc, puedeEditar, archivada) {
+  var html = '';
+  var fechaStr = '';
+  if (e.fecha) {
+    var parts = e.fecha.split('-');
+    if (parts.length === 3) {
+      var meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      fechaStr = parseInt(parts[2]) + ' ' + meses[parseInt(parts[1]) - 1];
+    }
+  }
+  var isAgotado = !!e.agotado;
+  html += '<div class="ent-item' + (puedeEditar ? ' editable' : '') + (isAgotado ? ' agotado' : '') + (archivada ? ' archivada' : '') + '"' + ' data-ent-id="' + escEnt(e.id) + '" data-suc="' + escEnt(suc) + '">';
+  html += '<div class="ent-item-row1">';
+  html += '<span class="ent-item-icon">' + icon('ticket', 'ic-xs') + '</span>';
+  html += '<span class="ent-item-nombre" title="' + escEnt(e.nombre) + '">' + escEnt(e.nombre) + '</span>';
+  if (isAgotado) {
+    html += '<span class="ent-badge-agotado">AGOTADO</span>';
+  } else {
+    html += '<span class="ent-item-precio">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
+  }
+  if (puedeEditar) {
+    html += '<button class="ent-toggle-agotado ' + (isAgotado ? 'desmarcar' : 'marcar') + '" title="' + (isAgotado ? 'Marcar como disponible' : 'Marcar como agotado') + '">' + (isAgotado ? icon('check','ic-xs') + ' Marcar disponible' : icon('x','ic-xs') + ' Marcar agotado') + '</button>';
+  }
+  html += '</div>';
+  if (fechaStr || e.obs || isAgotado || e.lugar) {
+    html += '<div class="ent-item-meta">';
+    if (fechaStr) html += '<span class="ent-item-fecha">' + icon('calendar', 'ic-xs') + ' ' + fechaStr + '</span>';
+    if (e.lugar) html += '<span class="ent-item-fecha" title="Lugar del evento">' + icon('map-pin', 'ic-xs') + ' ' + escEnt(e.lugar) + '</span>';
+    else html += '<span class="ent-item-fecha" style="color:#b45309" title="Falta cargar el lugar">Sin lugar</span>';
+    if (isAgotado) html += '<span class="ent-item-precio" style="text-decoration:line-through;background:#f1f5f9;color:#94a3b8">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
+    if (e.obs) html += '<span class="ent-item-obs" title="' + escEnt(e.obs) + '">' + escEnt(e.obs) + '</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
 function renderEntradasSucursal() {
   var grid = document.getElementById('entradasGrid');
   if (!grid) return;
@@ -5718,7 +5785,8 @@ function renderEntradasSucursal() {
 
   SUCURSALES_ENT.forEach(function(suc) {
     var lista       = getEntFiltradas(suc);
-    var listaTotal  = entradasData[suc] || [];
+    var listaTotal  = entActivas(suc);
+    var listaArch   = entVerArchivo ? getEntFiltradas(suc, true) : [];
     var puedeEditar = sesionRol === 'admin' || sesionRol === 'operador' || (sesionRol === 'encargado' && sesionSucursal === suc);
     var color       = SUC_COLORS[suc] || '#888';
     var tieneEntradas = listaTotal.length > 0;
@@ -5732,49 +5800,21 @@ function renderEntradasSucursal() {
     html += '</div>';
     // Body
     html += '<div class="ent-suc-body">';
-    if (lista.length === 0 && !tieneEntradas) {
+    if (lista.length === 0 && !tieneEntradas && listaArch.length === 0) {
       html += '<div class="ent-empty-state">';
       html += '<div class="ent-empty-icon">' + icon('ticket', 'icon-24') + '</div>';
       html += '<div class="ent-empty-txt">Aún no se cargaron entradas</div>';
       if (puedeEditar) html += '<div class="ent-empty-sub">Sé el primero en informar</div>';
       html += '</div>';
-    } else if (lista.length === 0 && entFiltro) {
+    } else if (lista.length === 0 && entFiltro && listaArch.length === 0) {
       html += '<div class="ent-empty-state"><div class="ent-empty-txt">Sin resultados para "' + escEnt(entFiltro) + '"</div></div>';
     } else {
-      lista.forEach(function(e) {
-        var fechaStr = '';
-        if (e.fecha) {
-          var parts = e.fecha.split('-');
-          if (parts.length === 3) {
-            var meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-            fechaStr = parseInt(parts[2]) + ' ' + meses[parseInt(parts[1]) - 1];
-          }
-        }
-        var isAgotado = !!e.agotado;
-        html += '<div class="ent-item' + (puedeEditar ? ' editable' : '') + (isAgotado ? ' agotado' : '') + '"' + ' data-ent-id="' + escEnt(e.id) + '" data-suc="' + escEnt(suc) + '">';
-        html += '<div class="ent-item-row1">';
-        html += '<span class="ent-item-icon">' + icon('ticket', 'ic-xs') + '</span>';
-        html += '<span class="ent-item-nombre" title="' + escEnt(e.nombre) + '">' + escEnt(e.nombre) + '</span>';
-        if (isAgotado) {
-          html += '<span class="ent-badge-agotado">AGOTADO</span>';
-        } else {
-          html += '<span class="ent-item-precio">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
-        }
-        if (puedeEditar) {
-          html += '<button class="ent-toggle-agotado ' + (isAgotado ? 'desmarcar' : 'marcar') + '" title="' + (isAgotado ? 'Marcar como disponible' : 'Marcar como agotado') + '">' + (isAgotado ? icon('check','ic-xs') + ' Marcar disponible' : icon('x','ic-xs') + ' Marcar agotado') + '</button>';
-        }
-        html += '</div>';
-        if (fechaStr || e.obs || isAgotado || e.lugar) {
-          html += '<div class="ent-item-meta">';
-          if (fechaStr) html += '<span class="ent-item-fecha">' + icon('calendar', 'ic-xs') + ' ' + fechaStr + '</span>';
-          if (e.lugar) html += '<span class="ent-item-fecha" title="Lugar del evento">' + icon('map-pin', 'ic-xs') + ' ' + escEnt(e.lugar) + '</span>';
-          else html += '<span class="ent-item-fecha" style="color:#b45309" title="Falta cargar el lugar">Sin lugar</span>';
-          if (isAgotado) html += '<span class="ent-item-precio" style="text-decoration:line-through;background:#f1f5f9;color:#94a3b8">$' + parseFloat(e.precio || 0).toLocaleString('es-AR') + '</span>';
-          if (e.obs) html += '<span class="ent-item-obs" title="' + escEnt(e.obs) + '">' + escEnt(e.obs) + '</span>';
-          html += '</div>';
-        }
-        html += '</div>';
-      });
+      if (lista.length === 0) html += '<div class="ent-empty-state"><div class="ent-empty-txt">Sin entradas vigentes</div></div>';
+      lista.forEach(function(e) { html += htmlItemEnt(e, suc, puedeEditar); });
+      if (listaArch.length) {
+        html += '<div class="ent-arch-title">Archivadas (evento pasado)</div>';
+        listaArch.forEach(function(e) { html += htmlItemEnt(e, suc, puedeEditar, true); });
+      }
     }
     html += '</div>';
     // Footer
@@ -5811,7 +5851,7 @@ function eventoKey(e) {
 function listarEventosUnicos() {
   var mapa = {};
   SUCURSALES_ENT.forEach(function(suc) {
-    (entradasData[suc] || []).forEach(function(e) {
+    entActivas(suc).forEach(function(e) {
       var k = eventoKey(e);
       if (!mapa[k]) mapa[k] = { key: k, nombre: e.nombre, fecha: e.fecha || '', lugar: e.lugar || '', sucursales: [] };
       mapa[k].sucursales.push(suc);
@@ -5879,11 +5919,10 @@ function usarEventoSugerido(i) {
   elegirEventoExistente();
 }
 
-function renderEntradasEvento() {
-  // Agrupa todas las entradas por evento (nombre + fecha + lugar)
+function agruparEventosEnt(archivadas) {
   var mapa = {};
   SUCURSALES_ENT.forEach(function(suc) {
-    getEntFiltradas(suc).forEach(function(e) {
+    getEntFiltradas(suc, archivadas).forEach(function(e) {
       var key = eventoKey(e);
       if (!mapa[key]) mapa[key] = { nombre: e.nombre, sucursales: [], precio: e.precio, fecha: e.fecha, lugar: e.lugar || '' };
       mapa[key].sucursales.push(suc);
@@ -5891,32 +5930,42 @@ function renderEntradasEvento() {
       if (!mapa[key].lugar && e.lugar) mapa[key].lugar = e.lugar;
     });
   });
+  return Object.keys(mapa).sort().map(function(k) { return mapa[k]; });
+}
 
-  var eventos = Object.keys(mapa).sort().map(function(k) { return mapa[k]; });
+function renderEntradasEvento() {
+  var eventos = agruparEventosEnt(false);
+  var archivados = entVerArchivo ? agruparEventosEnt(true) : [];
   var listEl = document.getElementById('entradasEvtList');
   if (!listEl) return;
 
-  if (eventos.length === 0) {
+  if (eventos.length === 0 && archivados.length === 0) {
     listEl.innerHTML = '<div class="empty-state">' + icon('calendar','es-icon') + 'Sin eventos cargados.</div>';
     return;
   }
   var html = '';
-  eventos.forEach(function(ev) {
+  var pintar = function(ev, arch) {
     var sucStr   = ev.sucursales.map(function(s){ return s.replace(/^\d+\s+/,''); }).join(', ');
     var fechaStr = fmtFechaCortaEnt(ev.fecha);
-    html += '<div class="ent-evt-card">';
+    html += '<div class="ent-evt-card' + (arch ? ' archivada' : '') + '">';
     html += '<div><div class="ent-evt-card-nombre">' + escEnt(ev.nombre) + (fechaStr ? ' <span style="font-weight:400;color:var(--gray-400);font-size:12px">· ' + fechaStr + '</span>' : '') + '</div>';
     html += '<div class="ent-evt-card-suc">' + (ev.lugar ? icon('map-pin','ic-xs') + ' ' + escEnt(ev.lugar) + ' · ' : '') + sucStr + '</div></div>';
     html += '<span class="ent-evt-card-badge">' + ev.sucursales.length + ' sucursal' + (ev.sucursales.length !== 1 ? 'es' : '') + '</span>';
     html += '</div>';
-  });
+  };
+  if (eventos.length === 0) html += '<div class="empty-state">Sin eventos vigentes.</div>';
+  eventos.forEach(function(ev) { pintar(ev, false); });
+  if (archivados.length) {
+    html += '<div class="ent-arch-title">Archivados (evento pasado)</div>';
+    archivados.forEach(function(ev) { pintar(ev, true); });
+  }
   listEl.innerHTML = html;
 }
 
 function renderEntradasSidebar() {
   var mapa = {};
   SUCURSALES_ENT.forEach(function(suc) {
-    (entradasData[suc] || []).forEach(function(e) {
+    entActivas(suc).forEach(function(e) {
       var key = eventoKey(e);
       if (!mapa[key]) mapa[key] = { nombre: e.nombre, sucursales: [], fecha: e.fecha, lugar: e.lugar || '' };
       mapa[key].sucursales.push(suc.replace(/^\d+\s+/,''));
