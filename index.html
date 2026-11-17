@@ -1881,7 +1881,7 @@ function fetchEnVivoNode() {
 // escritura). Sin fallback automático entre fuentes y SIN "guardado local"
 // silencioso: si Node falla, se muestra el error real y el dato queda en el
 // formulario (el camino GAS conserva su comportamiento histórico).
-var ENTRADAS_NODE = false;
+var ENTRADAS_NODE = true;
 
 // Wrapper de Entradas Node: devuelve { status, data } sin lanzar por HTTP != 2xx.
 function fetchEntradasNode(metodo, path, body) {

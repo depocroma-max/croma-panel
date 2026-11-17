@@ -69,8 +69,8 @@ async function caso(nombre, fn) {
 }
 
 (async () => {
-  await caso('ENTRADAS_NODE está DESACTIVADO por defecto en index.html', () => {
-    assert.match(SRC, /\nvar ENTRADAS_NODE = false;/);
+  await caso('ENTRADAS_NODE está ACTIVADO en index.html (rama de activación)', () => {
+    assert.match(SRC, /\nvar ENTRADAS_NODE = true;/);
   });
 
   // ── flag apagado: camino GAS intacto ──
