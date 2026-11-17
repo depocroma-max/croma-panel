@@ -689,6 +689,89 @@ td { padding: 10px 14px; vertical-align: middle; }
   .hor-cell { min-width: 0; padding: 5px 7px; }
 }
 
+/* === Rediseño V3 — estructura tipo boceto (paleta y colores de turno intactos) === */
+.horarios-header { margin-bottom: 1rem; }
+.horarios-title { font-size: 26px; letter-spacing: 1.5px; }
+.horarios-titulo-grupo .semana-info-bar { font-size: 12px; }
+.semana-nav { background: var(--white); border: 1px solid var(--gray-100); border-radius: 999px; padding: 4px; box-shadow: var(--shadow-sm); gap: 4px; }
+.semana-nav .btn-semana { border: none; border-radius: 50%; background: var(--gray-50); }
+.semana-nav .semana-label { min-width: 150px; font-size: 13px; padding: 0 6px; }
+/* Sidebar */
+.hor-layout { gap: 1.5rem; min-width: 0; }
+#horariosGrid { min-width: 0; flex: 1 1 0; }
+.hor-cuerpo-main { min-width: 0; }
+.hor-sidebar { width: 220px; border-radius: 20px; border-color: transparent; box-shadow: 0 2px 14px rgba(0,0,0,.06); padding: .6rem; }
+.hor-sidebar-search { padding: 0 0 .6rem; border: none; }
+.hor-sidebar-search input { height: 38px; border-radius: 12px; padding: 0 14px; background: var(--gray-50); border-color: transparent; }
+.hor-sidebar-list { gap: 2px; }
+.hor-sidebar-item { border: none; border-radius: 12px; padding: .65rem .75rem; font-weight: 500; }
+.hor-sidebar-item.active { background: var(--black); color: var(--white); box-shadow: none; }
+.hor-sidebar-item.active .hor-sidebar-pin { color: var(--white) !important; }
+.hor-sidebar-dot { width: 8px; height: 8px; }
+/* Panel: sin caja contenedora, cada bloque es su propia tarjeta */
+.hor-panel { background: transparent; border: none; box-shadow: none; border-radius: 0; overflow: visible; }
+.hor-panel-head { padding: 0 0 .25rem; border: none; gap: 12px; }
+.hor-panel-titulo { font-size: 34px; letter-spacing: 1.5px; gap: 10px; }
+.hor-panel-titulo svg { width: 24px; height: 24px; }
+.hor-editando-tag, .hor-ok-tag, .hor-pendiente-tag { padding: 5px 12px; border-radius: 999px; font-size: 12px; }
+/* KPIs */
+.hor-kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; padding: .5rem 0 0; }
+.hor-kpi { gap: 10px; padding: .55rem .85rem; border-radius: 16px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,.04); }
+.hor-kpi-ico { width: 38px; height: 38px; border-radius: 12px; background: rgba(255,255,255,.85); }
+.hor-kpi-ico svg { width: 19px; height: 19px; }
+.hor-kpi-num { font-size: 22px; font-weight: 800; }
+.hor-kpi-label { font-size: 12px; font-weight: 600; color: var(--gray-800); }
+/* Barra: leyenda + acciones */
+.hor-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem 1rem; padding: 1rem 0; }
+.hor-toolbar .hor-leyenda { padding: 0; border: none; gap: .4rem 1.1rem; }
+.hor-toolbar .hor-panel-actions { margin-left: 0; gap: 8px; }
+.hor-leyenda-dot { width: 14px; height: 14px; border-radius: 50%; }
+.hor-toolbar .btn-editar-hor, .hor-toolbar .btn-compartir { padding: 9px 16px; border-radius: 12px; font-size: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.hor-toolbar .btn-guardar-hor { padding: 9px 18px; border-radius: 12px; font-size: 12px; }
+.hor-guardado-error { margin: 0 0 .85rem; }
+/* Grilla */
+.hor-cuerpo-lado { padding: 0; }
+.hor-table-wrap { background: var(--white); border-radius: 20px; box-shadow: 0 2px 14px rgba(0,0,0,.06); padding: .4rem .6rem .6rem; }
+.hor-table { border-collapse: separate; border-spacing: 0 6px; }
+.hor-table th { background: none; border: none; padding: 8px 6px; color: var(--gray-600); }
+.hor-table th:first-child { font-size: 13px; text-transform: none; letter-spacing: 0; color: var(--black); font-weight: 700; padding-left: 10px; }
+.hor-th-dia { display: block; font-size: 11px; font-weight: 700; letter-spacing: .6px; }
+.hor-th-num { display: block; font-size: 12px; font-weight: 700; }
+.hor-table th.hor-th-hoy { background: var(--black); color: #fff; border-radius: 12px; }
+.hor-table td { border: none; padding: 3px; }
+.hor-table td:first-child { padding-left: 8px; }
+.hor-table tr:hover td { background: none; }
+.hor-emp-cell { gap: 12px; }
+.hor-avatar { width: 44px; height: 44px; font-size: 13px; box-shadow: 0 0 0 2px var(--white), 0 0 0 3px var(--gray-200); }
+.hor-emp-nombre { font-size: 13px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase; line-height: 1.2; }
+.hor-cell { display: block; width: 100%; min-width: 0; padding: 9px 8px; border-radius: 12px; font-size: 12px; font-weight: 700; line-height: 1.4; }
+.hor-cell-libre { background: var(--gray-50); border: 1px solid var(--gray-100); }
+.hor-total-pill { display: inline-block; min-width: 56px; padding: 8px 12px; border-radius: 12px; background: var(--gray-50); border: 1px solid var(--gray-100); font-size: 13px; font-weight: 800; }
+/* Plantillas */
+.hor-plantillas { background: var(--white); border: none; border-radius: 20px; box-shadow: 0 2px 14px rgba(0,0,0,.06); padding: .85rem 1.1rem; margin-top: 1rem; }
+.hor-plantillas-head b { font-size: 14px; }
+.hor-plantilla { border-radius: 14px; }
+@media (max-width: 900px) {
+  .hor-sidebar { width: 100%; position: static; }
+  .hor-layout { flex-direction: column; }
+  .hor-sidebar-list { flex-direction: row; flex-wrap: wrap; max-height: none; }
+  .hor-sidebar-item { width: auto; }
+}
+@media (max-width: 700px) {
+  .hor-kpis { grid-template-columns: repeat(2, 1fr); padding: .5rem 0 0; }
+  .hor-kpi { flex-direction: row; align-items: center; padding: .6rem .7rem; }
+  .hor-kpi-ico { display: flex; width: 36px; height: 36px; }
+  .hor-kpi-sub { display: block; }
+  .hor-kpi-num { font-size: 21px; }
+  .hor-panel-titulo { font-size: 28px; }
+  .hor-toolbar .hor-panel-actions { width: 100%; }
+  .hor-table-wrap { padding: .3rem; border-radius: 16px; }
+  .hor-emp-nombre { font-size: 11px; }
+  .hor-avatar { width: 34px; height: 34px; }
+  .hor-cell { padding: 7px 5px; font-size: 11px; }
+  .hor-plantillas { padding: .7rem .8rem; }
+}
+
 /* Confirmación de Horario semanal (reemplaza window.confirm() nativo) —
    mismo .modal-overlay/.modal-box que el resto de la app, ver confirmCroma(). */
 .hor-confirm-box     { max-width: 400px; }
@@ -971,6 +1054,25 @@ tbody tr:hover { background: var(--gray-50); }
 .modal-btn, .btn-date, .btn-guardar-hor, .btn-agregar-emp { border-radius: var(--radius-sm); }
 .login-card { border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
 .login-btn, .login-field input { border-radius: var(--radius-md); }
+
+/* Barra superior adaptable: sin desborde horizontal (nav completo -> compacto -> menu hamburguesa/drawer) */
+.topbar { min-width: 0; }
+.top-nav { min-width: 0; }
+.nav-btn { white-space: nowrap; }
+@media (max-width: 1320px) {
+  .topbar { padding: 0 1.25rem; gap: .75rem; }
+  .brand-divider, .brand-section { display: none; }
+  .top-nav { margin-left: .25rem; gap: 2px; }
+  .nav-btn { padding: 0 11px; font-size: 12.5px; }
+}
+@media (max-width: 1200px) {
+  .hamburger-btn { display: flex; }
+  .top-nav { display: none; }
+}
+@media (max-width: 700px) {
+  .topbar { padding: 0 .75rem; }
+  .top-actions { min-width: 0; }
+}
 
 @media (max-width: 700px) {
   .topbar { padding: 0 1rem; height: 56px; gap: .5rem; }
@@ -3244,7 +3346,8 @@ function renderContenidoLocal() {
   } else {
     html += cargado ? '<span class="hor-ok-tag">' + icon('check','ic-xs') + ' Horario cargado</span>' : '<span class="hor-pendiente-tag">' + icon('clock','ic-xs') + ' Pendiente</span>';
   }
-  html += '<div class="hor-panel-actions">';
+  var htmlHead = html;
+  html = '<div class="hor-panel-actions">';
 
   if (editando) {
     // Fase 4B §27: bloqueadas mientras hay un PUT o un GET de "semana
@@ -3284,18 +3387,20 @@ function renderContenidoLocal() {
     html += ' Mail</button>';
   }
 
-  html += '</div></div>';
+  html += '</div>';
+  var htmlAcciones = html;
+  html = htmlHead + '</div>';
 
   html += buildResumenSemanaHorario(editando
     ? Object.keys(horariosEditando).map(function(n){ var f = { empleado: n }; DIAS_KEY.forEach(function(dk){ f[dk] = turnoToString(horariosEditando[n][dk] || { tipo:'libre', h1:'', h2:'', h3:'', h4:'' }); }); return f; })
     : empleados);
 
-  html += '<div class="hor-leyenda">';
-  html += leyendaItemHorario('corrido',    'Corrido',     '8 hs o más');
-  html += leyendaItemHorario('medioturno', 'Medio Turno', 'Menos de 8 hs');
+  html += '<div class="hor-toolbar"><div class="hor-leyenda">';
+  html += leyendaItemHorario('corrido',    'Corrido',     '8 h o más');
+  html += leyendaItemHorario('medioturno', 'Medio turno', 'Menos de 8 h');
   html += leyendaItemHorario('cortado',    'Cortado',     'Dos bloques');
   html += leyendaItemHorario('libre',      'Libre',       'Sin turno');
-  html += '</div>';
+  html += '</div>' + htmlAcciones + '</div>';
 
   if (editando && (horarioConflicto || horarioErrorGuardado)) {
     // Fase 3 §9/§11/§12/§13: banner de feedback tras un guardado fallido —
@@ -3344,9 +3449,9 @@ function renderContenidoLocal() {
     dias.forEach(function(d, i) {
       var esWeekend = (i === 5 || i === 6);
       var esHoy = d.toDateString() === hoyStr;
-      html += '<th class="' + (esHoy ? 'hor-th-hoy' : '') + '" style="' + (esWeekend && !esHoy ? 'color:var(--accent)' : '') + '">' + DIAS_LABEL[i] + '<br><span style="font-size:9px;font-weight:400">' + d.getDate() + '</span></th>';
+      html += '<th class="' + (esHoy ? 'hor-th-hoy' : '') + '" style="' + (esWeekend && !esHoy ? 'color:var(--accent)' : '') + '"><span class="hor-th-dia">' + DIAS_LABEL[i] + '</span><span class="hor-th-num">' + d.getDate() + '</span></th>';
     });
-    html += '<th>Total horas</th></tr></thead><tbody>';
+    html += '<th>Total</th></tr></thead><tbody>';
 
     // En modo edición se recorre horariosEditando (el borrador) en vez de
     // `empleados` (horariosData crudo) — mismo set de empleados, ya que el
@@ -3384,7 +3489,7 @@ function renderContenidoLocal() {
       var filaConConflicto = horarioConflicto && horarioConflicto.empleado === emp.empleado;
       html += '<tr' + (filaConConflicto ? ' class="hor-fila-conflicto"' : '') + '><td><div class="hor-emp-cell">';
       html += '<div class="hor-avatar">' + (foto ? '<img src="' + foto + '" alt=""' + (fotoPropia ? ' crossorigin="anonymous"' : '') + ' onerror="this.parentElement.textContent=\'' + inic + '\'">' : inic) + '</div>';
-      html += '<span>' + escapeHtml(nombreVisible) + '</span>';
+      html += '<span class="hor-emp-nombre">' + escapeHtml(nombreVisible) + '</span>';
       // Fase 4A §12: mismo badge que ya usaba el modal legacy, sin crear
       // una segunda clasificación de fila. "MANUAL" reemplaza a "EXTERNO"
       // para dejar explícito que este nombre nunca se confirmó contra la
@@ -3476,7 +3581,7 @@ function renderContenidoLocal() {
         }
         horasFila += horasDeValorHorario(val);
       });
-      html += '<td class="hor-total-horas">' + formatearHorasHorario(horasFila) + '</td>';
+      html += '<td class="hor-total-horas"><span class="hor-total-pill">' + formatearHorasHorario(horasFila) + '</span></td>';
       html += '</tr>';
     });
 
