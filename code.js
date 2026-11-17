@@ -772,9 +772,26 @@ function obtenerEntradas(sucursalFiltro) {
   }
 }
 
+// ── BLOQUEO DE ESCRITURA DE ENTRADAS (migración a Node) ───────────────────
+// Las acciones guardarEntrada / eliminarEntrada son públicas y sin autenticación
+// (cualquiera con la URL /exec puede crear, pisar o borrar entradas). Cuando
+// Entradas ya corre en Node (api.croma-app.com.ar, con JWT y permisos), se
+// bloquean con una PROPIEDAD DEL SCRIPT, sin redeploy:
+//   Apps Script > Configuración del proyecto > Propiedades del script >
+//   ENTRADAS_ESCRITURA_BLOQUEADA = true      (para reabrir: borrarla o ponerla en false)
+// Solo afecta a estas dos funciones; obtenerEntradas y el resto de los módulos
+// (Pedidos, Cajas, Usuarios) no cambian. Sin la propiedad, el comportamiento es el de siempre.
+function entradasEscrituraBloqueada() {
+  try {
+    return String(PropertiesService.getScriptProperties().getProperty('ENTRADAS_ESCRITURA_BLOQUEADA') || '').toLowerCase() === 'true';
+  } catch (e) { return false; }
+}
+var MSG_ENTRADAS_BLOQUEADAS = 'Las entradas ahora se gestionan desde el panel nuevo (la escritura por esta vía está deshabilitada)';
+
 // ?accion=guardarEntrada&datos={id?,sucursal,nombre,precio,fecha?,obs?}
 // Sin id → crea nueva fila. Con id → actualiza la existente.
 function guardarEntrada(datos) {
+  if (entradasEscrituraBloqueada()) return { ok: false, error: MSG_ENTRADAS_BLOQUEADAS };
   try {
     var ss   = SpreadsheetApp.openById(SHEET_ID);
     var hoja = asegurarHojaEntradas(ss);
@@ -826,6 +843,7 @@ function guardarEntrada(datos) {
 
 // ?accion=eliminarEntrada&id=ENT-123&sucursal=01+PASEO
 function eliminarEntrada(id, sucursal) {
+  if (entradasEscrituraBloqueada()) return { ok: false, error: MSG_ENTRADAS_BLOQUEADAS };
   try {
     if (!id) return { ok: false, error: 'Falta id' };
 
