@@ -1873,6 +1873,32 @@ function fetchEnVivoNode() {
   }).then(function(r) { return r.json().then(function(data) { return { status: r.status, data: data }; }); });
 }
 
+// Entradas — Fase 4 de la migración GAS→Node. Flag de rollback, DESACTIVADO
+// por defecto (el camino GAS sigue siendo el productivo):
+//   false = GAS legacy (accion=obtenerEntradas / guardarEntrada / eliminarEntrada)
+//   true  = Node + Sheets API (/api/entradas, croma-backend, JWT del panel)
+// Cambiar SOLO esta constante alterna ambos caminos COMPLETOS (lectura y
+// escritura). Sin fallback automático entre fuentes y SIN "guardado local"
+// silencioso: si Node falla, se muestra el error real y el dato queda en el
+// formulario (el camino GAS conserva su comportamiento histórico).
+var ENTRADAS_NODE = false;
+
+// Wrapper de Entradas Node: devuelve { status, data } sin lanzar por HTTP != 2xx.
+function fetchEntradasNode(metodo, path, body) {
+  var opts = { method: metodo, headers: { 'Authorization': 'Bearer ' + getTokenPanel() } };
+  if (body !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  return fetch(HORARIOS_BACKEND_URL + '/api/entradas' + path, opts).then(function(r) {
+    return r.json().catch(function() { return {}; }).then(function(data) { return { status: r.status, data: data }; });
+  });
+}
+function mensajeErrorEntradasNode(res) {
+  if (res && res.status === 401) return 'Tu sesión venció. Volvé a ingresar.';
+  if (res && res.status === 403) return 'No tenés permiso para esta acción.';
+  if (res && res.status === 503) return 'Las modificaciones de entradas no están disponibles por ahora.';
+  if (res && res.data && res.data.error && res.status >= 400 && res.status < 500) return res.data.error;
+  return 'No se pudo completar la operación. Intentá de nuevo.';
+}
+
 var sesionRol      = null;
 var sesionSucursal = null;
 
@@ -5579,6 +5605,17 @@ async function cargarEntradas() {
   var fab = document.getElementById('entFab');
   if (fab) fab.classList.toggle('hidden', sesionRol !== 'admin' && sesionRol !== 'encargado');
 
+  if (ENTRADAS_NODE) {
+    // Camino Node: sin fallback a GAS; si falla se avisa (y no se muestra un vacío "como si no hubiera entradas").
+    try {
+      var rn = await fetchEntradasNode('GET', '');
+      if (rn.status === 200 && rn.data && rn.data.ok) { entradasData = rn.data.entradas || {}; }
+      else { entradasData = {}; toast('⚠ ' + mensajeErrorEntradasNode(rn), 'error'); }
+    } catch(e) { entradasData = {}; toast('⚠ No se pudieron cargar las entradas', 'error'); }
+    renderEntradas();
+    return;
+  }
+
   try {
     var resp = await fetch(API_URL + '?accion=obtenerEntradas');
     var data = await resp.json();
@@ -5965,6 +6002,20 @@ async function guardarEntrada() {
   if (!precio) { toast('⚠ El precio es obligatorio', 'error'); document.getElementById('mePrecio').focus(); return; }
 
   var payload = { id: id, sucursal: suc, nombre: nombre, precio: precio, fecha: fecha, obs: obs, agotado: agotado, lugar: lugar };
+
+  if (ENTRADAS_NODE) {
+    // Precio: el backend exige número (0 a 10.000.000, hasta 2 decimales)
+    var precioNum = Number(String(precio).replace(',', '.'));
+    if (!isFinite(precioNum) || precioNum < 0) { toast('⚠ Precio inválido', 'error'); return; }
+    var cuerpo = { sucursal: suc, nombre: nombre, precio: precioNum, fecha: fecha, obs: obs, agotado: agotado, lugar: lugar };
+    try {
+      var rg = id ? await fetchEntradasNode('PUT', '/' + encodeURIComponent(id), cuerpo) : await fetchEntradasNode('POST', '', cuerpo);
+      if (rg.status === 200 && rg.data && rg.data.ok) { cerrarModalEntrada(); toast('✓ Entrada guardada', 'success'); cargarEntradas(); }
+      else { toast('⚠ ' + mensajeErrorEntradasNode(rg), 'error'); } // el modal queda abierto con lo cargado
+    } catch(e) { toast('⚠ No se pudo guardar. Intentá de nuevo.', 'error'); }
+    return;
+  }
+
   cerrarModalEntrada();
 
   try {
@@ -5988,6 +6039,27 @@ async function guardarEntrada() {
 
 async function toggleAgotado(entrada, suc) {
   var nuevoEstado = !entrada.agotado;
+
+  if (ENTRADAS_NODE) {
+    // Optimista con reversión real si falla (el camino GAS conserva su comportamiento histórico).
+    var previa = Object.assign({}, entrada);
+    actualizarEntradaLocal(suc, entrada.id, Object.assign({}, entrada, { agotado: nuevoEstado }));
+    renderEntradas();
+    try {
+      var rt = await fetchEntradasNode('PATCH', '/' + encodeURIComponent(entrada.id) + '/agotado', { agotado: nuevoEstado });
+      if (rt.status === 200 && rt.data && rt.data.ok) {
+        toast(nuevoEstado ? '✗ Marcado como agotado' : '✓ Marcado como disponible', nuevoEstado ? 'error' : 'success');
+        return;
+      }
+      actualizarEntradaLocal(suc, entrada.id, previa); renderEntradas();
+      toast('⚠ ' + mensajeErrorEntradasNode(rt), 'error');
+    } catch(e) {
+      actualizarEntradaLocal(suc, entrada.id, previa); renderEntradas();
+      toast('⚠ No se pudo actualizar. Intentá de nuevo.', 'error');
+    }
+    return;
+  }
+
   // Actualizar localmente de inmediato
   actualizarEntradaLocal(suc, entrada.id, Object.assign({}, entrada, { agotado: nuevoEstado }));
   renderEntradas();
@@ -6020,6 +6092,16 @@ async function eliminarEntrada() {
   var suc = document.getElementById('meSucursal').value.trim();
   if (!id) { cerrarModalEntrada(); return; }
   if (!confirm('¿Eliminar esta entrada?')) return;
+
+  if (ENTRADAS_NODE) {
+    try {
+      var rd = await fetchEntradasNode('DELETE', '/' + encodeURIComponent(id));
+      if (rd.status === 200 && rd.data && rd.data.ok) { cerrarModalEntrada(); toast('✓ Entrada eliminada', 'success'); cargarEntradas(); }
+      else { toast('⚠ ' + mensajeErrorEntradasNode(rd), 'error'); }
+    } catch(e) { toast('⚠ No se pudo eliminar. Intentá de nuevo.', 'error'); }
+    return;
+  }
+
   cerrarModalEntrada();
   try {
     var url = API_URL + '?accion=eliminarEntrada&id=' + encodeURIComponent(id) + '&sucursal=' + encodeURIComponent(suc);
